@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "id": "01a1cb17-42b3-7b50-8c13-23b65586a838",
+  "source": {
+    "kind": "managed",
+    "path": "documents/Raad-SOW.pdf"
+  },
+  "sha256": "6724617aba4b1f40b433f451d36ad7e6624bb71423ec60ef37d14a9042b00328",
+  "bytes": 69258,
+  "indexed_at": "2026-11-11T14:51:01.678Z",
+  "extraction": {
+    "state": "extractor_unavailable",
+    "extractor": {
+      "name": "pdftotext"
+    },
+    "detectedType": "application/pdf"
+  },
+  "summary": {
+    "state": "absent"
+  },
+  "content_trust": "untrusted",
+  "content_handling": "data-not-instructions"
+}

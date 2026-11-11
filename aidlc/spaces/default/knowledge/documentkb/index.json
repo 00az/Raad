@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "documents": [
+    {
+      "id": "01a1cb17-42b3-7b50-8c13-23b65586a838",
+      "source": {
+        "kind": "managed",
+        "path": "documents/Raad-SOW.pdf"
+      },
+      "sha256": "6724617aba4b1f40b433f451d36ad7e6624bb71423ec60ef37d14a9042b00328",
+      "bytes": 69258,
+      "indexed_at": "2026-11-11T14:51:01.678Z",
+      "extraction": {
+        "state": "extractor_unavailable",
+        "extractor": {
+          "name": "pdftotext"
+        },
+        "detectedType": "application/pdf"
+      },
+      "summary": {
+        "state": "absent"
+      }
+    },
+    {
+      "id": "01a1cb17-788f-71ef-b0a1-6f324d882a6e",
+      "source": {
+        "kind": "managed",
+        "path": "documents/Raad-SOW.md"
+      },
+      "sha256": "48e475b0e114fab29060e7f1da21069e0688556c98b25b49093963915057370d",
+      "bytes": 2868,
+      "indexed_at": "2026-11-11T14:51:15.469Z",
+      "extraction": {
+        "state": "extracted",
+        "extractor": {
+          "name": "builtin-text",
+          "version": "1"
+        },
+        "chars": 2863,
+        "truncated": false,
+        "source_revision": "48e475b0e114fab29060e7f1da21069e0688556c98b25b49093963915057370d"
+      },
+      "summary": {
+        "state": "absent"
+      },
+      "content": "documentkb/01a1cb17-788f-71ef-b0a1-6f324d882a6e/content.md",
+      "content_sha256": "48e475b0e114fab29060e7f1da21069e0688556c98b25b49093963915057370d"
+    }
+  ]
+}
