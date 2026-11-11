@@ -56,11 +56,21 @@
 <!-- Format: NEVER [behavior] (affirmed [date]) -->
 <!-- Example: NEVER throw exceptions across service layer boundaries (affirmed 2026-05-17) -->
 
+NEVER commit secrets, passwords or AWS keys to the repository. (affirmed 2026-11-11)
+
+NEVER connect to real payment systems or accept real card or bank details; funds are simulated and SAR is the only currency. (affirmed 2026-11-11)
+
+NEVER write passwords, tokens or personal details into logs. (affirmed 2026-11-11)
+
+NEVER deploy to prd a version that has not passed its checks and smoke test on dev first. (affirmed 2026-11-11)
+
 ## Mandated
 
 <!-- Populated by practices-discovery affirmation gate. -->
 <!-- Format: ALWAYS [behavior] (affirmed [date]) -->
 <!-- Example: ALWAYS use Result<T,E> for fallible operations in service layer (affirmed 2026-05-17) -->
+
+ALWAYS store and calculate money as whole halalas (1 SAR = 100 halalas), never as decimals or floating-point numbers. (affirmed 2026-11-11)
 
 ## Corrections
 
