@@ -1824,3 +1824,1408 @@
 **State Validity**: valid
 
 ---
+
+## Session Start
+**Timestamp**: 2026-11-12T16:24:22Z
+**Event**: SESSION_STARTED
+**Source**: startup
+**Session**: sess_19dc9ff8-6b58-42b8-8ae9-73b6577588e2
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-12T16:24:22Z
+**Event**: HUMAN_TURN
+**Session**: sess_19dc9ff8-6b58-42b8-8ae9-73b6577588e2
+**Origin**: person
+**Source**: typed
+**Message Id**: 1b5ab7f0
+**Questions Digest**: {"file":"aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-design-questions.md","entries":{"Q1":"f385b208514d671a","Q2":"98c21fd2907b98b6","Q3":"10aa178cb4c6a851","Q4":"de64e081503a27cc","Q5":"188aecaefbe5455e","Q6":"2edba2fd3601bb31","Q7":"94858b01d8c987bb"}}
+
+---
+
+## Review Requested
+**Timestamp**: 2026-11-12T16:24:36Z
+**Event**: REVIEW_REQUESTED
+**Stage**: contract-design
+**Reviewer**: aidlc-architecture-reviewer-agent
+**Iteration**: 1
+**Retry**: pending-request
+**Artifact Fingerprint**: sha256:afce44e996aac7ec514e08fc9d1f8efb0898696840384ae94472d96cdbba20f1
+**Request Id**: review:f7f5a4846899234aac2e3bf745788de2
+**Review File**: .aidlc-engine/reviews/contract-design/stage/addc594fd7e4d751/1.f7f5a4846899234aac2e3bf745788de2.review.md
+
+---
+
+## Subagent Dispatched
+**Timestamp**: 2026-11-12T16:25:27Z
+**Event**: SUBAGENT_DISPATCHED
+**Agent Type**: aidlc-architecture-reviewer-agent
+
+---
+
+## Subagent Completed
+**Timestamp**: 2026-11-12T16:27:51Z
+**Event**: SUBAGENT_COMPLETED
+**Agent Type**: aidlc-architecture-reviewer-agent
+**Message**: Review complete. Verdict: **READY**.\n\nAll 8 concerns from the previous review-01.md are resolved in the revised contract-summary.md:\n- **R-01** (U4-to-U2 edge): Fixed — C5 contract added with full tok
+**Review File Digest**: .aidlc-engine/reviews/contract-design/stage/addc594fd7e4d751/1.f7f5a4846899234aac2e3bf745788de2.review.md=4c73d34bc783f4048b65e05ed4430018dca1d026a51c364ab4359938fddd4d88
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-12T16:27:54Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/.aidlc-engine/reviews/contract-design/stage/addc594fd7e4d751/1.f7f5a4846899234aac2e3bf745788de2.review.md
+**Context**: .aidlc-engine > reviews > contract-design > stage > addc594fd7e4d751 > 1.f7f5a4846899234aac2e3bf745788de2.review.md
+
+---
+
+## Review Completed
+**Timestamp**: 2026-11-12T16:27:54Z
+**Event**: REVIEW_COMPLETED
+**Stage**: contract-design
+**Reviewer**: aidlc-architecture-reviewer-agent
+**Iteration**: 1
+**Verdict**: READY
+**Review Verdict Dictated**: no
+**Request Fingerprint**: sha256:afce44e996aac7ec514e08fc9d1f8efb0898696840384ae94472d96cdbba20f1
+**Artifact Fingerprint**: sha256:afce44e996aac7ec514e08fc9d1f8efb0898696840384ae94472d96cdbba20f1
+**Request Id**: review:f7f5a4846899234aac2e3bf745788de2
+**Review Record**: .aidlc-engine/reviews/contract-design/stage/addc594fd7e4d751/1.json
+**Review Record Digest**: sha256:a94c1a70b5b2762b67ec192e8dbd0aa542434854f7581d23f943b63220c1782e
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-12T16:27:56Z
+**Event**: SENSOR_FIRED
+**Fire id**: 37161cbd
+**Sensor ID**: required-sections
+**Stage slug**: contract-design
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-12T16:27:56Z
+**Event**: SENSOR_PASSED
+**Fire id**: 37161cbd
+**Sensor ID**: required-sections
+**Stage slug**: contract-design
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Duration ms**: 53
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-12T16:27:56Z
+**Event**: SENSOR_FIRED
+**Fire id**: 90fb28d1
+**Sensor ID**: upstream-coverage
+**Stage slug**: contract-design
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-12T16:27:57Z
+**Event**: SENSOR_PASSED
+**Fire id**: 90fb28d1
+**Sensor ID**: upstream-coverage
+**Stage slug**: contract-design
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Duration ms**: 53
+
+---
+
+## Stage Awaiting Approval
+**Timestamp**: 2026-11-12T16:27:57Z
+**Event**: STAGE_AWAITING_APPROVAL
+**Stage**: contract-design
+**Details**: Re-entering gate after revision
+**Next Stage**: delivery-planning
+**Brief Digest**: none
+**Sensor State**: required-sections@aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md=passed; upstream-coverage@aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md=passed
+**Open Decisions**: 0
+**Question Id**: c6511b9f
+**Question Type**: gate
+**Question Chat**: sess_19dc9ff8-6b58-42b8-8ae9-73b6577588e2
+**Question Shows**: sha256:2dff30238d94fd48fe605617dea3075c2fa1cb45d2c505915884fdead623f478
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-12T16:29:21Z
+**Event**: HUMAN_TURN
+**Session**: sess_19dc9ff8-6b58-42b8-8ae9-73b6577588e2
+**Origin**: person
+**Source**: typed
+**Message Id**: 34835837
+**Open Questions**: c6511b9f
+**Questions Digest**: {"file":"aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-design-questions.md","entries":{"Q1":"f385b208514d671a","Q2":"98c21fd2907b98b6","Q3":"10aa178cb4c6a851","Q4":"de64e081503a27cc","Q5":"188aecaefbe5455e","Q6":"2edba2fd3601bb31","Q7":"94858b01d8c987bb"}}
+
+---
+
+## Guard Stood Aside
+**Timestamp**: 2026-11-12T16:29:27Z
+**Event**: GUARD_STOOD_ASIDE
+**Guard**: review-freeze
+**Authority**: grant
+**Grant**: turn-marker
+**Actor**: main
+**Stage**: contract-design
+**Tool**: Edit
+**Details**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:29:29Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Change Accepted
+**Timestamp**: 2026-11-12T16:29:30Z
+**Event**: CHANGE_ACCEPTED
+**Stage**: contract-design
+**Checkpoint**: review-receipt
+**Changed**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Recorded**: sha256:afce44e996aac7ec514e08fc9d1f8efb0898696840384ae94472d96cdbba20f1
+**Current**: sha256:1488abd99d2b68c4c188eb996f23674e2bd52a2359394675bf788453c43a6588
+**Details**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md changed after the Contract Design review; carrying on.
+
+---
+
+## Gate Approved
+**Timestamp**: 2026-11-12T16:29:30Z
+**Event**: GATE_APPROVED
+**Stage**: contract-design
+**User Input**: Approve and fix
+**Message Id**: 34835837
+**Message Ids**: 1b5ab7f0,34835837
+**Review Finding Dispositions**: {"version":1,"dispositions":[{"artifact":"aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md","id":"R-01","fingerprint":"sha256:1554aa7f227b8b403372d1ad6ceaee4167cbbedc1fb2feea466abb7a77b6fdf3","status":"Changed after review","decided_at_severity":"Minor","reviewed_record":{"path":".aidlc-engine/reviews/contract-design/stage/addc594fd7e4d751/1.json","digest":"sha256:a94c1a70b5b2762b67ec192e8dbd0aa542434854f7581d23f943b63220c1782e"}}]}
+**Brief Digest**: sha256:d678717deb049480348d07af8e816e1e99cd019628c2dbf1c5fd75152712b1dc
+
+---
+
+## Stage Completion
+**Timestamp**: 2026-11-12T16:29:30Z
+**Event**: STAGE_COMPLETED
+**Stage**: contract-design
+**Validation Basis**: {"graphContract":"sha256:ad5599bf4da38de3dec2bfb4bf705de33d27113e18b6a160549a97c4b694fea3","inputs":[{"artifact":"components","contentHash":"sha256:7b9e885748ee3dabc7e1ab5904095a0322566ebc35ce054b6783fe1b3be080ae","instanceCount":1,"presentCount":1,"producer":"domain-design","required":false,"structureHash":"sha256:27c9d10f0f58a76c03ec5dacb15c992824776658e6aafa70b59a835d5f688cc8"},{"artifact":"requirements","contentHash":"sha256:7e6b6cc110a7a08fb08daa728d5de422adbf2e69710a71541ed7db9367f60140","instanceCount":1,"presentCount":1,"producer":"requirements-analysis","required":false,"structureHash":"sha256:c6cf39042bd23bce3aacaea6e75cc80a53603c4ef2cba0d3be8bf9c047841597"},{"artifact":"unit-of-work-dependency","contentHash":"sha256:fe0cede4ce0d316bfc3853d3383914e96aeda8d4addc81cd0079cff8273f0958","instanceCount":1,"presentCount":1,"producer":"units-generation","required":true,"structureHash":"sha256:595db18291012408f6e1e45b8e1acddcb9c9d7fbfa37d973d2353975c64057e0"},{"artifact":"unit-of-work","contentHash":"sha256:4bd93c0f5ca874a8ae42bdd6a90429131df340c70b99965638460c7bf725a3cc","instanceCount":1,"presentCount":1,"producer":"units-generation","required":true,"structureHash":"sha256:aa760bd843b9126c07a7ce892ae0ecee4e327d5530fdc0a83785003e77cabb06"}],"outputs":[{"artifact":"contract-summary","contentHash":"sha256:9008e35c3ef522870569aaa33f38c2b6ae2627834691b164b143e6f55f482fce","instanceCount":1,"presentCount":1,"producer":"contract-design","required":true,"structureHash":"sha256:0ce4da6c39017fe51cd160d81804160083e0a654a968ade7c7d2fafda6dc9ffc"}],"projectType":"greenfield","schema":3}
+**Details**: Stage Contract Design approved by gate
+**Tokens In**: 90
+**Tokens Out**: 97405
+**Cache Read**: 21758075
+**Cache Write**: 289016
+**Cost USD**: 0.16
+**By Model**: claude-fable-5-2=null; sonnet-5-5=0.16
+**By Agent**: aidlc-architecture-reviewer-agent=0.16
+**Tokens By Model**: claude-fable-5-2=88/97.1k/21.8M/226.3k; sonnet-5-5=2/318/0/62.7k
+**Tokens By Agent**: main=88/97.1k/21.8M/226.3k; aidlc-architecture-reviewer-agent=2/318/0/62.7k
+
+---
+
+## Stage Start
+**Timestamp**: 2026-11-12T16:29:30Z
+**Event**: STAGE_STARTED
+**Stage**: delivery-planning
+**Agent**: aidlc-delivery-agent
+**Answer Mode**: chat (reused from practices-discovery)
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:35:41Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/memory.md
+**Context**: inception > delivery-planning > memory.md
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-12T16:35:49Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md
+**Context**: inception > delivery-planning > delivery-planning-questions.md
+
+---
+
+## Session End
+**Timestamp**: 2026-11-12T16:45:06Z
+**Event**: SESSION_ENDED
+**Reason**: other
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-12T16:45:30Z
+**Event**: HUMAN_TURN
+**Session**: sess_19dc9ff8-6b58-42b8-8ae9-73b6577588e2
+**Origin**: person
+**Source**: typed
+**Message Id**: b94a2ab2
+**Questions Digest**: {"file":"aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md","entries":{"Strategic Questions":"c515dc2a7c34da5b","Per-Bolt Questions":"49bf3c22ae1c92f3","Repo Ownership":"7bf29de686e68a64","Assumptions & Open Questions":"06e19bfe6c673e8a","Sources":"4d36fe96540cc39d"}}
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:45:40Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md
+**Context**: inception > delivery-planning > delivery-planning-questions.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:45:46Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md
+**Context**: inception > delivery-planning > delivery-planning-questions.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:45:49Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md
+**Context**: inception > delivery-planning > delivery-planning-questions.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:45:53Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md
+**Context**: inception > delivery-planning > delivery-planning-questions.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:45:57Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md
+**Context**: inception > delivery-planning > delivery-planning-questions.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:46:01Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md
+**Context**: inception > delivery-planning > delivery-planning-questions.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:46:04Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md
+**Context**: inception > delivery-planning > delivery-planning-questions.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:46:08Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md
+**Context**: inception > delivery-planning > delivery-planning-questions.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:46:11Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md
+**Context**: inception > delivery-planning > delivery-planning-questions.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:46:14Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md
+**Context**: inception > delivery-planning > delivery-planning-questions.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:46:17Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md
+**Context**: inception > delivery-planning > delivery-planning-questions.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:46:20Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md
+**Context**: inception > delivery-planning > delivery-planning-questions.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:46:23Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md
+**Context**: inception > delivery-planning > delivery-planning-questions.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:46:26Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md
+**Context**: inception > delivery-planning > delivery-planning-questions.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:46:29Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md
+**Context**: inception > delivery-planning > delivery-planning-questions.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:46:33Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md
+**Context**: inception > delivery-planning > delivery-planning-questions.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:47:07Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md
+**Context**: inception > delivery-planning > delivery-planning-questions.md
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-12T16:47:15Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/bolt-plan.md
+**Context**: inception > delivery-planning > bolt-plan.md
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-12T16:47:34Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/team-allocation.md
+**Context**: inception > delivery-planning > team-allocation.md
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-12T17:10:18Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/risk-and-sequencing-rationale.md
+**Context**: inception > delivery-planning > risk-and-sequencing-rationale.md
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-12T17:10:24Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/external-dependency-map.md
+**Context**: inception > delivery-planning > external-dependency-map.md
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-12T17:10:49Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/verification/phase-check-inception.md
+**Context**: verification > phase-check-inception.md
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-12T17:12:52Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/verification-command.txt
+**Context**: verification-command.txt
+
+---
+
+## Decision Recorded
+**Timestamp**: 2026-11-12T17:12:53Z
+**Event**: DECISION_RECORDED
+**Stage**: delivery-planning
+**Decision**: Use this command to verify each completed Unit?
+**Options**: Approve,Request Changes
+**Checkpoint**: Construction Verification Command
+**Command SHA-256**: 13c6314ad23f8e4f8c88dda11cf454e83ec0f2367ccc7a307ec7345491e0aeb2
+**Command Label**: scripts/verify-dev.sh
+**Session**: sess_19dc9ff8-6b58-42b8-8ae9-73b6577588e2
+**Question Id**: ad1dc9bf
+**Question Type**: verification-command
+**Question Chat**: sess_19dc9ff8-6b58-42b8-8ae9-73b6577588e2
+**Question Shows**: sha256:e9b8cf29b5c0debfdde66bd380a571444a304801f29228aad2f9152c91306f7e
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-12T17:50:04Z
+**Event**: HUMAN_TURN
+**Session**: sess_19dc9ff8-6b58-42b8-8ae9-73b6577588e2
+**Origin**: person
+**Source**: typed
+**Message Id**: 141689b6
+**Open Questions**: ad1dc9bf
+**Questions Digest**: {"file":"aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md","entries":{"Strategic Questions":"c515dc2a7c34da5b","Per-Bolt Questions":"49bf3c22ae1c92f3","Repo Ownership":"7bf29de686e68a64","Assumptions & Open Questions":"06e19bfe6c673e8a","Sources":"4d36fe96540cc39d"}}
+
+---
+
+## Verification Command Recorded
+**Timestamp**: 2026-11-12T17:50:08Z
+**Event**: VERIFICATION_COMMAND_RECORDED
+**Stage**: delivery-planning
+**Details**: Approve
+**Checkpoint**: Construction Verification Command
+**Command SHA-256**: 13c6314ad23f8e4f8c88dda11cf454e83ec0f2367ccc7a307ec7345491e0aeb2
+**Command Label**: scripts/verify-dev.sh
+**User Input**: Approve
+**Session**: sess_19dc9ff8-6b58-42b8-8ae9-73b6577588e2
+**Person Reply**: Approve
+**Message Id**: 141689b6
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-12T17:50:12Z
+**Event**: SENSOR_FIRED
+**Fire id**: dcfefec9
+**Sensor ID**: required-sections
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/bolt-plan.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-12T17:50:13Z
+**Event**: SENSOR_PASSED
+**Fire id**: dcfefec9
+**Sensor ID**: required-sections
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/bolt-plan.md
+**Duration ms**: 54
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-12T17:50:13Z
+**Event**: SENSOR_FIRED
+**Fire id**: e27a396b
+**Sensor ID**: required-sections
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/team-allocation.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-12T17:50:13Z
+**Event**: SENSOR_PASSED
+**Fire id**: e27a396b
+**Sensor ID**: required-sections
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/team-allocation.md
+**Duration ms**: 52
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-12T17:50:13Z
+**Event**: SENSOR_FIRED
+**Fire id**: ca720ffd
+**Sensor ID**: required-sections
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/risk-and-sequencing-rationale.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-12T17:50:13Z
+**Event**: SENSOR_PASSED
+**Fire id**: ca720ffd
+**Sensor ID**: required-sections
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/risk-and-sequencing-rationale.md
+**Duration ms**: 53
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-12T17:50:13Z
+**Event**: SENSOR_FIRED
+**Fire id**: b9ee6453
+**Sensor ID**: required-sections
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/external-dependency-map.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-12T17:50:13Z
+**Event**: SENSOR_PASSED
+**Fire id**: b9ee6453
+**Sensor ID**: required-sections
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/external-dependency-map.md
+**Duration ms**: 52
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-12T17:50:13Z
+**Event**: SENSOR_FIRED
+**Fire id**: c9f9f8f7
+**Sensor ID**: required-sections
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-12T17:50:13Z
+**Event**: SENSOR_PASSED
+**Fire id**: c9f9f8f7
+**Sensor ID**: required-sections
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md
+**Duration ms**: 51
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-12T17:50:13Z
+**Event**: SENSOR_FIRED
+**Fire id**: 5d94e1c9
+**Sensor ID**: upstream-coverage
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/bolt-plan.md
+
+---
+
+## Sensor Failed
+**Timestamp**: 2026-11-12T17:50:13Z
+**Event**: SENSOR_FAILED
+**Fire id**: 5d94e1c9
+**Sensor ID**: upstream-coverage
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/bolt-plan.md
+**Detail path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/.aidlc-engine/sensors/delivery-planning/upstream-coverage-5d94e1c9.md
+**Findings count**: 2
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T17:50:29Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/bolt-plan.md
+**Context**: inception > delivery-planning > bolt-plan.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T17:50:29Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/bolt-plan.md
+**Context**: inception > delivery-planning > bolt-plan.md
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-12T17:50:30Z
+**Event**: SENSOR_FIRED
+**Fire id**: 70afda68
+**Sensor ID**: required-sections
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/bolt-plan.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-12T17:50:30Z
+**Event**: SENSOR_PASSED
+**Fire id**: 70afda68
+**Sensor ID**: required-sections
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/bolt-plan.md
+**Duration ms**: 52
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-12T17:50:30Z
+**Event**: SENSOR_FIRED
+**Fire id**: c78836ce
+**Sensor ID**: required-sections
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/team-allocation.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-12T17:50:30Z
+**Event**: SENSOR_PASSED
+**Fire id**: c78836ce
+**Sensor ID**: required-sections
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/team-allocation.md
+**Duration ms**: 52
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-12T17:50:30Z
+**Event**: SENSOR_FIRED
+**Fire id**: 7ebdbb9a
+**Sensor ID**: required-sections
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/risk-and-sequencing-rationale.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-12T17:50:30Z
+**Event**: SENSOR_PASSED
+**Fire id**: 7ebdbb9a
+**Sensor ID**: required-sections
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/risk-and-sequencing-rationale.md
+**Duration ms**: 53
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-12T17:50:30Z
+**Event**: SENSOR_FIRED
+**Fire id**: 2c4b5e56
+**Sensor ID**: required-sections
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/external-dependency-map.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-12T17:50:30Z
+**Event**: SENSOR_PASSED
+**Fire id**: 2c4b5e56
+**Sensor ID**: required-sections
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/external-dependency-map.md
+**Duration ms**: 51
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-12T17:50:30Z
+**Event**: SENSOR_FIRED
+**Fire id**: 7e3ab7f9
+**Sensor ID**: required-sections
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-12T17:50:30Z
+**Event**: SENSOR_PASSED
+**Fire id**: 7e3ab7f9
+**Sensor ID**: required-sections
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md
+**Duration ms**: 55
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-12T17:50:30Z
+**Event**: SENSOR_FIRED
+**Fire id**: 31092b6b
+**Sensor ID**: upstream-coverage
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/bolt-plan.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-12T17:50:30Z
+**Event**: SENSOR_PASSED
+**Fire id**: 31092b6b
+**Sensor ID**: upstream-coverage
+**Stage slug**: delivery-planning
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/bolt-plan.md
+**Duration ms**: 52
+
+---
+
+## Stage Awaiting Approval
+**Timestamp**: 2026-11-12T17:50:30Z
+**Event**: STAGE_AWAITING_APPROVAL
+**Stage**: delivery-planning
+**Next Stage**: functional-design
+**Brief Digest**: none
+**Sensor State**: required-sections@aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/bolt-plan.md=passed; required-sections@aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/team-allocation.md=passed; required-sections@aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/risk-and-sequencing-rationale.md=passed; required-sections@aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/external-dependency-map.md=passed; required-sections@aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md=passed; upstream-coverage@aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/bolt-plan.md=passed
+**Open Decisions**: 0
+**Question Id**: 21c2236f
+**Question Type**: gate
+**Question Chat**: sess_19dc9ff8-6b58-42b8-8ae9-73b6577588e2
+**Question Shows**: sha256:48085ed8f8c1fbccc1c6ee49f436f726a86d6734f720c3f72409b656ecac0e9c
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-12T17:56:31Z
+**Event**: HUMAN_TURN
+**Session**: sess_19dc9ff8-6b58-42b8-8ae9-73b6577588e2
+**Origin**: person
+**Source**: typed
+**Message Id**: 3ef95344
+**Open Questions**: 21c2236f
+**Questions Digest**: {"file":"aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md","entries":{"Strategic Questions":"c515dc2a7c34da5b","Per-Bolt Questions":"49bf3c22ae1c92f3","Repo Ownership":"7bf29de686e68a64","Assumptions & Open Questions":"06e19bfe6c673e8a","Sources":"4d36fe96540cc39d"}}
+
+---
+
+## Gate Approved
+**Timestamp**: 2026-11-12T17:56:34Z
+**Event**: GATE_APPROVED
+**Stage**: delivery-planning
+**User Input**: Approve
+**Person Reply**: Approve
+**Message Id**: 3ef95344
+**Brief Digest**: none
+
+---
+
+## Stage Completion
+**Timestamp**: 2026-11-12T17:56:34Z
+**Event**: STAGE_COMPLETED
+**Stage**: delivery-planning
+**Validation Basis**: {"graphContract":"sha256:a107b7327c50c8716649b92e85898e6621eb07b7364abb8cf88794d8672f5550","inputs":[{"artifact":"components","contentHash":"sha256:7b9e885748ee3dabc7e1ab5904095a0322566ebc35ce054b6783fe1b3be080ae","instanceCount":1,"presentCount":1,"producer":"domain-design","required":true,"structureHash":"sha256:27c9d10f0f58a76c03ec5dacb15c992824776658e6aafa70b59a835d5f688cc8"},{"artifact":"contract-summary","contentHash":"sha256:9008e35c3ef522870569aaa33f38c2b6ae2627834691b164b143e6f55f482fce","instanceCount":1,"presentCount":1,"producer":"contract-design","required":false,"structureHash":"sha256:0ce4da6c39017fe51cd160d81804160083e0a654a968ade7c7d2fafda6dc9ffc"},{"artifact":"mockups","contentHash":"sha256:3970f8a19729c7a848c9dea31b704d367ba4d07f0f113df92769c9f43d43d542","instanceCount":1,"presentCount":1,"producer":"refined-mockups","required":false,"structureHash":"sha256:92e5e99ad75b88904c7e31d050ce1bb663f02e22ee8d01b70e73d8a9bf96645c"},{"artifact":"requirements","contentHash":"sha256:7e6b6cc110a7a08fb08daa728d5de422adbf2e69710a71541ed7db9367f60140","instanceCount":1,"presentCount":1,"producer":"requirements-analysis","required":true,"structureHash":"sha256:c6cf39042bd23bce3aacaea6e75cc80a53603c4ef2cba0d3be8bf9c047841597"},{"artifact":"stories","contentHash":"sha256:5629b755c4ae582aff65720af7dba59d50e0768c109cc5af72b8c017313144b7","instanceCount":1,"presentCount":1,"producer":"user-stories","required":false,"structureHash":"sha256:a7c3b5d3b460c343c0c60623fb01d7408642b20301736261f28c40eac20a1c81"},{"artifact":"team-practices","contentHash":"sha256:8d14b9c8f3b807e8959899372681f8159d4e55a9101617e4df499038da13c970","instanceCount":1,"presentCount":1,"producer":"practices-discovery","required":false,"structureHash":"sha256:1f91086f72cab8aa01dd5937abbcae5cbe0edf66aa00250c1cf48c8833b770c4"},{"artifact":"unit-of-work-dependency","contentHash":"sha256:fe0cede4ce0d316bfc3853d3383914e96aeda8d4addc81cd0079cff8273f0958","instanceCount":1,"presentCount":1,"producer":"units-generation","required":true,"structureHash":"sha256:595db18291012408f6e1e45b8e1acddcb9c9d7fbfa37d973d2353975c64057e0"},{"artifact":"unit-of-work-story-map","contentHash":"sha256:309e32ceb2b265e0843f0226de6fda2d12496b34cfa091fdb47b424e4d757b3b","instanceCount":1,"presentCount":1,"producer":"units-generation","required":false,"structureHash":"sha256:13ffff8e4e64f7049b05e6c1157284d7aaaaf6dbb294c19a4502a5f243cef273"},{"artifact":"unit-of-work","contentHash":"sha256:4bd93c0f5ca874a8ae42bdd6a90429131df340c70b99965638460c7bf725a3cc","instanceCount":1,"presentCount":1,"producer":"units-generation","required":true,"structureHash":"sha256:aa760bd843b9126c07a7ce892ae0ecee4e327d5530fdc0a83785003e77cabb06"}],"outputs":[{"artifact":"bolt-plan","contentHash":"sha256:da8a17938d3e1d69c59ac3adf061f7299287b7a0048faadd79b1e6f3a522074b","instanceCount":1,"presentCount":1,"producer":"delivery-planning","required":true,"structureHash":"sha256:c8116bf837a3bae8862f3af9ba49c72b7879473ba87258346de188c2696eebc8"},{"artifact":"delivery-planning-questions","contentHash":"sha256:15c7d092085c1dfa8f171f5d8decec13ff60adba17e8f8e86353293d19275cd8","instanceCount":1,"presentCount":1,"producer":"delivery-planning","required":true,"structureHash":"sha256:fbc8e1c687754c62686568ff16424654f0af3bdc648c17864f00211352650a5d"},{"artifact":"external-dependency-map","contentHash":"sha256:f2cd78244dfb2b951b5b6e7dc58c6f0c8c23803f5cbd9fcd783645bb64528589","instanceCount":1,"presentCount":1,"producer":"delivery-planning","required":true,"structureHash":"sha256:2e0f27df52808bc114b474359470d1f72282a29c018c5867e368c19a818cbd64"},{"artifact":"risk-and-sequencing-rationale","contentHash":"sha256:81d4644523cb5725053b0d7c8fbfd4e54c9316cc3721cd2e12ce72572940e079","instanceCount":1,"presentCount":1,"producer":"delivery-planning","required":true,"structureHash":"sha256:e1ef6d1a1e8bd0210176f6b77055e83839bcd08531ab5ba7df066de0050333a0"},{"artifact":"team-allocation","contentHash":"sha256:052d741bd81222f2e054dfbceeeee56b258b7d06ceb153eca2e07228345ce369","instanceCount":1,"presentCount":1,"producer":"delivery-planning","required":true,"structureHash":"sha256:db5856eed81e859a6b1a51d22b4bf0824d5be15154e170371403f652eec536ef"}],"projectType":"greenfield","schema":3}
+**Details**: Stage Delivery Planning approved by gate
+
+---
+
+## Phase Completion
+**Timestamp**: 2026-11-12T17:56:34Z
+**Event**: PHASE_COMPLETED
+**From phase**: inception
+**To phase**: construction
+**Stages completed**: 11
+
+---
+
+## Phase Verification
+**Timestamp**: 2026-11-12T17:56:34Z
+**Event**: PHASE_VERIFIED
+**Phase boundary**: inception → construction
+
+---
+
+## Phase Start
+**Timestamp**: 2026-11-12T17:56:34Z
+**Event**: PHASE_STARTED
+**Phase**: construction
+**Scope**: classic
+
+---
+
+## Stage Start
+**Timestamp**: 2026-11-12T17:56:34Z
+**Event**: STAGE_STARTED
+**Stage**: functional-design
+**Agent**: aidlc-architect-agent
+**Answer Mode**: chat (reused from practices-discovery)
+
+---
+
+## Memory Empty
+**Timestamp**: 2026-11-12T17:56:36Z
+**Event**: MEMORY_EMPTY
+**Stage**: delivery-planning
+
+---
+
+## Question Asked
+**Timestamp**: 2026-11-12T17:56:36Z
+**Event**: QUESTION_ASKED
+**Question Id**: a0cb6b44
+**Question Type**: construction-staffing
+**Question Chat**: sess_19dc9ff8-6b58-42b8-8ae9-73b6577588e2
+**Question Shows**: sha256:a8634eb96515c584c36a72352f5635c30cd5ca45b26da5341f6613287f3221a0
+**Stage**: functional-design
+**Options**: ["Just me","Several teams"]
+**State Digest**: 7c2699a5699f3a1cda2718dd09cbc31788b7b361e7445b5d7683541d1acea51f
+**Question Text SHA-256**: 3e4367755d94181ffa3de824ede3712cea690cf432f0aa384c5514e5bbf5d346
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-12T17:58:29Z
+**Event**: HUMAN_TURN
+**Session**: sess_19dc9ff8-6b58-42b8-8ae9-73b6577588e2
+**Origin**: person
+**Source**: typed
+**Open Question**: construction-staffing
+**Message Id**: 4f675f5f
+**Open Questions**: a0cb6b44
+**Questions Digest**: {"file":"aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/delivery-planning/delivery-planning-questions.md","entries":{"Strategic Questions":"c515dc2a7c34da5b","Per-Bolt Questions":"49bf3c22ae1c92f3","Repo Ownership":"7bf29de686e68a64","Assumptions & Open Questions":"06e19bfe6c673e8a","Sources":"4d36fe96540cc39d"}}
+
+---
+
+## Unit Ownership Set
+**Timestamp**: 2026-11-12T17:58:31Z
+**Event**: UNIT_OWNERSHIP_SET
+**Mode**: team
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T18:01:23Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/functional-design/memory.md
+**Context**: construction > functional-design > memory.md
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-12T18:01:23Z
+**Event**: HUMAN_TURN
+**Session**: sess_19dc9ff8-6b58-42b8-8ae9-73b6577588e2
+**Origin**: person
+**Source**: typed
+**Message Id**: 61ec8ef7
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-12T18:03:34Z
+**Event**: HUMAN_TURN
+**Session**: sess_19dc9ff8-6b58-42b8-8ae9-73b6577588e2
+**Origin**: person
+**Source**: typed
+**Message Id**: 982807ff
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-12T18:04:36Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/entities.md
+**Context**: construction > u1-walking-skeleton > functional-design > entities.md
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-12T18:05:11Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/rules.md
+**Context**: construction > u1-walking-skeleton > functional-design > rules.md
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-12T18:05:39Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/functional-spec.md
+**Context**: construction > u1-walking-skeleton > functional-design > functional-spec.md
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-12T18:05:42Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/frontend-components.md
+**Context**: construction > u1-walking-skeleton > functional-design > frontend-components.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T18:05:58Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/traceability.json
+**Context**: construction > u1-walking-skeleton > functional-design > traceability.json
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-12T18:05:59Z
+**Event**: SENSOR_FIRED
+**Fire id**: e984fce3
+**Sensor ID**: required-sections
+**Stage slug**: functional-design
+**Unit**: u1-walking-skeleton
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/entities.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-12T18:05:59Z
+**Event**: SENSOR_PASSED
+**Fire id**: e984fce3
+**Sensor ID**: required-sections
+**Stage slug**: functional-design
+**Unit**: u1-walking-skeleton
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/entities.md
+**Duration ms**: 57
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-12T18:05:59Z
+**Event**: SENSOR_FIRED
+**Fire id**: 8d8a77ab
+**Sensor ID**: required-sections
+**Stage slug**: functional-design
+**Unit**: u1-walking-skeleton
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/rules.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-12T18:05:59Z
+**Event**: SENSOR_PASSED
+**Fire id**: 8d8a77ab
+**Sensor ID**: required-sections
+**Stage slug**: functional-design
+**Unit**: u1-walking-skeleton
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/rules.md
+**Duration ms**: 54
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-12T18:05:59Z
+**Event**: SENSOR_FIRED
+**Fire id**: f0e5d896
+**Sensor ID**: required-sections
+**Stage slug**: functional-design
+**Unit**: u1-walking-skeleton
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/functional-spec.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-12T18:05:59Z
+**Event**: SENSOR_PASSED
+**Fire id**: f0e5d896
+**Sensor ID**: required-sections
+**Stage slug**: functional-design
+**Unit**: u1-walking-skeleton
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/functional-spec.md
+**Duration ms**: 53
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-12T18:05:59Z
+**Event**: SENSOR_FIRED
+**Fire id**: 00288554
+**Sensor ID**: required-sections
+**Stage slug**: functional-design
+**Unit**: u1-walking-skeleton
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/traceability.json
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-12T18:05:59Z
+**Event**: SENSOR_PASSED
+**Fire id**: 00288554
+**Sensor ID**: required-sections
+**Stage slug**: functional-design
+**Unit**: u1-walking-skeleton
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/traceability.json
+**Duration ms**: 52
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-12T18:05:59Z
+**Event**: SENSOR_FIRED
+**Fire id**: dff8316c
+**Sensor ID**: required-sections
+**Stage slug**: functional-design
+**Unit**: u1-walking-skeleton
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/frontend-components.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-12T18:05:59Z
+**Event**: SENSOR_PASSED
+**Fire id**: dff8316c
+**Sensor ID**: required-sections
+**Stage slug**: functional-design
+**Unit**: u1-walking-skeleton
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/frontend-components.md
+**Duration ms**: 53
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-12T18:05:59Z
+**Event**: SENSOR_FIRED
+**Fire id**: 8eee4603
+**Sensor ID**: upstream-coverage
+**Stage slug**: functional-design
+**Unit**: u1-walking-skeleton
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/entities.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-12T18:06:00Z
+**Event**: SENSOR_PASSED
+**Fire id**: 8eee4603
+**Sensor ID**: upstream-coverage
+**Stage slug**: functional-design
+**Unit**: u1-walking-skeleton
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/entities.md
+**Duration ms**: 52
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-12T18:06:00Z
+**Event**: SENSOR_FIRED
+**Fire id**: c1fec970
+**Sensor ID**: traceability
+**Stage slug**: functional-design
+**Unit**: u1-walking-skeleton
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/traceability.json
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-12T18:06:00Z
+**Event**: SENSOR_PASSED
+**Fire id**: c1fec970
+**Sensor ID**: traceability
+**Stage slug**: functional-design
+**Unit**: u1-walking-skeleton
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/traceability.json
+**Duration ms**: 68
+
+---
+
+## Review Requested
+**Timestamp**: 2026-11-12T18:06:00Z
+**Event**: REVIEW_REQUESTED
+**Stage**: functional-design
+**Reviewer**: aidlc-architecture-reviewer-agent
+**Unit**: u1-walking-skeleton
+**Iteration**: 1
+**Artifact Fingerprint**: sha256:9e24a634bcafdc76d4dec1c7c2af85f323b3bd0e1e2f7ca2356bbce64084c619
+**Request Id**: review:81ec8a6f56763c87483efd475fa71be5
+**Review File**: .aidlc-engine/reviews/functional-design/units/u1-walking-skeleton/c843469997ea470d/1.81ec8a6f56763c87483efd475fa71be5.review.md
+
+---
+
+## Subagent Dispatched
+**Timestamp**: 2026-11-12T18:06:17Z
+**Event**: SUBAGENT_DISPATCHED
+**Agent Type**: aidlc-architecture-reviewer-agent
+
+---
+
+## Subagent Completed
+**Timestamp**: 2026-11-12T18:12:53Z
+**Event**: SUBAGENT_COMPLETED
+**Agent Type**: aidlc-architecture-reviewer-agent
+**Message**: Review complete. Verdict: **READY** (advisory pass).\n\nFive findings reported — 2 Major, 3 Minor — none individually blocks READY under the advisory posture, but all are worth weighing before code gene
+**Review File Digest**: .aidlc-engine/reviews/functional-design/units/u1-walking-skeleton/c843469997ea470d/1.81ec8a6f56763c87483efd475fa71be5.review.md=628fb78352cc079afb5739b4248ff2993cb540a0bdef1927ca5393e69092a1db
+
+---
+
+## Artifact Created
+**Timestamp**: 2026-11-12T18:12:58Z
+**Event**: ARTIFACT_CREATED
+**Tool**: Write
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/.aidlc-engine/reviews/functional-design/units/u1-walking-skeleton/c843469997ea470d/1.81ec8a6f56763c87483efd475fa71be5.review.md
+**Context**: .aidlc-engine > reviews > functional-design > units > u1-walking-skeleton > c843469997ea470d > 1.81ec8a6f56763c87483efd475fa71be5.review.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T18:13:01Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/entities.md
+**Context**: construction > u1-walking-skeleton > functional-design > entities.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T18:18:11Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/entities.md
+**Context**: construction > u1-walking-skeleton > functional-design > entities.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T18:18:11Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/entities.md
+**Context**: construction > u1-walking-skeleton > functional-design > entities.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T18:18:17Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/rules.md
+**Context**: construction > u1-walking-skeleton > functional-design > rules.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T18:18:19Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/rules.md
+**Context**: construction > u1-walking-skeleton > functional-design > rules.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T18:18:45Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/rules.md
+**Context**: construction > u1-walking-skeleton > functional-design > rules.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T18:18:45Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/rules.md
+**Context**: construction > u1-walking-skeleton > functional-design > rules.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T18:18:45Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/rules.md
+**Context**: construction > u1-walking-skeleton > functional-design > rules.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T18:18:58Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/rules.md
+**Context**: construction > u1-walking-skeleton > functional-design > rules.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T18:30:49Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/functional-spec.md
+**Context**: construction > u1-walking-skeleton > functional-design > functional-spec.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T18:30:52Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/functional-spec.md
+**Context**: construction > u1-walking-skeleton > functional-design > functional-spec.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T18:30:57Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/traceability.json
+**Context**: construction > u1-walking-skeleton > functional-design > traceability.json
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T18:31:00Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/functional-design/traceability.json
+**Context**: construction > u1-walking-skeleton > functional-design > traceability.json
+
+---
+
+## Review Completed
+**Timestamp**: 2026-11-12T18:31:01Z
+**Event**: REVIEW_COMPLETED
+**Stage**: functional-design
+**Reviewer**: aidlc-architecture-reviewer-agent
+**Unit**: u1-walking-skeleton
+**Iteration**: 1
+**Verdict**: READY
+**Review Verdict Dictated**: no
+**Request Fingerprint**: sha256:9e24a634bcafdc76d4dec1c7c2af85f323b3bd0e1e2f7ca2356bbce64084c619
+**Artifact Fingerprint**: sha256:9e24a634bcafdc76d4dec1c7c2af85f323b3bd0e1e2f7ca2356bbce64084c619
+**Request Id**: review:81ec8a6f56763c87483efd475fa71be5
+**Review Record**: .aidlc-engine/reviews/functional-design/units/u1-walking-skeleton/c843469997ea470d/1.json
+**Review Record Digest**: sha256:66047d929e12d453c356e0b9929ff6f20941648d85b34f27f14e5c910fde0f62
+
+---
+
+## Question Asked
+**Timestamp**: 2026-11-12T18:31:03Z
+**Event**: QUESTION_ASKED
+**Question Id**: 19490fc1
+**Question Type**: guard-recovery
+**Question Chat**: sess_19dc9ff8-6b58-42b8-8ae9-73b6577588e2
+**Question Shows**: sha256:46dde486c004cd3a5192c72d8e30dfa8efa649014133a0df669d687a9b380d58
+**Stage**: functional-design
+**Unit**: u1-walking-skeleton
+**Options**: ["Mark this Unit finished","Request Changes"]
+**State Digest**: a41c6aabb590510809000fcbd3b039049aa7b5deb8d215c8091e90260fc9b780
+**Question Text SHA-256**: 6a5a67adb5ed1467cda2a045e55b4a17ce9b1949f1aa1df37bf3c041fc31a11b
+
+---
+
+## Error Logged
+**Timestamp**: 2026-11-12T18:31:06Z
+**Event**: ERROR_LOGGED
+**Tool**: aidlc-state
+**Command**: aidlc-state engine state unit complete --stage functional-design --unit u1-walking-skeleton
+**Error**: Refusing to complete unit "u1-walking-skeleton" for "functional-design": it is not the active unit (no unit is active; start it first with `aidlc engine state unit start --stage functional-design --unit u1-walking-skeleton`).
+
+---
+
+## Error Logged
+**Timestamp**: 2026-11-12T18:31:09Z
+**Event**: ERROR_LOGGED
+**Tool**: aidlc-state
+**Command**: aidlc-state engine state unit start --stage functional-design --unit u1-walking-skeleton
+**Error**: Refusing to start unit "u1-walking-skeleton" for "functional-design": the engine currently routes a ask directive. Run the exact directive.stage/directive.unit pair returned by aidlc-orchestrate.ts next.
+
+---
+
+## Error Logged
+**Timestamp**: 2026-11-12T18:31:12Z
+**Event**: ERROR_LOGGED
+**Tool**: aidlc-log
+**Command**: aidlc-log engine log answer --stage functional-design --checkpoint guard-recovery --details record-unit-completion
+**Error**: The person has not replied to the recovery question since it was shown. End the turn, wait for their reply, then record the remedy they picked.
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-12T18:35:01Z
+**Event**: HUMAN_TURN
+**Session**: sess_19dc9ff8-6b58-42b8-8ae9-73b6577588e2
+**Origin**: person
+**Source**: typed
+**Message Id**: 5e2969ee
+**Open Questions**: 19490fc1
+
+---
+
+## Error Logged
+**Timestamp**: 2026-11-12T18:35:06Z
+**Event**: ERROR_LOGGED
+**Tool**: aidlc-state
+**Command**: aidlc-state engine state unit start --stage functional-design --unit u1-walking-skeleton
+**Error**: Refusing to start unit "u1-walking-skeleton" for "functional-design": the engine currently routes a ask directive. Run the exact directive.stage/directive.unit pair returned by aidlc-orchestrate.ts next.
+
+---
+
+## Question Shown
+**Timestamp**: 2026-11-12T18:35:09Z
+**Event**: QUESTION_SHOWN
+**Question Id**: 19490fc1
+**Question Type**: guard-recovery
+**Question Chat**: sess_19dc9ff8-6b58-42b8-8ae9-73b6577588e2
+**Question Shows**: sha256:0fb9198f3ad0aee97b247e7b5754672e86bc64fbb5079cb7acdd5f5ef1dea753
+**Stage**: functional-design
+**Unit**: u1-walking-skeleton
+
+---
+
+## Unit Completed
+**Timestamp**: 2026-11-12T18:35:11Z
+**Event**: UNIT_COMPLETED
+**Stage**: functional-design
+**Unit**: u1-walking-skeleton
+**Run floor**: WORKFLOW_STARTED:2026-11-11T15:27:52Z#1
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-12T19:01:20Z
+**Event**: HUMAN_TURN
+**Session**: sess_19dc9ff8-6b58-42b8-8ae9-73b6577588e2
+**Origin**: person
+**Source**: typed
+**Message Id**: e8f17179
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-12T19:09:21Z
+**Event**: HUMAN_TURN
+**Session**: sess_19dc9ff8-6b58-42b8-8ae9-73b6577588e2
+**Origin**: person
+**Source**: typed
+**Message Id**: a0113822
+
+---

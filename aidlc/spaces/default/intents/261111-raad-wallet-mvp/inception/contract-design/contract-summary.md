@@ -1161,6 +1161,7 @@ The person approved Domain Design and Units Generation without requesting fixes 
 | C2 | Which AWS event-bus resources implement the address, 24-hour retry and dead-letter behavior? | U2/U4 Infrastructure Design |
 | C2 | Which monitoring email receives the dead-letter alarm? | Infrastructure Design / NFR Design |
 | C3 | Which AWS sign-in service and SDK implement the behavior profile, and which fallbacks do its capability checks (P1 to P13) select? | U1 and U4 Infrastructure Design; U3 implementation |
+| C3 — P7 | Does the chosen AWS sign-in provider natively invalidate an earlier confirmation code when a resend is requested? If yes, no extra work is needed. If no, U4 must implement a Lambda trigger or pre-confirmation hook to enforce this, and that mechanism must be named before Infrastructure Design begins so U3 can test against it. This is **the only P-check fallback that may require application-level logic in a `packaging` unit with no Functional Design stage.** | Confirmed in U1 Infrastructure Design when the provider is chosen |
 | C4, C5 | What are each environment's issuer, audience and client ID, and how do U4's deployment outputs reach the U2 and U3 pipelines? | Infrastructure Design and environment provisioning |
 | C5 | Which AWS resources implement the public edge, its firewall and its rate limits? | U1 and U4 Infrastructure Design |
 | C1–C5 | Should a scheduled job with a read-only credential also re-check every consumer's pins against the owning repos' tags? Pinning works without it. | CI Pipeline |

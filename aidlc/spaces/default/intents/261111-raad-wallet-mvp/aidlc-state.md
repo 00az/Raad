@@ -35,8 +35,8 @@
 
 ## Execution Plan Summary
 - **Total Stages**: 21
-- **Completed**: 9
-- **In Progress**: contract-design
+- **Completed**: 11
+- **In Progress**: functional-design
 
 ## Runtime State
 - **Revision Count**: 2
@@ -44,13 +44,19 @@
 - **Construction Iteration**: unit-major
 - **Construction Execution**: serial
 
+- **Construction Verification Command**: scripts/verify-dev.sh
+
+- **Unit Ownership**: team
+
+- **Skeleton Stance**: on
+
 ## Phase Progress
 <!-- Status values: Pending, Active, Verified, Skipped -->
 
 - **Initialization**: Verified
 - **Ideation**: Skipped
-- **Inception**: Active
-- **Construction**: Pending
+- **Inception**: Verified
+- **Construction**: Active
 - **Operation**: Pending
 
 ## Stage Progress
@@ -78,11 +84,11 @@
 - [x] refined-mockups — EXECUTE
 - [x] domain-design — EXECUTE
 - [x] units-generation — EXECUTE
-- [R] contract-design — EXECUTE
-- [ ] delivery-planning — EXECUTE
+- [x] contract-design — EXECUTE
+- [x] delivery-planning — EXECUTE
 
 ### CONSTRUCTION PHASE
-- [ ] functional-design — EXECUTE
+- [-] functional-design — EXECUTE
 - [ ] nfr-requirements — EXECUTE
 - [ ] nfr-design — EXECUTE
 - [ ] infrastructure-design — EXECUTE
@@ -99,14 +105,24 @@
 - [ ] performance-validation — SKIP
 - [ ] feedback-optimization — SKIP
 
+## Unit Progress
+<!-- Derived, engine-owned projection; routing ignores hand edits. -->
+| unit | owner | functional-design | nfr-requirements | nfr-design | infrastructure-design | code-generation | gate |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| u1-walking-skeleton | - | [?] | [ ] | [ ] | [ ] | [ ] | [?] |
+| u2-money-service | - | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| u4-platform | - | [x] | [ ] | [ ] | [ ] | [ ] | [-] |
+| u5-landing-page | - | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| u3-mobile-app | - | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+
 ## Current Status
-- **Lifecycle Phase**: INCEPTION
-- **Current Stage**: contract-design
-- **Next Stage**: delivery-planning
+- **Lifecycle Phase**: CONSTRUCTION
+- **Current Stage**: functional-design
+- **Next Stage**: nfr-requirements
 - **Status**: Running
-- **Last Updated**: 2026-11-12T15:38:24Z
+- **Last Updated**: 2026-11-12T18:35:11Z
 
 ## Session Resume Point
-- **Last Completed Stage**: units-generation
-- **Next Action**: Execute Contract Design
+- **Last Completed Stage**: delivery-planning
+- **Next Action**: Execute Functional Design
 - **Pending Artifacts**: none
