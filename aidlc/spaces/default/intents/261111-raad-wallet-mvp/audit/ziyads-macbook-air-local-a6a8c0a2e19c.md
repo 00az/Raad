@@ -1402,3 +1402,425 @@
 **Answer Mode**: chat (reused from practices-discovery)
 
 ---
+
+## Human Turn
+**Timestamp**: 2026-11-12T15:54:35Z
+**Event**: HUMAN_TURN
+**Session**: cc685485-8492-4124-bc16-df5a5ecd6129
+**Origin**: person
+**Source**: typed
+**Message Id**: 9d52d3e0
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:03:37Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:03:38Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:03:39Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:03:40Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:03:41Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:03:42Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:03:43Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:03:43Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:03:44Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:03:45Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Human Turn
+**Timestamp**: 2026-11-12T16:03:46Z
+**Event**: HUMAN_TURN
+**Session**: cc685485-8492-4124-bc16-df5a5ecd6129
+**Origin**: person
+**Source**: typed
+**Message Id**: 48cdd847
+**Questions Digest**: {"file":"aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-design-questions.md","entries":{"Q1":"f385b208514d671a","Q2":"98c21fd2907b98b6","Q3":"10aa178cb4c6a851","Q4":"de64e081503a27cc","Q5":"188aecaefbe5455e","Q6":"2edba2fd3601bb31","Q7":"94858b01d8c987bb"}}
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:04:13Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:04:14Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:04:15Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:04:15Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:04:16Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:04:17Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:04:52Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:04:53Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:04:54Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:04:55Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:05:16Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:05:17Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:05:18Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:06:04Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:06:04Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:06:05Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:06:06Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:06:07Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:06:08Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:06:09Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:06:41Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Context**: inception > contract-design > contract-summary.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:07:09Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/memory.md
+**Context**: inception > contract-design > memory.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:07:10Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/memory.md
+**Context**: inception > contract-design > memory.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:07:11Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/memory.md
+**Context**: inception > contract-design > memory.md
+
+---
+
+## Artifact Updated
+**Timestamp**: 2026-11-12T16:07:11Z
+**Event**: ARTIFACT_UPDATED
+**Tool**: Edit
+**File**: <project-dir>/aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/memory.md
+**Context**: inception > contract-design > memory.md
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-12T16:07:26Z
+**Event**: SENSOR_FIRED
+**Fire id**: 4fd16686
+**Sensor ID**: required-sections
+**Stage slug**: contract-design
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-12T16:07:26Z
+**Event**: SENSOR_PASSED
+**Fire id**: 4fd16686
+**Sensor ID**: required-sections
+**Stage slug**: contract-design
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Duration ms**: 56
+
+---
+
+## Sensor Fired
+**Timestamp**: 2026-11-12T16:07:26Z
+**Event**: SENSOR_FIRED
+**Fire id**: e27e5af3
+**Sensor ID**: upstream-coverage
+**Stage slug**: contract-design
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+
+---
+
+## Sensor Passed
+**Timestamp**: 2026-11-12T16:07:26Z
+**Event**: SENSOR_PASSED
+**Fire id**: e27e5af3
+**Sensor ID**: upstream-coverage
+**Stage slug**: contract-design
+**Output path**: aidlc/spaces/default/intents/261111-raad-wallet-mvp/inception/contract-design/contract-summary.md
+**Duration ms**: 54
+
+---
+
+## Review Requested
+**Timestamp**: 2026-11-12T16:07:26Z
+**Event**: REVIEW_REQUESTED
+**Stage**: contract-design
+**Reviewer**: aidlc-architecture-reviewer-agent
+**Iteration**: 1
+**Artifact Fingerprint**: sha256:afce44e996aac7ec514e08fc9d1f8efb0898696840384ae94472d96cdbba20f1
+**Request Id**: review:f7f5a4846899234aac2e3bf745788de2
+**Review File**: .aidlc-engine/reviews/contract-design/stage/addc594fd7e4d751/1.f7f5a4846899234aac2e3bf745788de2.review.md
+
+---
+
+## Subagent Dispatched
+**Timestamp**: 2026-11-12T16:15:36Z
+**Event**: SUBAGENT_DISPATCHED
+**Agent Type**: aidlc-architecture-reviewer-agent
+
+---
+
+## Subagent Dispatched
+**Timestamp**: 2026-11-12T16:17:19Z
+**Event**: SUBAGENT_DISPATCHED
+**Agent Type**: aidlc-architecture-reviewer-agent
+
+---
+
+## Host Turn
+**Timestamp**: 2026-11-12T16:18:54Z
+**Event**: HOST_TURN
+**Session**: cc685485-8492-4124-bc16-df5a5ecd6129
+**Origin**: host
+**Reason**: claude task notification
+**Source**: template
+
+---
+
+## Session Compacted
+**Timestamp**: 2026-11-12T16:18:55Z
+**Event**: SESSION_COMPACTED
+**Current Stage**: contract-design
+**State Validity**: valid
+
+---

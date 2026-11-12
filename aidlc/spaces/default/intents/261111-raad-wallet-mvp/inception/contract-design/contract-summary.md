@@ -26,7 +26,7 @@ The account-confirmed event in C2 is a narrow exception to Domain Design ADR-005
 
 C1 is the only public API for wallet data and money movement. MobileApp calls it through the shared public API address. The `/money` mapping sends `/money/v1` to MoneyApi. Later services may consume an approved operation through the same contract; they never read the Ledger or WalletDirectory stores directly.
 
-The API description is owned in `RaadMoneyService` at `openapi/raad-money-v1.yaml`. U1 introduces the v1 description for the walking-skeleton operations. U2 completes it. `RaadMobile` pins an exact released revision and generates its Dart client from it in CI (Q3 A). Handwritten request and response models in `RaadMobile` are not allowed.
+The API description is owned in `RaadMoneyService` at `openapi/raad-money-v1.yaml`. U1 commits the v1 description and builds the walking-skeleton operations against it. U2 completes the behavior behind it. `RaadMobile` pins an exact released revision, as Contract Files, Releases and Pinning describes, and generates its Dart client from the pinned copy in CI (Q3 A). Handwritten request and response models in `RaadMobile` are not allowed.
 
 ### OpenAPI specification
 
@@ -71,6 +71,8 @@ paths:
                 $ref: '#/components/schemas/Wallet'
         '401':
           $ref: '#/components/responses/AuthenticationRequired'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '409':
           description: The user's verified email is already held by another wallet holder.
           content:
@@ -95,6 +97,8 @@ paths:
                 $ref: '#/components/schemas/Wallet'
         '401':
           $ref: '#/components/responses/AuthenticationRequired'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           description: The caller has no wallet; the app should call PUT /wallet.
           content:
@@ -133,6 +137,8 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/AuthenticationRequired'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/RecipientNotFound'
         '409':
@@ -173,10 +179,16 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/AuthenticationRequired'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           description: >
-            No recipient has the normalized email address. This is a persisted
-            first business outcome for this caller and idempotency key.
+            RECIPIENT_NOT_FOUND: no recipient has the normalized email address. It
+            is a persisted first business outcome for this caller and idempotency
+            key. WALLET_NOT_FOUND: the caller has no wallet yet. Nothing is
+            persisted against the key and Idempotency-Replayed is omitted, so the
+            app calls PUT /wallet and may then send the same request with the
+            same key.
           headers:
             Idempotency-Replayed:
               $ref: '#/components/headers/IdempotencyReplayed'
@@ -228,7 +240,10 @@ paths:
         - name: limit
           in: query
           required: false
-          description: Page size; defaults to 20 and cannot exceed 100.
+          description: >
+            Page size; defaults to 20 and cannot exceed 100. A request that sends
+            a cursor must use the same page size as the request that started that
+            cursor's chain.
           schema:
             type: integer
             minimum: 1
@@ -249,6 +264,14 @@ paths:
                 $ref: '#/components/schemas/Error'
         '401':
           $ref: '#/components/responses/AuthenticationRequired'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: The caller has no wallet (WALLET_NOT_FOUND); the app should call PUT /wallet.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '429':
           $ref: '#/components/responses/RateLimited'
         '500':
@@ -280,9 +303,12 @@ components:
   headers:
     IdempotencyReplayed:
       description: >
-        false on the first response and on a non-persisted error; true when this
-        response comes from the persisted first outcome for an earlier request
-        with this caller and key.
+        Sent only on a response that reports a persisted outcome or a key
+        conflict. false on the first response for a persisted outcome and on
+        IDEMPOTENCY_KEY_REUSED; true when this response replays the persisted
+        first outcome of an earlier request with this caller and key. Omitted on
+        every response that persists nothing (400, 401, 403, WALLET_NOT_FOUND,
+        429, 500 and 503).
       schema:
         type: boolean
   schemas:
@@ -410,7 +436,10 @@ components:
         nextCursor:
           type: [string, 'null']
           maxLength: 2048
-          description: Opaque cursor for the next page; null at the end. Valid for 24 hours.
+          description: >
+            Opaque cursor for the next page. Non-null exactly when another page
+            exists and null at the end. It expires 24 hours after the first page
+            of its chain was issued.
     FieldError:
       type: object
       additionalProperties: true
@@ -468,6 +497,14 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: >
+        The public API edge refused the request under a firewall rule (C5), code
+        FORBIDDEN. The response reveals no wallet data and nothing about the rule.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     RecipientNotFound:
       description: No RAAD wallet holder has this complete normalized email address.
       content:
@@ -508,7 +545,7 @@ components:
 
 ### Caller identity and authorization
 
-The app sends `Authorization: Bearer <access token>` (Q7 A). C5 governs the U4 edge and U2 verification layers: both verify signature, issuer, audience, expiry, token type and the pinned asymmetric algorithm against the environment's key-discovery configuration, including rotation and discovery failure. The edge forwards the access token unchanged and strips caller-supplied identity headers. MoneyApi takes the user ID only from the independently verified token's `sub`. No request contains a caller user ID or a source wallet ID. MoneyApi uses that `sub` for wallet setup, wallet reads, transfers, history and the idempotency-key scope. A token, issuer, audience or key configuration from `dev` cannot authorize `stg` or `prd`. Every edge- or service-generated response carries the same `X-Correlation-Id`; every error body follows the C1 `Error` schema.
+The app sends `Authorization: Bearer <access token>` (Q7 A). C5 governs the U4 edge and U2 verification layers: both verify signature, issuer, audience binding, expiry, token type and the pinned asymmetric algorithm against the environment's verifier configuration, including key rotation and discovery failure. The edge forwards the access token unchanged and strips caller-supplied identity headers. MoneyApi takes the user ID only from the independently verified token's `sub`. No request contains a caller user ID or a source wallet ID. MoneyApi uses that `sub` for wallet setup, wallet reads, transfers, history and the idempotency-key scope. For wallet setup it takes the email address and display name from the source that the verifier configuration names (C3 check P2), never from a request body. A token, issuer, audience or key configuration from `dev` cannot authorize `stg` or `prd`. Every edge- or service-generated response carries the same `X-Correlation-Id`; every error body follows the C1 `Error` schema.
 
 ### Error and retry behavior
 
@@ -521,7 +558,9 @@ The app sends `Authorization: Bearer <access token>` (Q7 A). C5 governs the U4 e
 
 ### Transfer idempotency matrix
 
-MoneyApi processes `POST /transfers` in this order: verify C5 identity and rate limits; parse the header and body; normalize the recipient email; build a fingerprint from contract major version `1`, the normalized recipient email and `amountHalalas`; then conditionally create the first `TransferRequest` for the unique pair `(verified sub, Idempotency-Key)`. The client-supplied key is opaque and never used without the verified `sub`.
+MoneyApi processes `POST /transfers` in this order: verify C5 identity and rate limits; parse the header and body; normalize the recipient email; find the caller's wallet; build a fingerprint from contract major version `1`, the normalized recipient email and `amountHalalas`; then conditionally create the first `TransferRequest` for the unique pair `(verified sub, Idempotency-Key)`. The client-supplied key is opaque and never used without the verified `sub`. Only a one-way digest of the fingerprint is kept with the request, so the Ledger still holds no email address (ADR-002).
+
+When a new request breaks more than one business rule, the first rule in this order decides the one outcome that is persisted: unknown recipient, amount out of range, own wallet, balance too low. This is the order in which `components.md` has MoneyApi find the recipient and the Ledger then apply its rules.
 
 The first business outcome and its fingerprint remain for the lifetime of the environment in this MVP. A key is never made available for another transfer. If a later retention policy erases the owning account and its transfer data, it may erase the key with that data; no active app session may retain it afterward.
 
@@ -530,6 +569,7 @@ The first business outcome and its fingerprint remain for the lifetime of the en
 | Malformed JSON, missing/unknown field, invalid key syntax, non-integer amount or email invalid after normalization | No | 400 `VALIDATION_ERROR` | Evaluated as a new attempt after the request is corrected | Header omitted |
 | Missing, invalid, expired, wrong-environment or wrong-type token; authorization refusal | No | 401 `AUTHENTICATION_REQUIRED` or 403 `FORBIDDEN` | Evaluated again | Header omitted |
 | Rate limit reached | No | 429 `RATE_LIMITED` | Evaluated again after `Retry-After` | Header omitted |
+| Caller has no wallet yet | No | 404 `WALLET_NOT_FOUND` | Evaluated again after `PUT /wallet` succeeds; the same key may be used | Header omitted |
 | No recipient has the normalized email | Yes, as a final refused outcome | 404 `RECIPIENT_NOT_FOUND` | Same status, code and business result; a fresh request correlation ID | `true` on repeat, `false` first |
 | Recipient is the caller | Yes, as a final refused outcome | 409 `SELF_TRANSFER` | Same status, code and business result; a fresh request correlation ID | `true` on repeat, `false` first |
 | Amount is below 100 or above 50,000 halalas | Yes, as a final refused outcome | 422 `AMOUNT_OUT_OF_RANGE` | Same status, code and business result; a fresh request correlation ID | `true` on repeat, `false` first |
@@ -541,7 +581,7 @@ The first business outcome and its fingerprint remain for the lifetime of the en
 
 For two simultaneous requests with the same `(sub, key)` and fingerprint, one conditional operation creates the outcome. The other waits for that atomic operation to resolve, then reads and returns that same final business outcome. No externally visible `pending` outcome exists. If the store fails before either commits, neither reserves the key or changes a balance and both may receive a transient failure. Two simultaneous requests with one key and different fingerprints result in one first outcome and one 409 `IDEMPOTENCY_KEY_REUSED`; which fingerprint wins is not promised, so the app must never do this.
 
-`AMOUNT_OUT_OF_RANGE` is a Ledger business refusal, not schema validation: the OpenAPI request accepts any int64 and the Ledger applies the 100–50,000 range. This removes the former 400/422 ambiguity. `WALLET_NOT_FOUND`, if the safety-net `PUT /wallet` has not completed, is not persisted against the transfer key; the app ensures the wallet and may then retry with the same key.
+`AMOUNT_OUT_OF_RANGE` is a Ledger business refusal, not schema validation: the OpenAPI request accepts any int64 and the Ledger applies the 100–50,000 range, so an out-of-range amount always answers 422 and never 400. `WALLET_NOT_FOUND`, if the safety-net `PUT /wallet` has not completed, is not persisted against the transfer key; the app ensures the wallet and may then retry with the same key.
 
 ### Compatibility behavior
 
@@ -549,10 +589,13 @@ For two simultaneous requests with the same `(sub, key)` and fingerprint, one co
 - Response schemas and the C2 event payload are open to unknown fields for consumers. U2 and U4 provider-emission tests separately refuse undeclared output fields unless the field has first been added to the current owned contract.
 - Generated C1 clients must deserialize a response containing an unknown optional field and continue using all known fields. The C2 consumer must do the same for an event. These are compatibility tests in U3 and U2 respectively.
 - Removing, renaming or changing a field, making an optional field required, or adding an enum value when a consumer lacks an unknown-value fallback remains breaking and requires a new major version.
+- `Error.code` is the one enum that may grow within v1. The generated client maps a code it does not know to an `unknown` fallback, and MobileApp then handles the response by its HTTP status and shows its generic failure message. Adding a value to any other enum (`direction`, `currency`, `environment`) is breaking.
+- C2 consumers accept every `specVersion` whose major version is 1.
+- C4 and the C5 verifier configuration are closed on purpose: a build or a service start must fail on a missing, extra or cross-environment value. Every added, removed or changed key in either is therefore a new `configVersion`, and U4 supplies a new version to an environment only after the consumer's release for that environment accepts it.
 
 ### Email normalization
 
-For `ResolveRecipientRequest.email` and `CreateTransferRequest.recipientEmail`, MoneyApi performs these steps before email-format validation, lookup, self-transfer comparison or idempotency fingerprinting: remove leading and trailing Unicode whitespace; normalize Unicode to NFC; lowercase the complete address for comparison; then validate the normalized complete address. The normalized value must be at most 254 characters. WalletDirectory uses this same value as `emailKey`. MobileApp performs the same trim and lowercase for early feedback, but server correctness never depends on the client doing it. The confirmed display spelling from WalletDirectory is returned in `Recipient.email`.
+For `ResolveRecipientRequest.email` and `CreateTransferRequest.recipientEmail`, MoneyApi performs these steps before email-format validation, lookup, self-transfer comparison or idempotency fingerprinting: remove leading and trailing Unicode whitespace; normalize Unicode to NFC; lowercase the complete address with locale-independent Unicode lowercasing; then validate the normalized complete address. The normalized value must be at most 254 characters. WalletDirectory uses this same value as `emailKey`. MobileApp performs the same trim and lowercase for early feedback, but server correctness never depends on the client doing it. The confirmed display spelling from WalletDirectory is returned in `Recipient.email`. U2's provider tests cover surrounding spaces, capitals, and composed against decomposed characters for the lookup, the own-wallet comparison and the idempotency fingerprint (AC3.5.3).
 
 ### Pagination stability
 
@@ -622,7 +665,11 @@ components:
       properties:
         specVersion:
           type: string
-          const: '1.0'
+          pattern: '^1\.[0-9]+$'
+          description: >
+            Major version 1 with any minor version. U4 emits the minor version of
+            its released contract. A consumer accepts every 1.x and ignores the
+            fields it does not know.
         eventId:
           type: string
           format: uuid
@@ -720,6 +767,7 @@ operations:
     session_policy:
       access_token_lifetime_minutes: 60
       refresh_allowed_until_idle_days: 30
+      idle_rule_enforced_by: the provider when it has an idle limit; otherwise MobileApp (check P9)
     expected_failures: [SESSION_EXPIRED]
   requestPasswordReset:
     input: [email]
@@ -742,13 +790,25 @@ password_rule:
   requires_digit: true
 stored_user_attributes: [email, displayName]
 access_token:
-  required_claims: [sub, iss, aud, exp, iat, email, displayName]
+  required_claims: [sub, iss, audience_binding, exp, iat, token_type_marker]
   claim_rules:
     sub: immutable opaque user identifier within one environment
     iss: unique issuer for one environment
-    aud: unique mobile app client for one environment
+    audience_binding: >
+      The claim that names the mobile app client of one environment: aud, or
+      client_id when the provider's access tokens carry no aud. C5's verifier
+      configuration names which one applies.
+    token_type_marker: >
+      The provider's mark that the token is an access token and not an ID or
+      refresh token. C5's verifier configuration names it and its expected value.
+  profile_attributes:
     email: confirmed address used by the C1 wallet-setup safety net
     displayName: display name used by the C1 wallet-setup safety net
+    source: >
+      Claims in the access token when the provider can put them there; otherwise
+      the provider's own-profile call, made by MoneyApi with the caller's access
+      token. C5's verifier configuration says which source an environment uses.
+      They never come from a request body or from an ID token sent by the app.
 privacy:
   never_log: [password, confirmationCode, resetCode, accessToken, refreshToken, email, displayName]
   generic_client_errors:
@@ -761,8 +821,28 @@ privacy:
 
 - MobileApp branches on the stable client code, not provider-specific text. It owns the Arabic and English messages in `interaction-spec.md`.
 - Sign-up is the one account-enumerating operation allowed by FR1.6: it may return `EMAIL_IN_USE`. Sign-in, resend and password-reset request do not reveal whether an account exists.
-- U4 applies provider-native limits to sign-up, confirmation, resend, sign-in and password-reset operations. These direct account calls do not pass through the public API firewall; NFR12 and AC1.3.5 depend on these provider limits.
-- MobileApp never sends passwords, codes or tokens to C1. Access and refresh tokens are held only in phone secure storage.
+- U4 applies per-caller limits to sign-up, confirmation, resend, sign-in and password-reset operations, with the provider's own limits or with the fallback in check P10. These direct account calls do not pass through the public API edge; NFR12 and AC1.3.5 depend on these limits.
+- MobileApp never sends passwords or codes to C1. It sends C1 only the access token, in the `Authorization` header. Access and refresh tokens are held only in phone secure storage.
+
+### Provider capability acceptance
+
+The choice of sign-in provider stays with Infrastructure Design. Whichever provider is chosen must pass every check below on `dev`. U1's Infrastructure Design runs the checks the walking skeleton relies on (P1, P2 and P13). U4's runs the rest before U3 builds the account screens. A check that fails takes the fallback in its row, and the unit named there owns it. A fallback that would change a requirement or an acceptance criterion goes back to the person first.
+
+| # | Guarantee in this profile | Acceptance check on `dev` | If the provider cannot do it | Fallback owner |
+|---|---|---|---|---|
+| P1 | The access token carries `sub`, the issuer, an audience binding and a token-type marker | Decode an access token and find the claims that C5's verifier configuration names; two sign-ins by one user give the same `sub` | The configuration names whichever claim the provider uses (`aud` or `client_id`, and its own token-type marker). A provider with no audience binding or no token-type marker is not used | U4 |
+| P2 | MoneyApi gets the confirmed email address and display name from the verified sign-in | The access token holds `email` and `displayName` equal to the confirmed account's values | U4 adds both to the access token with the provider's token-customization hook. With no such hook, the verifier configuration sets `profileAttributeSource` to `user-profile-endpoint`, and MoneyApi reads both once at wallet setup with the caller's own access token and checks that the profile's subject equals `sub` | U4 for the hook and the configuration; U2 for the own-profile call |
+| P3 | One account per normalized email address (FR1.6) | Sign up `a@x.com`, then `A@x.com` with a trailing space: the second gets `EMAIL_IN_USE` | MobileApp already trims and lowercases before every account call. U4 adds a check in the platform, before sign-up completes, that refuses an address differing only in capitals | U3 for the client rule; U4 for the check |
+| P4 | The password rule of A4, at sign-up and at reset | A4's five sample passwords give A4's results | U4 brings the difference to the person as a change to A4 before U3 builds the sign-up screen | U4 |
+| P5 | Only the email address and display name are stored about a user (AC1.1.4) | List a `dev` account's attributes | U4 requests and fills no other attribute. Identifiers, timestamps and status that the provider creates by itself are not data collected from the user | U4 |
+| P6 | Wrong password, unknown email and unconfirmed account give one refusal (AC1.3.2, AC1.3.3) | Try the three cases and compare what the app receives | U4 turns on the provider's setting that hides whether an account exists, where it has one. U3's sign-in adapter maps every provider refusal except a rate limit to `SIGN_IN_FAILED` and one message. U4 reports any difference still visible on the network to the person before `stg` | U3 for the adapter; U4 for the setting and the report |
+| P7 | A resent code replaces every earlier code, and the answer is the same for any address (AC1.2.6) | Ask for two codes: the first is refused and the second works. Ask for a resend for an unknown and for a confirmed address | U3's adapter shows the one acknowledgement for every outcome except a rate limit. If an earlier code stays valid, U4 adds its own confirmation step in the platform that cancels earlier codes, or returns AC1.2.6 to the person before U3 builds the confirmation screen. The app never works around it | U4; U3 for the message |
+| P8 | A password-reset request gives one acknowledgement for any address | Ask for a reset for a known and for an unknown address | U3's adapter shows the one acknowledgement for every outcome except a rate limit | U3 |
+| P9 | An access token lasts 60 minutes, and renewal is refused after 30 days without use (A5) | Read both settings, and run A5's test-clock check where the provider allows one | If the provider has only a fixed renewal lifetime counted from sign-in, U4 sets it to at least 30 days (the value is chosen in Infrastructure Design). MobileApp keeps the time of last use in secure storage and, after more than 30 days without use, signs out and shows sign-in. An active user then signs in again only when the fixed lifetime ends | U3 for the idle rule; U4 for the lifetime |
+| P10 | Per-caller limits on account operations (AC1.3.5, NFR12) | Send a burst of sign-in attempts from one caller: further attempts are refused and a second caller is unaffected | U4 attaches the platform firewall's per-caller rate rule to the sign-in service's endpoint where the provider allows it. If neither can separate callers, U4 returns AC1.3.5 to the person before `stg` | U4 |
+| P11 | Every code under `expected_failures` is a stable client code | Produce each code once and list the provider error behind it | U3's adapter owns the mapping and turns any unlisted provider error into its generic failure, never into provider text | U3 |
+| P12 | Confirming an account can publish the C2 event with the email address and display name | Confirm a `dev` account and observe one C2 event | None is needed: with no hook after confirmation, no event is published and `PUT /wallet` opens every wallet, as C2 permits | U4 |
+| P13 | Signing keys are published over HTTPS and tokens are signed with RS256 | `jwksUri` answers, and the token header names RS256 | None: a provider without public key discovery, or with shared-secret signing only, is not used | U4 |
 
 ---
 
@@ -866,22 +946,100 @@ forwarding:
     add_headers: [X-Correlation-Id]
 token_verification:
   layers: [public-edge, MoneyApi]
-  required_checks: [signature, issuer, audience, expiry, not-before-if-present, token-type]
+  required_checks: [signature, issuer, audience-binding, expiry, not-before-if-present, token-type]
   required_token_type: access-token
   caller_id_claim: sub
   accepted_algorithms: [RS256]
   configuration:
-    canonical_contract: C3
-    per_environment_fields: [issuer, audience, jwksUri, acceptedAlgorithms]
-    delivery: immutable non-secret deployment configuration
+    name: raad-token-verifier-config
+    version: '1.0'
+    delivery: immutable non-secret deployment configuration, one per environment
+    secrets_allowed: false
+    schema:
+      type: object
+      additionalProperties: false
+      required:
+        - configVersion
+        - environment
+        - issuer
+        - audience
+        - audienceClaim
+        - tokenTypeMarker
+        - jwksUri
+        - acceptedAlgorithms
+        - profileAttributeSource
+      properties:
+        configVersion:
+          type: string
+          const: '1.0'
+        environment:
+          type: string
+          enum: [dev, stg, prd]
+        issuer:
+          type: string
+          format: uri
+          pattern: '^https://'
+        audience:
+          type: string
+          minLength: 1
+          description: >
+            The value the access token's audience-binding claim must carry in
+            this environment; equals C4 authAudience.
+        audienceClaim:
+          type: string
+          enum: [aud, client_id]
+          description: The access-token claim that must equal audience for this provider.
+        tokenTypeMarker:
+          type: object
+          additionalProperties: false
+          required: [location, name, expectedValue]
+          properties:
+            location:
+              type: string
+              enum: [claim, header]
+            name:
+              type: string
+              minLength: 1
+            expectedValue:
+              type: string
+              minLength: 1
+        jwksUri:
+          type: string
+          format: uri
+          pattern: '^https://'
+        acceptedAlgorithms:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            type: string
+            const: RS256
+        profileAttributeSource:
+          type: string
+          enum: [access-token-claims, user-profile-endpoint]
+          description: Where MoneyApi reads email and displayName at wallet setup (C3 check P2).
+        userProfileUri:
+          type: string
+          format: uri
+          pattern: '^https://'
+          description: Present exactly when profileAttributeSource is user-profile-endpoint.
+    validation:
+      - issuer, audience, jwksUri and userProfileUri must all belong to environment
+      - userProfileUri is present exactly when profileAttributeSource is user-profile-endpoint
+      - every value is public information about the sign-in service; none is a secret
   key_discovery:
     transport: HTTPS
     source: jwksUri
     cache_maximum_minutes: 360
     unknown_kid_behavior: refresh-once-then-refuse
+    unknown_kid_refresh_minimum_interval_seconds: 60
     rotation: >
-      New and retiring keys overlap for at least the greater of the access-token
-      lifetime and the verifier cache maximum. Verifiers accept both during overlap.
+      A verifier refreshes its key set once when a token names a key it does not
+      hold, and at most once a minute, so a new key works without a restart.
+      Where U4 controls rotation, the new and the retiring key overlap for at
+      least the greater of the access-token lifetime and the verifier cache
+      maximum. Where the provider rotates by itself, a token signed by a
+      withdrawn key is refused with 401 and the app renews its session.
     discovery_failure: >
       Continue with an unexpired cached key set. With no usable cached key, return
       503 TOKEN_VERIFIER_UNAVAILABLE; never turn verifier unavailability into 401.
@@ -908,50 +1066,89 @@ failure_behavior:
   upstream_timeout: return C1 Error with 503 SERVICE_UNAVAILABLE and Retry-After
 ```
 
-C3 supplies `issuer`, `audience`, `jwksUri` and `acceptedAlgorithms` to U2 as non-secret environment configuration. U2 refuses to start if any is missing or if the issuer/audience identify a different environment. The edge forwards the original access token to MoneyApi; it never converts token claims into trusted identity headers. MoneyApi independently verifies the token and takes the caller only from `sub`.
+U4 publishes one `raad-token-verifier-config` per environment, from the same deployment outputs that describe the sign-in service C3 profiles. The edge and U2 each load it. U2 refuses to start if a value is missing, if the configuration fails the schema, or if the issuer or audience belongs to a different environment. The edge forwards the original access token to MoneyApi; it never converts token claims into trusted identity headers. MoneyApi independently verifies the token and takes the caller only from `sub`.
 
 ### Edge tests
 
-- U4 proves path and query forwarding, request-body preservation, allowed-header forwarding, spoofed identity-header stripping, correlation-ID creation/preservation, edge error shape, 401/403/429/503 mappings and `Retry-After`.
-- U2 proves issuer, audience, algorithm, expiry, token type and signature checks; unknown-key refresh; overlapping-key rotation; cached-key behavior during discovery failure; refusal to start with missing or cross-environment configuration; and that no request field or forwarded identity header can replace `sub`.
+- U4 proves path and query forwarding, request-body preservation, allowed-header forwarding, spoofed identity-header stripping, correlation-ID creation/preservation, edge error shape, 401/403/429/503 mappings and `Retry-After`. It validates each environment's verifier configuration against the schema.
+- U2 proves the issuer, audience-binding, algorithm, expiry, token-type and signature checks with the claim names the configuration gives; unknown-key refresh and its one-minute limit; overlapping-key rotation; cached-key behavior during discovery failure; refusal to start with a missing, invalid or cross-environment configuration; the configured profile-attribute source; and that no request field or forwarded identity header can replace `sub`.
 - The joint test sends the same C1 request through the edge and directly to a test MoneyApi adapter and compares the C1 status/body, apart from headers that C5 owns. A token from each wrong environment is refused at both layers.
 
 ---
 
+## Contract Files, Releases and Pinning
+
+Each contract is one file in the repo of the unit that owns it. That file at a released tag is the contract; this document is its design record.
+
+| Contract | Owning repo | Canonical file | Contract ID | Repos that pin it |
+|---|---|---|---|---|
+| C1 | `RaadMoneyService` | `openapi/raad-money-v1.yaml` | `c1-money-api` | `RaadMobile`; `Raad`, for the `Error` shape of edge responses |
+| C2 | `Raad` | `contracts/c2-identity-events-v1.asyncapi.yaml` | `c2-identity-events` | `RaadMoneyService` |
+| C3 | `Raad` | `contracts/c3-sign-in-client-profile-v1.yaml` | `c3-sign-in-profile` | `RaadMobile` |
+| C4 | `Raad` | `contracts/c4-mobile-environment-config-v1.schema.yaml` | `c4-mobile-config` | `RaadMobile` |
+| C5 | `Raad` | `contracts/c5-money-edge-v1.yaml` | `c5-money-edge` | `RaadMoneyService` |
+
+The last column is the register of consumers. The owning repo's README repeats its rows, and a new consumer is added there by pull request.
+
+### Release identity
+
+- A release is an annotated git tag on a commit of the owning repo's `main`, named `contract/<contract ID>/v<MAJOR>.<MINOR>.<PATCH>`, for example `contract/c1-money-api/v1.0.0`.
+- A pull request that changes a contract file raises the version inside the file: `info.version` for C1 and C2, `version` for C3 to C5. The markers that travel with data (`specVersion`, `configVersion`) carry `MAJOR.MINOR`. PATCH is for wording that changes no schema and no behavior, MINOR for a compatible addition, and MAJOR for a breaking change, which also gets a new file ending in `-v2` and a new path or address.
+- After the merge, the owning repo's pipeline creates the tag for a version that has no tag yet and writes the SHA-256 of the file's bytes in the tag message. CI fails a change that alters a contract file but keeps a version that is already tagged.
+- A tag is never moved or deleted. A tag rule enforces this where the GitHub plan allows one. Each consumer also records the commit the tag pointed to, so a moved tag shows at the next pin check.
+- Until a contract's provider tests pass for the whole file, its releases carry a pre-release suffix such as `v1.0.0-rc.1`. U1 tags the first ones for the walking skeleton. `v1.0.0` of C1 is tagged when U2's provider tests pass, and `v1.0.0` of C2 to C5 when U4's do. A pre-release is pinned in the same way as a full release.
+
+### Pinning in a consumer repo
+
+- A consumer keeps `contracts/pins.yaml` with one entry per contract it uses: the contract ID, the owning repo, the tag, the commit the tag points to, and the file's SHA-256. It keeps a byte-for-byte copy of each pinned file under `contracts/pinned/`.
+- Code generation, schema validation and contract tests read only the pinned copy, never a branch of the owning repo. On every run, CI recomputes each copy's SHA-256 and fails if it differs from `pins.yaml`. A build therefore needs no access to another repo.
+- A pin changes only through a pull request in the consumer repo. A script in that repo takes a contract ID and a tag, fetches the file at that tag from the owning repo, checks its SHA-256 against the tag message, and rewrites the copy and the `pins.yaml` entry. The engineer runs it with their own GitHub access. The same pull request carries the regenerated client or the updated tests, and the other engineer reviews it.
+
+### Compatibility baseline in the owning repo
+
+- For a changed contract file, CI takes as the previous release the highest full-release tag with the same contract ID and the same major version, reads the file at that tag and compares the change with it. The pipeline fetches tags for this. Before the first full release there is no baseline, and the check passes.
+- A difference that the rules below class as breaking fails the check unless the change is a new major version in a new file.
+
+### Old major versions
+
+- Each major version has its own file and its own series of tags, so the `-v1` file stays on `main` beside the `-v2` file.
+- The provider keeps serving the old major version until no consumer's `pins.yaml` names it and both engineers approve its removal in a pull request to the owning repo. Removing the file from `main` leaves its tags in place.
+
 ## Contract Ownership and Change Rules
 
-- **C1:** U2 owns `openapi/raad-money-v1.yaml`. U1 may introduce its initial revision, but U2 owns every later change. U3 pins an exact released revision and generates its client in CI.
+- **C1:** U2 owns `openapi/raad-money-v1.yaml`. U1 commits its first pre-release, and U2 owns every later change. U3 pins a released revision and generates its client from the pinned copy in CI.
 - **C2:** U4 owns the `UserConfirmed` event name and payload. U2 owns its consumer behavior but cannot change the payload contract alone.
-- **C3 and C4:** U4 owns the behavior and configuration schemas. U3 owns its client implementation and tests against them.
+- **C3, C4 and C5:** U4 owns the sign-in behavior profile, both configuration schemas and the edge contract. U3 owns its client implementation and tests it against C3 and C4. U2 owns its token verifier and tests it against C5.
 - An additive response field is safe only when optional and consumers ignore unknown fields. Removing or renaming a field, making an optional field required, changing its meaning or type, narrowing a numeric range, or adding an enum value without an unknown-value fallback is breaking.
-- A breaking C1 change uses `/money/v2` and a new OpenAPI major version. A breaking C2 change uses a new event address such as `raad.identity.user-confirmed.v2`. Breaking C3 or C4 changes use version `2.0` and coexist with v1 until U3 migrates.
+- A breaking C1 change uses `/money/v2` and a new OpenAPI major version. A breaking C2 change uses a new event address such as `raad.identity.user-confirmed.v2`. A breaking C3, C4 or C5 change uses version `2.0` and coexists with v1 until its consumer migrates.
 - A provider keeps the old major version until every registered consumer has migrated and both engineers approve its removal. A provider change and its compatibility report are reviewed in that provider repo's pull request.
-- CI checks C1 against the last released v1 description and checks C2 to C4 against their last released schemas. Additive changes still require the owner's review; breaking changes require coordinated changes in provider and consumer repos.
+- CI in the owning repo checks every changed contract file against its previous release, found as Contract Files, Releases and Pinning describes. Additive changes still require the owner's review; breaking changes require coordinated changes in provider and consumer repos.
 - Consumers never rely on undocumented fields, transport metadata, ordering between unrelated events, or provider-specific error text.
 
 ## Contract Test Responsibilities
 
 | Contract | Provider check | Consumer check | Integrated check |
 |---|---|---|---|
-| C1 | U2 validates every request/response against OpenAPI and tests all status/code combinations; Ledger replay/concurrency tests remain behind it | U3 generates the Dart client, runs client tests against an OpenAPI-based fake server, and has no handwritten models | U1 proves balance/send/history on `dev`; U3 runs all later mobile integration tests against the real U2 service (Q2 B in Units Generation) |
-| C2 | U4 validates emitted events against AsyncAPI and tests publish failure never fails confirmation | U2 validates events and tests duplicate, simultaneous, wrong-environment, malformed and dead-letter cases | U3 confirms an account and observes exactly one wallet with 1,000.00 SAR; the safety-net test covers a lost event |
-| C3 | U4 tests every configured sign-in behavior, generic response and rate limit | U3 tests each screen against a provider test environment | U3's account integration suite on `dev` |
+| C1 | U2 validates every request and response against OpenAPI, refuses undeclared output fields, and tests every status and code that MoneyApi itself produces, every row of the transfer idempotency matrix, the refusal order and the email normalization cases; Ledger replay/concurrency tests remain behind it. The statuses the edge produces are U4's under C5 | U3 generates the Dart client from the pinned copy, runs client tests against an OpenAPI-based fake server, proves that an unknown response field and an unknown `Error.code` do not break it, and has no handwritten models | U1 proves balance/send/history on `dev`; U3 runs all later mobile integration tests against the real U2 service (Q2 B in Units Generation) |
+| C2 | U4 validates emitted events against AsyncAPI, refuses undeclared fields, and tests that a publish failure before the bus accepts the event never fails confirmation | U2 validates events and tests duplicate, simultaneous, wrong-environment, malformed, unknown-field, later-minor-version and dead-letter cases | U3 confirms an account and observes exactly one wallet with 1,000.00 SAR; the safety-net test covers a lost event |
+| C3 | U1 runs capability checks P1, P2 and P13 and U4 runs the rest on `dev`; each result and chosen fallback is recorded in that unit's Infrastructure Design | U3 tests each screen and its adapter's code mapping against a provider test environment, and the idle-session rule when check P9 assigns it | U3's account integration suite on `dev` |
 | C4 | U4 validates each environment's generated configuration against the schema | U3 fails builds on missing, secret-looking or cross-environment values | Each environment's smoke test checks that the app calls only its matching API and issuer |
+| C5 | U4 proves forwarding, identity-header stripping, correlation IDs, the edge error shape and the 401/403/429/503 mappings, and validates each environment's verifier configuration against the schema | U2 proves every verifier check, key refresh and rotation, discovery failure, refusal to start on a bad configuration, and the configured profile-attribute source | One C1 request sent through the edge and directly to a test MoneyApi gives the same status and body; a token from each wrong environment is refused at both layers |
 
 ## Timeouts, Availability and Data Handling
 
 - C1 client timeout: 15 seconds. Reads get one retry; transfers require a person to choose retry and reuse the key. NFR6 remains 95% within 2 seconds at the demo load.
 - C2 delivery: at least once, retried for 24 hours, then dead letter plus an alarm. The safety net makes wallet setup recoverable even after permanent event failure.
 - C3 uses provider-native timeouts and capped SDK retries for safe reads only; account-changing operations are not blindly repeated by the app.
-- C1 and C3 use TLS 1.2 or later. C2 is encrypted in transit and at rest. C4 contains no secret.
+- C1, C3 and C5 use TLS 1.2 or later. C2 is encrypted in transit and at rest. C4 and the C5 verifier configuration contain no secret.
 - Emails appear only in encrypted request/event bodies and responses to authorized callers, never in C1 URLs, logs, metric dimensions or alert text. Correlation and event IDs support investigation without personal data.
 
 ## Accepted Design Risks Carried Forward
 
 The person approved Domain Design and Units Generation without requesting fixes to their review findings. This contract resolves some but does not silently change the approved unit graph or kinds:
 
-- **Units R-01:** C2 now pins the U4-to-U2 signal even though U2 does not depend on U4 in the approved graph. U2 and U4 each owe contract tests; U3 depends on both for the integrated test. Deployment order remains a Delivery Planning and Infrastructure Design concern.
-- **Units R-02:** U4 remains `packaging`, so it receives no Functional Design. C2, C3 and C4 are therefore the authoritative functional contracts for its sign-in and signal behavior, and its Infrastructure Design must implement and trace them.
+- **Units R-01:** C2 and C5 pin the two U4-to-U2 boundaries, the signal and the edge, even though U2 does not depend on U4 in the approved graph. U2 and U4 each owe contract tests; U3 depends on both for the integrated test. Deployment order remains a Delivery Planning and Infrastructure Design concern.
+- **Units R-02:** U4 remains `packaging`, so it receives no Functional Design. C2, C3, C4 and C5, with the provider capability checks in C3, are therefore the authoritative functional contracts for its sign-in, signal and edge behavior, and its Infrastructure Design must implement and trace them.
 - **Units R-03/R-04:** U1 still needs a positive-amount check and must initialize both test users before the skeleton sends. These are construction requirements, not cross-boundary contracts.
 - **Domain R-01:** Store-level uniqueness for one request per sender/key, one wallet per owner and one holder per normalized email remains for Functional and Infrastructure Design. C1 and C2 require the observable behavior.
 
@@ -963,14 +1160,16 @@ The person approved Domain Design and Units Generation without requesting fixes 
 | C1 | What exact transfer-reference format will Ledger issue? The contract permits 1 to 64 characters. | Functional Design; not client generation |
 | C2 | Which AWS event-bus resources implement the address, 24-hour retry and dead-letter behavior? | U2/U4 Infrastructure Design |
 | C2 | Which monitoring email receives the dead-letter alarm? | Infrastructure Design / NFR Design |
-| C3 | Which AWS sign-in service and SDK implement the behavior profile, and can its native settings satisfy every generic response? | U4 Infrastructure Design and U3 implementation |
-| C4 | What are each environment's issuer, audience and client ID? | Environment provisioning |
-| C1–C4 | How is a released contract revision tagged so another repo can pin it? | Delivery Planning and CI Pipeline |
+| C3 | Which AWS sign-in service and SDK implement the behavior profile, and which fallbacks do its capability checks (P1 to P13) select? | U1 and U4 Infrastructure Design; U3 implementation |
+| C4, C5 | What are each environment's issuer, audience and client ID, and how do U4's deployment outputs reach the U2 and U3 pipelines? | Infrastructure Design and environment provisioning |
+| C5 | Which AWS resources implement the public edge, its firewall and its rate limits? | U1 and U4 Infrastructure Design |
+| C1–C5 | Should a scheduled job with a read-only credential also re-check every consumer's pins against the owning repos' tags? Pinning works without it. | CI Pipeline |
 
 ## Sources
 
 - `unit-of-work.md` and `unit-of-work-dependency.md` in `inception/units-generation/`: U1 to U5, their dependencies and integration points.
 - `components.md` and `decisions.md` in `inception/domain-design/`: MobileApp, MoneyApi, Ledger, WalletDirectory, their entities and ADR-001 to ADR-007.
-- `requirements.md` in `inception/requirements-analysis/`: FR1 to FR8 and NFR1 to NFR15.
+- `requirements.md` in `inception/requirements-analysis/`: FR1 to FR8, NFR1 to NFR15 and assumptions A4, A5 and A13.
+- `stories.md` in `inception/user-stories/`: the acceptance criteria cited by ID.
 - `contract-design-questions.md` in this directory: Q1 to Q7, all answered A.
 - `team-practices.md` in `inception/practices-discovery/`: OpenAPI ownership, generated Dart client, environments, deployment order and security practices.
