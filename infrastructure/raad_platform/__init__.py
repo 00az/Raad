@@ -1,0 +1,1 @@
+"""Shared RAAD platform package."""

@@ -1,0 +1,41 @@
+name: deploy-platform-dev
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infrastructure/**"
+      - ".github/workflows/deploy-dev.yml"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: dev
+    defaults:
+      run:
+        working-directory: infrastructure
+    env:
+      RAAD_ENVIRONMENT: dev
+      RAAD_DOMAIN_NAME: ${{ vars.RAAD_DOMAIN_NAME }}
+      RAAD_HOSTED_ZONE_ID: ${{ vars.RAAD_HOSTED_ZONE_ID }}
+      RAAD_CERTIFICATE_ARN: ${{ vars.RAAD_CERTIFICATE_ARN }}
+      RAAD_ALERT_EMAIL: ${{ vars.RAAD_ALERT_EMAIL }}
+      RAAD_COGNITO_DOMAIN_PREFIX: ${{ vars.RAAD_COGNITO_DOMAIN_PREFIX }}
+      AWS_REGION: ${{ vars.AWS_REGION }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --global aws-cdk
+      - run: uv sync --locked --all-groups
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN_DEV }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - run: uv run cdk deploy --all --require-approval never
