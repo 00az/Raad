@@ -1,0 +1,23 @@
+{
+  "stage": "nfr-requirements",
+  "unit": "u1-walking-skeleton",
+  "upstream_ids": ["NFR1", "NFR2", "NFR3", "NFR4", "NFR5", "NFR6", "NFR7", "NFR8", "NFR9", "NFR10", "NFR11", "NFR12", "NFR13", "NFR14", "NFR15"],
+  "coverage": [
+    {"id": "NFR1", "status": "OK", "target": "NFR1.1, NFR1.2, NFR1.3, NFR1.4 in security-requirements.md"},
+    {"id": "NFR2", "status": "OK", "target": "NFR2.1, NFR2.2, NFR2.3 in security-requirements.md"},
+    {"id": "NFR3", "status": "OK", "target": "NFR3.1, NFR3.2 in scalability-requirements.md; NFR3.3, NFR3.4 in reliability-requirements.md; NFR14.3 in tech-stack-decisions.md"},
+    {"id": "NFR4", "status": "Deferred", "target": "NFR4.1 in reliability-requirements.md covers U1 duplicate-tap/automatic-retry restrictions; durable replay and the complete concurrency/replay suite remain U2, with lost-answer client retry in U3."},
+    {"id": "NFR5", "status": "Deferred", "target": "99.5% production calendar-month availability remains later production/platform delivery; NFR5.1 and NFR5.2 in reliability-requirements.md define the separately selected disposable-dev recovery policy."},
+    {"id": "NFR6", "status": "OK", "target": "NFR6.1, NFR6.2, NFR6.3 in performance-requirements.md"},
+    {"id": "NFR7", "status": "OK", "target": "NFR7.1, NFR7.2 in performance-requirements.md; NFR7.3, NFR7.4 in scalability-requirements.md"},
+    {"id": "NFR8", "status": "OK", "target": "NFR8.1, NFR8.2, NFR8.3 in observability-requirements.md; NFR Design/Infrastructure Design supply concrete alarm settings and destination, with stg delivery verification deferred to later deployment."},
+    {"id": "NFR9", "status": "OK", "target": "NFR9.1 in performance-requirements.md; NFR9.2, NFR9.3 in reliability-requirements.md; security-requirements.md Error disclosure"},
+    {"id": "NFR10", "status": "OK", "target": "NFR10.1 in security-requirements.md; NFR10.2 in observability-requirements.md"},
+    {"id": "NFR11", "status": "OK", "target": "NFR11.1 in security-requirements.md; NFR11.2 in tech-stack-decisions.md"},
+    {"id": "NFR12", "status": "Deferred", "target": "NFR12.1 in security-requirements.md covers U1 basic firewall; complete per-caller account/API abuse limits remain U4 and service integration U2."},
+    {"id": "NFR13", "status": "Deferred", "target": "NFR13.1 in scalability-requirements.md preserves the U1 mapping boundary; the later platform extensibility demonstration remains U4 and introduces no extra U1 service."},
+    {"id": "NFR14", "status": "OK", "target": "NFR14.1 in security-requirements.md; NFR14.2 in reliability-requirements.md; NFR14.3, NFR14.4 in tech-stack-decisions.md"},
+    {"id": "NFR15", "status": "OK", "target": "NFR15.1 in observability-requirements.md"}
+  ],
+  "reverse": []
+}
