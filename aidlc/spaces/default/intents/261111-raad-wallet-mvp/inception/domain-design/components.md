@@ -4,7 +4,7 @@ Conversation language: English.
 
 This catalogue names the building blocks of RAAD, meaning the code the team writes, and says which block owns which data. It follows the answers in `domain-design-questions.md`: the wallet opens at confirmation with a safety net (Q1 B and Q6 A), the money service has three blocks (Q2 A), the shared platform is infrastructure (Q3 A), names are looked up when history is read (Q4 A), and nothing is announced on the event bus in the MVP (Q5 A). It realizes the stories in `stories.md` and the requirements in `requirements.md`, serves the screens in `mockups.md`, and keeps to `team-practices.md`.
 
-Infrastructure appears only as external dependencies: the shared platform in `Raad` (sign-in service, public API address, firewall and rate limits, event bus), the data stores and the web hosting. This stage does not decide how the blocks are grouped into deployable units (Units Generation), or the technology and NFR patterns (later stages). Entities are given as ownership and attribute names only; types and validation come in Functional Design. The decisions behind the boundaries are in `decisions.md` (ADR-001 to ADR-007).
+Infrastructure appears only as external dependencies: the shared platform in `Raad` (sign-in service, public API address, firewall and rate limits, event bus), the data stores and the web hosting. This stage does not decide how the blocks are grouped into deployable units (Units Generation), or the technology and NFR patterns (later stages). Entities are given as ownership and attribute names only; types and validation come in Functional Design. The decisions behind the boundaries are in `decisions.md` (ADR-001 to ADR-008).
 
 ## Component Catalogue
 
@@ -116,21 +116,22 @@ components:
     entities: []
 
   - name: Ledger
-    summary: "The money core: wallets, balances, transfers and request keys. The only block that changes a balance."
+    summary: "The money core: wallets with current balances, immutable transaction records and request keys. The only block that changes a balance."
     behaviour: >
       Holds every amount as whole halalas. Opens at most one wallet per owner: the first
       opening credits the opening balance of 100,000 halalas (1,000.00 SAR) in every
       environment, and opening again for the same owner returns the same wallet and credits
       nothing. A transfer is refused unless the amount is from 100 to 50,000 halalas inclusive,
       the two wallets differ, and the sender's balance covers the amount at the moment of the
-      change. The balance check, both balance changes, the TransferRequest and the Transfer are
-      one all-or-nothing change, so a failure changes nothing and simultaneous transfers can
+      change. The balance check, both balance changes, the TransferRequest and one immutable
+      Transfer record are one all-or-nothing change, so a failure changes nothing and simultaneous transfers can
       never take a balance below zero (ADR-006). Each sender and request key is answered once:
       a repeat with the same details returns the first outcome, completed or refused, without
       running the rules again, and a repeat with different details is refused. Each completed
       transfer gets a reference that is unique among all transfers. History returns only
-      completed transfers in which the wallet is the sender or the recipient, newest first with
-      a fixed tiebreak, one page at a time from a position marker, so no entry is skipped or
+      completed transfers in which the wallet is the sender or the recipient, using wallet-id
+      lookup indexes over records identified by transferId, newest first with a fixed tiebreak,
+      one page at a time from a position marker, so no entry is skipped or
       shown twice when new transfers arrive. At all times the sum of all balances equals the
       sum of all opening balances, and no balance is below zero. Holds no personal data;
       wallets are linked to people only by the opaque user id. Built test-first, with at least
@@ -139,7 +140,8 @@ components:
       - "Wallets and their balances"
       - "Transfer rules: amount limits, not to one's own wallet, enough balance, all or nothing"
       - "Request keys and their first outcome"
-      - "Transfer references and the history of completed transfers"
+      - "One immutable transaction record per completed transfer, keyed by transferId"
+      - "Wallet-indexed history of completed transfers"
     depends_on: []
     dependents:
       - component: MoneyApi
@@ -147,7 +149,7 @@ components:
     external_dependencies:
       - name: "Ledger data store (chosen in infrastructure design)"
         kind: database
-        purpose: "Wallets, TransferRequests and Transfers, changed all or nothing"
+        purpose: "Wallet balances and TransferRequests, plus a dedicated Transactions table with one immutable row per completed transfer keyed by transferId; sender/recipient wallet IDs support history queries through indexes selected in Infrastructure Design, and successful transfer writes change atomically"
     entities:
       - name: Wallet
         identifier: walletId
@@ -242,7 +244,7 @@ Text fallback: the app sends account actions (sign-up, confirmation, sign-in, pa
 |---|---|---|---|---|
 | MobileApp | Every screen of the wallet app, in Arabic and English | MoneyApi | none | PendingTransfer, BalanceSnapshot, LanguageSetting |
 | MoneyApi | The only way into the money service; checks callers and requests and combines the two blocks below | Ledger, WalletDirectory | MobileApp | none |
-| Ledger | Wallets, balances, transfers and request keys; the only block that changes a balance | none | MoneyApi | Wallet, TransferRequest, Transfer |
+| Ledger | Wallets with current balances, immutable per-transfer records and request keys; the only block that changes a balance | none | MoneyApi | Wallet, TransferRequest, Transfer |
 | WalletDirectory | Email and display name of each holder; finding a holder by email | none | MoneyApi | WalletHolder |
 | LandingPage | The public RAAD page | none | none | none |
 
@@ -255,10 +257,10 @@ Text fallback: the app sends account actions (sign-up, confirmation, sign-in, pa
 | LanguageSetting | MobileApp | installId | installId, language | none |
 | Wallet | Ledger | walletId | walletId, ownerId, balance, openingBalance, openedAt | WalletHolder (WalletDirectory), by user id |
 | TransferRequest | Ledger | senderWalletId + requestKey | senderWalletId, requestKey, recipientWalletId, amount, outcome, transferId, receivedAt | none (Transfer is in the same block) |
-| Transfer | Ledger | transferId | transferId, reference, senderWalletId, recipientWalletId, amount, completedAt | none |
+| Transfer | Ledger | transferId | transferId, reference, senderWalletId, recipientWalletId, amount, completedAt | none; stored as one immutable row in the dedicated Transactions table |
 | WalletHolder | WalletDirectory | userId | userId, email, emailKey, displayName, registeredAt | none (userId is the sign-in service's id) |
 
-Each entity has exactly one owner. `TransferRequest` holds every request key and its first outcome, including refusals. `Transfer` holds only completed movements, and the history reads `Transfer` alone, so a refused request can never appear in it (FR5.4).
+Each entity has exactly one owner. `TransferRequest` holds every request key and its first outcome, including refusals. `Transfer` holds only completed movements, one immutable row per transfer in a dedicated `Transactions` table keyed by `transferId`; sender and recipient wallet IDs support history queries through indexes chosen in Infrastructure Design. Wallet records retain current balances for fast reads and conditional transactional updates. A refused request can never appear in history (FR5.4).
 
 ## External Dependencies
 
@@ -270,7 +272,8 @@ Each entity has exactly one owner. `TransferRequest` holds every request key and
 | MobileApp | Phone local storage | database | PendingTransfer, BalanceSnapshot, LanguageSetting |
 | MoneyApi | Sign-in service (Raad platform) | other | Verifying callers; the account-confirmed signal |
 | MoneyApi | Public API address, firewall and rate limits (Raad platform) | other | Routing `/money`; limits per caller |
-| Ledger | Ledger data store | database | Wallets, TransferRequests, Transfers |
+| Ledger | Ledger data store | database | Wallet balances and TransferRequests |
+| Ledger | Dedicated Transactions table | database | One immutable row per completed transfer, keyed by transferId with sender/recipient wallet IDs for history indexes |
 | WalletDirectory | Directory data store | database | WalletHolders |
 | LandingPage | Static site hosting (S3 and CloudFront) | object-store | Serving the page |
 

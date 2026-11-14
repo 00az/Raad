@@ -22,6 +22,8 @@ U3 is last (depends on U1, U2 and U4 all being complete).
 All Bolts are executed serially, one at a time (Q4 A), owned by aidlc-developer-agent (classic scope;
 team-formation was not run). The two engineers own repos as agreed in team-allocation.md.
 
+Within U1, the engineers work side by side in separate repos: Engineer 1 owns the platform and money-service work, and Engineer 2 owns the mobile work. This is a split inside the same first unit, not a change to the later unit order. Both use the same pinned C1 pre-release; the mobile track can use a contract-based fake server while the backend is being built. U1 completion still requires the real integrated `dev` result. The work boundaries and handoff are in `team-allocation.md`.
+
 ---
 
 ## Bolt 1 — U1 Walking Skeleton
@@ -41,6 +43,8 @@ team-formation was not run). The two engineers own repos as agreed in team-alloc
 3. Both test users can sign in; one can send a transfer; the history shows it.
 4. The other engineer has reviewed and approved the pull request to `main` in each of the three repos (`Raad`, `RaadMoneyService`, `RaadMobile`).
 5. All checks pass in CI for each merged PR.
+6. `RaadMoneyService` provisions the dedicated `Transactions` table keyed by `transferId`; a completed transfer writes one immutable row atomically with both wallet balance changes. The row retains sender/recipient wallet IDs for later history indexes (ADR-008).
+7. The partial C1 pre-release validates the request key but stores no idempotency outcome. Until U2 supplies replay protection, the mobile track reconciles an uncertain result through balance/history and does not resubmit the transfer.
 
 **Expected demo:** A test user signs in on a simulator, the wallet shows a 1,000.00 SAR balance, a transfer of any amount within limits goes through to the second test user, and the history entry appears. The API smoke script output is shown alongside.
 
@@ -65,6 +69,9 @@ team-formation was not run). The two engineers own repos as agreed in team-alloc
 5. The complete OpenAPI description (C1 from Contract Design) is committed to `RaadMoneyService`.
 6. The service deploys to `dev`, `stg` and `prd` and passes its smoke test on each.
 7. The other engineer has reviewed and approved the pull request to `main`.
+8. U2 introduces `TransferRequest` outcomes and the complete C1 idempotency matrix, including success written atomically with the existing transaction row and both balances, persisted business refusals, conflict handling and concurrent replay. Historical U1 transfers receive no fabricated key-to-outcome records; the transition starts fresh transfer intents and keys.
+9. Sender-wallet and recipient-wallet history indexes extend U1's same `Transactions` table, and opaque-cursor paging passes the C1 stability and caller-binding checks. No second transfer-history store is introduced.
+10. Provider/consumer contract checks use the canonical files and exact release pins in `contract-summary.md`. C2 event delivery and C5 edge/verifier behavior are tested at their boundaries; deployment to each environment waits for the matching platform resources and configuration, even while U2 and U4 can be developed independently.
 
 **Expected demo:** The `pytest` run output showing all money-movement tests passing, coverage report at ≥95%/≥80%, and the `dev`/`stg`/`prd` smoke test results.
 
@@ -150,7 +157,7 @@ team-formation was not run). The two engineers own repos as agreed in team-alloc
 ## Sources
 
 - `requirements.md` in `inception/requirements-analysis/`: FR1–FR8, NFR1–NFR15 and acceptance criteria each Bolt's Definition of Done must satisfy
-- `components.md` in `inception/domain-design/`: the five components (MobileApp, MoneyApi, Ledger, WalletDirectory, LandingPage) and ADR-001 to ADR-007 informing each unit's scope
+- `components.md` and `decisions.md` in `inception/domain-design/`: the five components (MobileApp, MoneyApi, Ledger, WalletDirectory, LandingPage) and ADR-001 to ADR-008 informing each unit's scope
 - `unit-of-work.md` and `unit-of-work-dependency.md` in `inception/units-generation/`
 - `contract-summary.md` in `inception/contract-design/`
 - `team-practices.md` in `inception/practices-discovery/`

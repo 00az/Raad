@@ -24,6 +24,8 @@ The production availability indicator is retained for the later production targe
 
 Correlation IDs are sufficient for the approved basic investigation path. Distributed request tracing, a tracing backend and transfer-completed event publication remain outside this scope.
 
+When a completed transfer ID is available, it links the API result to the one Transactions row and both parties' history items. Never use a wallet ID as a transaction identity. An uncertain response must not increment a confirmed-business-refusal category or be treated as proof of a rolled-back transfer; reconciliation uses the stored completion record. Transfer IDs may support permitted log investigation but are not metric dimensions because their cardinality is unbounded.
+
 ## Outstanding implementation inputs
 
 - NFR Design: concrete alarm windows, sample requirements and recovery thresholds.

@@ -59,7 +59,7 @@ App
 3. **Success:** session token stored; navigate to WalletScreen.
 4. **Failure (wrong password, unrecognized email, unconfirmed account):** show the same generic error message in all cases — do not reveal which part was wrong (AC1.3.2, AC1.3.3).
 5. **Rate-limited (too many attempts):** show the too-many-attempts message (AC1.3.5). This message is distinct from the wrong-credential message.
-6. The screen includes a link that opens the confirmation-code entry screen for any email address. This is reachable even when sign-in fails, so a user with an unconfirmed account can confirm without help (AC1.3.3).
+6. Confirmation-code screens and their entry link are delivered in U3; U1 uses the confirmed test users supplied by its setup script.
 
 **Form validation:**
 - Email: non-empty, valid format.
@@ -83,9 +83,9 @@ App
 - `historyError: string | null`
 
 **Interaction flow:**
-1. On mount: call `GET /wallet` and `GET /transfers` in parallel.
+1. After sign-in, call `PUT /wallet` to ensure the wallet, then call `GET /wallet` and `GET /transfers` in parallel. If a read returns `WALLET_NOT_FOUND`, complete `PUT /wallet` and retry the read.
 2. While loading: show a loading indicator for balance and for history list.
-3. Balance loaded: display `halalas / 100` formatted to two decimal places (e.g., `1,234.56 SAR`). Never show 0 for a missing wallet — trigger the wallet setup safety net (WF2) server-side; the balance returned is 1,000.00 SAR for a new account (BR2.1).
+3. Balance loaded: display `balance.amountHalalas` from the generated C1 model as SAR using integer formatting to two decimal places (e.g., `1,234.56 SAR`). Never show 0 for a missing wallet; ensure it through `PUT /wallet` (WF2). The new wallet has 100,000 halalas (BR2.1).
 4. History loaded: show the HistoryList. If empty: show an empty-state message.
 5. **Refresh:** tapping the refresh button re-calls both endpoints. Pull-to-refresh is in U3.
 6. A received transfer that arrived while the screen was open is not shown until the next refresh (pull-to-refresh is U3).
@@ -103,12 +103,15 @@ App
 - `transferId: string`
 - `direction: 'sent' | 'received'`
 - `counterpartyName: string`
+- `counterpartyEmail: string`
+- `reference: string` — distinct from transferId
 - `amountHalalas: int`
 - `completedAt: timestamp`
 
 **Display:**
 - Amount: `amountHalalas / 100` formatted to two decimal places.
 - Direction: "To [name]" for sent; "From [name]" for received.
+- Show the counterparty email and human-readable reference from the C1 item.
 - Time: formatted in the device's local timezone (AC4.1.4 — not UTC).
 - Order: newest first (BR5.1).
 
@@ -123,11 +126,12 @@ A multi-step flow managed by a navigator. State is owned at the flow level and p
 **Flow-level state:**
 - `recipientEmail: string`
 - `amountHalalas: int | null`
-- `resolvedRecipient: { displayName: string, recipientId: string } | null`
+- `resolvedRecipient: Recipient | null` — generated C1 model containing displayName and email, no wallet/recipient ID
 - `idempotencyKey: string` — generated once per send attempt (new for each distinct send)
-- `submitState: 'idle' | 'submitting' | 'success' | 'error'`
+- `submitState: 'idle' | 'submitting' | 'success' | 'refused' | 'uncertain'`
 - `errorCode: 'insufficient_funds' | 'server_error' | null`
 - `resultTransferId: string | null`
+- `resultReference: string | null` — distinct human-readable reference from the C1 response
 - `resultNewBalanceHalalas: int | null`
 
 #### SendFormScreen
@@ -140,8 +144,8 @@ A multi-step flow managed by a navigator. State is owned at the flow level and p
 5. The send button is disabled after the first tap (prevents double submission before WF4 returns).
 
 **Form validation:**
-- Recipient email: non-empty, valid format; normalized (trim + lowercase) before the API call.
-- Amount: must be a positive number representable in halalas (integer number of halalas ≥ 1). Entered in SAR (decimal); converted to `int(amount_SAR * 100)` before the API call.
+- Recipient email: non-empty; normalize Unicode whitespace/NFC/case for early feedback, then validate. The server performs the authoritative C1 normalization independently.
+- Amount: parse the SAR input as text with at most two decimal digits, combine whole SAR and padded fractional digits using integer arithmetic, and require at least one halalah. Reject extra decimal places instead of rounding. Never parse or multiply a floating-point value.
 - Errors clear when the field is edited; values are retained after a refusal (AC3.4.3).
 
 #### SendReviewScreen
@@ -161,18 +165,18 @@ A multi-step flow managed by a navigator. State is owned at the flow level and p
 
 After the user confirms on SendReviewScreen:
 1. Disable the confirm button immediately (prevents a second tap while the request is in flight).
-2. Call `POST /transfers` with `recipientEmail` (normalized), `amountHalalas`, `idempotencyKey`.
-3. **201 success:** store `resultTransferId` and `resultNewBalanceHalalas`; navigate to SendResultScreen.
+2. Call `POST /transfers` with C1 JSON `{recipientEmail, amountHalalas}` and the `Idempotency-Key` HTTP header. The key is validated but not persisted for replay by the U1 pre-release.
+3. **201 success:** store `transferId`, `reference` and `balanceAfter.amountHalalas` from the generated C1 result; navigate to SendResultScreen.
 4. **422 insufficient funds:** show an error on SendFormScreen with the message; amount and recipient are retained in the form (AC3.4.1, AC3.4.3).
-5. **Other error:** show a generic error; amount and recipient are retained; the user may try again.
+5. **Timeout, lost response, 500/503 or unknown result:** retain the values for display, set `uncertain`, disable resubmission and refresh balance/history to reconcile. Do not offer a transfer retry in U1; U2 introduces saved outcomes and replay protection. An unavailable or inconclusive read does not establish that the transfer failed. Only a definitive business refusal permits editing and a new send intent.
 
 #### SendResultScreen
 
 **Stories:** US3.1
 
-**Props (from flow state):** `resultTransferId`, `amountHalalas`, `resultNewBalanceHalalas`, `resolvedRecipient.displayName`
+**Props (from flow state):** `resultTransferId`, `resultReference`, `amountHalalas`, `resultNewBalanceHalalas`, `resolvedRecipient.displayName`
 
-**Display:** "Transfer sent" confirmation, transfer reference (`resultTransferId`), amount, recipient name, new balance in SAR (AC3.1.2).
+**Display:** "Transfer sent" confirmation, human-readable `resultReference`, amount, recipient name, new balance in SAR (AC3.1.2). Keep `resultTransferId` as the stable identity for result/history correlation.
 
 **Navigation:** A "Done" button returns to WalletScreen and triggers a balance refresh.
 
@@ -188,7 +192,7 @@ After the user confirms on SendReviewScreen:
 
 **Interaction flow:**
 1. Shown when WF2 fails (the safety-net wallet creation returned a server error).
-2. Tapping **Retry** calls `GET /wallet` again (which re-triggers WF2 server-side).
+2. Tapping **Retry** calls `PUT /wallet` again (the idempotent WF2 safety net).
 3. **Success:** wallet is created; navigate to WalletScreen.
 4. **Failure:** remain on this screen; button is re-enabled.
 
@@ -199,6 +203,7 @@ After the user confirms on SendReviewScreen:
 | Component | Endpoint | When |
 |---|---|---|
 | AuthGuard / SignInScreen | Sign-in service (C3) | Sign-in attempt |
+| WalletScreen / WalletSetupErrorScreen | `PUT /wallet` (C1) | After sign-in, on missing-wallet response, or wallet-setup retry |
 | WalletScreen | `GET /wallet` (C1) | On mount, on refresh |
 | WalletScreen | `GET /transfers` (C1) | On mount, on refresh |
 | SendFormScreen | `POST /recipients/resolve` (C1) | After email input, before review |
@@ -207,6 +212,8 @@ After the user confirms on SendReviewScreen:
 ---
 
 ## Sources
+
+All public requests and responses use the client generated from the exact pinned C1 pre-release; the names above describe screen state, not handwritten transport models. The mobile engineer owns this file's implementation in `RaadMobile`, while the backend engineer owns `Transactions`, balances and service behavior. Contract-based fake-server development precedes the joint real-`dev` verification. U1 has no saved replay outcome; moving to U2 starts fresh intents and keys without manufacturing outcomes for old U1 transfers.
 
 - `unit-of-work.md` in `inception/units-generation/`: U1 MobileApp scope
 - `stories.md`: US1.2, US1.3, US2.1, US3.1, US3.2, US3.4, US4.1, US4.2

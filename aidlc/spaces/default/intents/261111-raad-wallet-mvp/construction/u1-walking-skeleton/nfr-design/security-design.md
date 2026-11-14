@@ -8,7 +8,7 @@ MobileApp sends the original access token to the public edge. The edge strips sp
 
 Validate C5 configuration on deployment/startup: closed schema, version, environment, issuer, audience/claim binding, algorithm, key-discovery URI and profile source. A missing or mismatched value prevents service readiness. Never discover an issuer, algorithm or key URL from an untrusted token. Keys are accepted only from the configured HTTPS source; reject redirects to unconfigured destinations. The selected sign-in provider and SDK, actual hosts, issuer and audience remain Infrastructure Design decisions.
 
-Wallet and history access resolve the caller's wallet from sub, never a source-wallet ID from the body, URL or identity header. An operation cannot select someone else's history. Request validation follows C1's exact shape, normalization order and field names. Snake_case domain attributes remain internal; C1 uses amountHalalas and the Idempotency-Key header. Validate responses against the pinned OpenAPI as well as validating requests. The upstream mapping concerns remain open; this design does not certify that Functional Design already describes those mappings correctly.
+Wallet and history access resolve the caller's wallet from sub, never a source-wallet ID from the body, URL or identity header. An operation cannot select someone else's history. Request validation follows C1's exact shape, normalization order and field names. Snake_case domain attributes remain internal; C1 uses amountHalalas and the Idempotency-Key header. Validate requests and provider emissions against the pinned OpenAPI; generated consumers tolerate unknown response fields under C1. The U1 pin is explicitly a partial pre-release without the completed U2 replay guarantee.
 
 ## S2 — Bounded signing-key cache
 
@@ -20,9 +20,9 @@ A known key in an unexpired cache continues to authorize otherwise valid tokens 
 
 MoneyApi reads email and display name only from the C5 configured verified access-token claims or the provider's own-profile endpoint using that access token. In the endpoint case, require the returned subject to equal the verified caller. Do not trust an ID token presented as an access token, an email in a wallet-setup body or a recipient's asserted user ID. Infrastructure Design runs C3 P1, P2 and P13 on dev and records the selected source/fallback.
 
-WalletDirectory owns the only personal attributes in the money service: email and display name. Ledger holds opaque IDs, integer halalas and transfer data. Use separate data-access ports and write privileges where the physical store supports them; MoneyApi invokes Ledger operations rather than directly changing balances. Only Ledger's transaction adapter may mutate money records. A shared physical database does not permit either component to read the other's logical tables directly.
+WalletDirectory owns the only personal attributes in the money service: email and display name. Ledger holds opaque IDs, integer halalas and transfer data. Each Transactions row is keyed by transferId, holds both wallet references and contains no email, display name, credential or token. Use separate data-access ports and write privileges where the physical store supports them; MoneyApi invokes Ledger operations rather than directly changing balances. Only Ledger's transaction adapter may insert completed transfer rows as part of the balance transaction; existing rows cannot be updated or deleted by ordinary request handling. A shared database product preserves the dedicated Transactions table and component ownership boundaries.
 
-The setup path must satisfy C1's idempotent PUT /wallet and the shared wallet-then-holder boundary without crediting twice. The existing Functional Design omits parts of that path; implementation needs explicit readiness/contract checks. This is a carried-forward risk, not a statement that setup has been repaired. Do not collect bank details, card data, identity documents or extra personal attributes. Funds stay simulated; SAR is the sole currency.
+The setup path satisfies C1's idempotent PUT /wallet and wallet-then-holder sequence. Readiness checks repair a missing holder entry for an existing wallet without another credit; verified profile values remain authoritative. No request can substitute its own setup email or holder ID. Do not collect bank details, card data, identity documents or extra personal attributes. Funds stay simulated; SAR is the sole currency.
 
 ## S4 — Encryption, credentials and logs
 
@@ -49,7 +49,7 @@ No browser session or cookie-based wallet authentication is introduced. The Flut
 
 - construction/u1-walking-skeleton/nfr-requirements/security-requirements.md: NFR1.1–1.4, NFR2.1–2.3, NFR10.1, NFR11.1, NFR12.1 and NFR14.1.
 - construction/u1-walking-skeleton/nfr-requirements/tech-stack-decisions.md: NFR11.2 and NFR14.3–14.4; deferred provider/store/edge selections.
-- construction/u1-walking-skeleton/functional-design/functional-spec.md and rules.md: owned-wallet behavior and accepted setup/mapping concerns.
+- construction/u1-walking-skeleton/functional-design/functional-spec.md and rules.md: owned-wallet behavior, explicit setup repair and C1 public mapping.
 - inception/contract-design/contract-summary.md: C1 validation/disclosure and C3/C5 identity, profile, cache and edge contracts.
 - inception/domain-design/components.md: MoneyApi, Ledger and WalletDirectory ownership.
 - aidlc/spaces/default/memory/team.md and project.md: simulated funds, whole halalas, short-lived credentials and no personal-data logging.

@@ -13,6 +13,7 @@ These records explain why the building blocks in `components.md` look the way th
 | ADR-005 | Announce nothing on the shared event bus in the MVP | Accepted (Q5 A) |
 | ADR-006 | Keep the transfer and its request key in one all-or-nothing change inside the Ledger | Proposed: decided in this stage without a question, to confirm at the gate |
 | ADR-007 | Send every account action from the app straight to the sign-in service | Proposed: decided in this stage without a question, to confirm at the gate |
+| ADR-008 | Store one immutable transaction record per completed transfer | Proposed: selected on 2026-11-13, to confirm at the gate |
 
 All records are dated 2026-11-11.
 
@@ -260,3 +261,33 @@ MobileApp calls the sign-in service directly for every account action. MoneyApi 
 ### Security
 
 Passwords travel only between the phone and the sign-in service, over TLS (NFR2). Tokens are kept only in the phone's secure storage (`components.md`, MobileApp).
+
+---
+
+## ADR-008: Store one immutable transaction record per completed transfer
+
+**Status:** Proposed. Selected in Q7 on 2026-11-13; confirm at the Domain Design gate.
+
+### Context
+
+The person asked that transaction history be represented per transaction rather than organized as wallet-owned records. The service must still read current balances efficiently, enforce atomic debit/credit, and query a wallet's sent and received history without exposing personal data.
+
+### Decision
+
+Keep `Wallet.balance` as the current balance and store each completed `Transfer` as one immutable row in a dedicated `Transactions` table keyed by `transferId`. Store sender and recipient wallet IDs on that row and provide wallet-ID query indexes for history. Update both wallet balances, the transfer request outcome, and the transaction row atomically. Infrastructure Design chooses the AWS service and concrete index configuration; it must preserve the dedicated table boundary selected here.
+
+### Consequences
+
+- Positive: each movement has an independent transaction record and stable UUID identity; a wallet's history can be queried through sender/recipient indexes.
+- Positive: current balances remain directly readable and conditionally writable; no full-history summation is required on each balance request.
+- Negative: transfer writes and wallet history access must maintain the transaction record and both query indexes consistently; storage, retention, backup and migration design must account for the transaction table.
+- Negative: U1's existing transfer persistence and tests need a compatible schema transition, and U2 must preserve atomic writes and replay guarantees across the wallet and transaction records.
+
+### Alternatives Rejected
+
+- **Use wallet ID as the transaction record's primary key:** rejected because multiple transfers for a wallet require a composite key and make a transaction itself lack a direct primary identity.
+- **Derive balances only by summing transaction entries:** rejected because the person chose to retain current wallet balances; it also adds work to each balance read and complicates the transfer latency target.
+
+### Security
+
+Transaction records contain opaque wallet IDs and monetary values only, never email or display name. MoneyApi continues to derive the caller from verified identity; wallet indexes are queried only for that caller's sent/received history.

@@ -11,15 +11,15 @@ All traceability files from the executed Inception stages are clean. No unresolv
 **File:** `inception/user-stories/traceability.json`
 **Result:** PASS
 
-All 54 upstream requirement IDs (FR1.1–FR8.1 and NFR1–NFR15) are covered. No gaps or orphans.
+All 52 upstream requirement IDs (FR1.1–FR8.1 and NFR1–NFR15) have coverage rows. No gaps, orphans, duplicate coverage IDs or missing upstream IDs were found.
 
 | Status | Count | Note |
 |---|---|---|
 | OK | 42 | Requirement covered by a user story |
-| Deferred | 12 | NFR2, NFR5–NFR10, NFR12, NFR13, NFR14 — each deferred to a named later stage (nfr-requirements, domain-design, ci-pipeline) |
-| N/A | 3 | US1.5, US1.6, US6.4 — trace to confirmed assumptions or SOW Success Criteria with no FR/NFR row; acceptable |
+| Deferred | 10 | NFR2, NFR5–NFR10, NFR12, NFR13, NFR14 — each has a named target (nfr-requirements, domain-design, ci-pipeline) |
+| N/A (reverse mapping) | 3 | US1.5, US1.6, US6.4 — trace to confirmed assumptions or SOW Success Criteria with no FR/NFR row; these are not additional upstream requirements |
 
-Deferred NFRs are all traced to stages that remain in the Construction plan. No unresolved item.
+The NFR and CI deferrals name Construction stages. NFR13's domain-design target is resolved by the recorded boundary for the future AI service outside the MVP. Deferrals identify delivery responsibility; they do not claim the requirements have already been implemented or tested.
 
 ---
 
@@ -53,6 +53,8 @@ All 28 upstream user story IDs are assigned to a unit.
 ## contract-design
 
 Contract Design produces no `traceability.json` (it owns formal contracts, not requirement coverage). Excluded from this check per stage definition.
+
+The approved contract and unit handoff agree on ADR-008: U1 provisions one immutable transaction row per `transferId` and atomically changes both wallet balances; U2 introduces saved idempotency outcomes and sender/recipient history indexes. U1's partial pre-release has no replay guarantee. The Contract Design review has no open findings.
 
 ---
 

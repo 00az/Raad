@@ -214,6 +214,8 @@ For each repo, say which engineer is primarily responsible for its work during C
 
 ## Assumptions & Open Questions
 
+The later request to keep the engineers' work separate is applied within U1: backend/platform and mobile work run in separate repos against one pinned C1 pre-release, then join for the real `dev` check. The previously selected serial order between units is preserved. The approved Contract Design assigns U1 the `Transactions` table and atomic transfer/balance writes, and U2 the saved idempotency outcomes, history indexes and paging; the delivery plan carries those assignments forward.
+
 - U3's integration tests require a simulator (Xcode) and an emulator (Android SDK). These are assumed available on a development machine or a macOS GitHub Actions runner.
 - The RAAD logo file and the test-access email address are still outstanding (`unit-of-work.md`, Open Questions); U3 and U5 respectively are blocked on these before `prd`.
 - The Apple Developer account and Google Play setup are assumed in progress; U3's tester builds need them.

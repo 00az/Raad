@@ -8,7 +8,9 @@ from raad_platform.stacks import IdentityStack
 
 def template() -> Template:
     app = cdk.App()
-    stack = IdentityStack(app, "Identity", environment="dev", cognito_domain_prefix="raad-dev-example")
+    stack = IdentityStack(
+        app, "Identity", environment="dev", cognito_domain_prefix="raad-dev-example"
+    )
     return Template.from_stack(stack)
 
 
@@ -21,11 +23,15 @@ def test_mobile_client_has_no_secret() -> None:
 
 
 def test_mobile_client_enables_authorization_code_pkce_flow() -> None:
-    template().has_resource_properties("AWS::Cognito::UserPoolClient", {"AllowedOAuthFlows": ["code"]})
+    template().has_resource_properties(
+        "AWS::Cognito::UserPoolClient", {"AllowedOAuthFlows": ["code"]}
+    )
 
 
 def test_email_is_a_verified_alias() -> None:
-    template().has_resource_properties("AWS::Cognito::UserPool", {"AutoVerifiedAttributes": ["email"]})
+    template().has_resource_properties(
+        "AWS::Cognito::UserPool", {"AutoVerifiedAttributes": ["email"]}
+    )
 
 
 def test_environment_name_scopes_pool() -> None:
@@ -33,4 +39,6 @@ def test_environment_name_scopes_pool() -> None:
 
 
 def test_hmac_secret_is_environment_scoped() -> None:
-    template().has_resource_properties("AWS::SecretsManager::Secret", {"Name": "raad/dev/correlation-hmac"})
+    template().has_resource_properties(
+        "AWS::SecretsManager::Secret", {"Name": "raad/dev/correlation-hmac"}
+    )

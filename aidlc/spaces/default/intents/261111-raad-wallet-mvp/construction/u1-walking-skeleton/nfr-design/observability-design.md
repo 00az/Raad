@@ -8,6 +8,8 @@ The platform edge measures total public request duration from complete request r
 
 Track request count, response status, public transfer-latency distribution, valid-transfer successes, business refusals, technical transfer failures and unknown outcomes separately. A known business refusal is not a technical transfer failure, and a 5xx/timeout is not a successful transfer. Edge failures before MoneyApi entry remain visible in edge request/server-error counts; a missing service log is not a successful request. Client-observed no-response results are captured by the safe load/smoke report because server logs alone cannot prove delivery to the caller.
 
+Where an authorized investigation has the completed transferId, reconcile the API result with the one immutable Transactions row and both parties' history items. Wallet IDs are references and never substitute for a transfer identity. U1 has no saved request-key outcome to consult; an uncertain response is not a definitive refusal or proof of rollback. A diagnostic operation must never re-execute the transfer.
+
 ## O2 — Logs, metrics and UTC
 
 Structured JSON log fields are the security-design.md S4 allowlist. UTC timestamps use an explicit offset and refer to real instants. Transfer completedAt and operational time remain UTC; the app formats the same transfer instant in the device time zone without changing order.

@@ -21,7 +21,7 @@ The team has already selected the languages, application framework and infrastru
 
 | Selection | Required capability | Owning next step |
 |---|---|---|
-| Ledger/WalletDirectory data store and physical layout | Whole-halala integer storage; atomic guarded debit, credit and transfer record; one wallet per owner; encrypted persistence; bounded first-page queries; appropriate local-container tests | Infrastructure Design, informed by NFR Design. No data-store product is selected here. |
+| Ledger/WalletDirectory data-store product and remaining physical layout | Whole-halala integer storage; dedicated Transactions table keyed by transferId with sender/recipient wallet references; atomic guarded debit, credit and immutable transfer row; one wallet per owner; encrypted persistence; bounded first-page queries; appropriate local-container tests | Infrastructure Design, informed by NFR Design and ADR-008. The dedicated table is already decided; the data-store product remains for Infrastructure Design. U2 adds history indexes and saved idempotency outcomes. |
 | Sign-in provider and SDK | C3 P1/P2/P13 for U1, verified access-token identity, environment-specific issuer/audience and an approved profile-attribute source | U1 Infrastructure Design; remaining P-checks stay assigned to U4. |
 | Public gateway/firewall implementation | C5 forwarding, verification, safe error/correlation behavior and U1's basic firewall | U1 Infrastructure Design; complete rate policies remain U4 work. |
 | Secret store | Setup reads test-user passwords without committing or logging them | Infrastructure Design. |

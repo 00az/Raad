@@ -32,7 +32,7 @@ rules:
       IF a request carries a valid credential,
       THEN the caller's holder_id is extracted from the credential.
       The caller may never override their own identity through a request field.
-    violation_behaviour: Ignore any caller-supplied identity field; use the credential only.
+    violation_behaviour: Reject undeclared request identity fields under C1 strict request validation; never use them as identity. Strip spoofed identity headers under C5.
     source: FR1.3, NFR1
 
   # ── Group 2: Wallet setup (safety net) ────────────────────────────────────
@@ -44,13 +44,15 @@ rules:
     category: policy
     applies_to: MoneyApi / Ledger (PUT /wallet safety net)
     trigger: >
-      An authenticated request to any MoneyApi endpoint where the caller's
-      holder_id has no Wallet yet.
+      An authenticated PUT /wallet request where the caller's holder_id has no Wallet yet.
     logic: >
       IF the authenticated caller has no Wallet,
       THEN create one Wallet for that holder_id with balance_halalas = 100,000.
       The creation is atomic: concurrent first requests for the same holder_id
-      must produce exactly one Wallet, not two.
+      must produce exactly one Wallet, not two. Then register the verified email
+      and display name with WalletDirectory. Setup is ready only when both the
+      wallet and holder entry exist; repair a missing entry on the next PUT
+      without recreating or recrediting the existing wallet.
     violation_behaviour: >
       If a concurrent request races and a Wallet already exists when the create
       is attempted, return the existing Wallet. Do not create a second one.
@@ -59,19 +61,22 @@ rules:
 
   - id: BR2.2
     statement: >
-      If wallet creation fails, the caller receives an error; no partial wallet
-      is left behind.
+      Setup errors are surfaced; retries repair incomplete setup without a
+      second wallet or opening credit.
     category: constraint
     applies_to: MoneyApi / Ledger (PUT /wallet safety net)
     trigger: Wallet creation attempt that fails (storage error, timeout, etc.)
     logic: >
-      IF a wallet-creation attempt fails before it completes,
-      THEN no Wallet record exists for that holder_id after the attempt.
-      A retry of the same request is safe and will attempt creation again.
+      IF a wallet-creation attempt is known to have failed before commit,
+      THEN it leaves no partial Wallet record. If the wallet committed but directory
+      registration or the response failed, keep that wallet and retry directory
+      registration on PUT; never credit the wallet again.
     violation_behaviour: >
-      A failed creation must leave no Wallet record. The endpoint returns a
-      retriable server error. The caller may retry; on the next attempt, BR2.1
-      applies as if the first attempt never happened.
+      The endpoint returns a safe server error when completion cannot be confirmed.
+      PUT /wallet may be retried safely; BR2.1 returns or creates exactly one Wallet
+      and ensures its holder entry before reporting readiness. A transient profile
+      or directory error returns a safe 503; C1's normalized-email ownership conflict
+      returns 409 without replacing the other holder's entry or adding a credit.
     source: AC1.2.5
 
   # ── Group 3: Transfer ──────────────────────────────────────────────────────
@@ -87,11 +92,15 @@ rules:
       IF a transfer is requested with a valid sender, recipient and amount,
       THEN the sender's balance_halalas is reduced by amount_halalas AND
       the recipient's balance_halalas is increased by amount_halalas in one
-      atomic operation. If the atomic operation cannot complete, neither
+      atomic operation together with one immutable Transfer row in the dedicated
+      Transactions table keyed by transfer_id (API transferId). Sender and recipient
+      wallet IDs are references on that row, not its key. If the atomic operation cannot complete, neither
       balance changes and no Transfer record is created.
     violation_behaviour: >
       If the atomic operation fails, both balances remain unchanged.
-      No Transfer record is written. The caller receives a retriable error.
+      No Transfer record is written on a known pre-commit failure. The caller
+      receives a safe error. A lost response or uncertain commit must be reconciled
+      by reading balance/history, never by resubmitting a U1 transfer; U2 adds replay protection.
     source: FR3.1, FR3.4, AC3.1.3, NFR3
 
   - id: BR3.2
@@ -138,10 +147,10 @@ rules:
     trigger: Successful transfer
     logic: >
       IF a transfer succeeds,
-      THEN the response includes: transfer_id (UUID, opaque), reference (1–64 character
-      human-readable string), amount_halalas, the sender's new balance_halalas,
-      and the recipient's display_name and email_normalized.
-      transfer_id and reference are distinct fields; they must both be present.
+      THEN return C1 TransferResult with transferId (UUID), reference (1–64 characters),
+      completedAt, recipient (displayName, email), amount and balanceAfter
+      (each containing amountHalalas and currency SAR). Internal snake_case attributes
+      are mapped to those exact public fields. transferId and reference are distinct.
     violation_behaviour: >
       Omitting any of these fields is a contract violation (C1 §POST /transfers
       TransferResult schema). transfer_id and reference must both be non-null.
@@ -174,7 +183,8 @@ rules:
     trigger: Recipient lookup by email
     logic: >
       IF a recipient email is supplied,
-      THEN normalize it (trim whitespace, lowercase) before comparing against
+      THEN normalize it (trim Unicode whitespace, NFC, locale-independent lowercase)
+      before format validation and comparing against
       email_normalized in WalletHolder. A match returns the holder's
       display_name and holder_id. No match returns a not-found error.
     violation_behaviour: >
@@ -196,7 +206,9 @@ rules:
       IF an authenticated caller requests history,
       THEN return only the completed Transfer records where
       sender_wallet_id or recipient_wallet_id equals the caller's wallet_id,
-      ordered by completed_at descending. Refused, in-flight or failed
+      ordered by completed_at descending, then transfer_id descending. Both parties
+      view the same immutable Transactions row through their own wallet reference.
+      Refused, in-flight or failed
       transfers are never included.
     violation_behaviour: >
       Returning another holder's transfers, or including failed transfers,
@@ -219,7 +231,8 @@ rules:
       Names and emails are fetched from WalletDirectory using the counterparty's holder_id.
     violation_behaviour: >
       A missing counterparty name, email or timestamp is a contract violation (C1
-      §GET /transfers TransferListItem). Omit the entry rather than return incomplete data.
+      §GET /transfers TransferListItem). Return a safe service error for the page
+      rather than silently dropping a completed transfer from history.
     source: FR4.1, FR5.3, AC4.1.1, AC4.1.4, contract-summary C1 §TransferListItem
 
   # ── Group 6: Balance read ──────────────────────────────────────────────────
@@ -237,8 +250,8 @@ rules:
       owner_id matches the caller's holder_id.
     violation_behaviour: >
       Returning another wallet's balance is an authorization violation.
-      If no Wallet exists yet for the caller, trigger BR2.1 (wallet setup)
-      first, then return the new balance.
+      If no Wallet exists yet for the caller, return 404 WALLET_NOT_FOUND;
+      the app calls PUT /wallet (BR2.1) and then repeats the read.
     source: FR2.1, FR2.2, FR2.4, AC2.1.4
 ```
 

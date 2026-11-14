@@ -39,7 +39,7 @@
 - **In Progress**: functional-design
 
 ## Runtime State
-- **Revision Count**: 2
+- **Revision Count**: 6
 - **Construction Checkpoints**: enabled
 - **Construction Iteration**: unit-major
 - **Construction Execution**: serial
@@ -57,6 +57,39 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- **Active Unit**: u1-walking-skeleton
+
+- **Unit Stage**: code-generation
+
+- **Unit State**: in-progress
 
 ## Phase Progress
 <!-- Status values: Pending, Active, Verified, Skipped -->
@@ -100,7 +133,7 @@
 - [-] nfr-requirements — EXECUTE
 - [-] nfr-design — EXECUTE
 - [-] infrastructure-design — EXECUTE
-- [ ] code-generation — EXECUTE
+- [-] code-generation — EXECUTE
 - [ ] build-and-test — EXECUTE
 - [ ] ci-pipeline — EXECUTE
 
@@ -117,7 +150,7 @@
 <!-- Derived, engine-owned projection; routing ignores hand edits. -->
 | unit | owner | functional-design | nfr-requirements | nfr-design | infrastructure-design | code-generation | gate |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| u1-walking-skeleton | - | [x] | [x] | [x] | [x] | [ ] | [-] |
+| u1-walking-skeleton | - | [x] | [x] | [x] | [x] | [-] | [-] |
 | u2-money-service | - | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | u4-platform | - | [x] | [ ] | [ ] | [ ] | [ ] | [-] |
 | u5-landing-page | - | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
@@ -128,7 +161,7 @@
 - **Current Stage**: functional-design
 - **Next Stage**: nfr-requirements
 - **Status**: Running
-- **Last Updated**: 2026-11-13T14:08:17Z
+- **Last Updated**: 2026-11-14T00:33:28Z
 
 ## Session Resume Point
 - **Last Completed Stage**: delivery-planning

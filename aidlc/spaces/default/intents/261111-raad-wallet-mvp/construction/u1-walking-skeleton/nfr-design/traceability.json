@@ -165,17 +165,17 @@
     {
       "id": "NFR3.3",
       "status": "OK",
-      "target": "reliability-design.md R1/R5: atomic commit, conservation and pre/post-commit fault checks"
+      "target": "reliability-design.md R1/R5: dedicated immutable Transactions row keyed by transferId, atomic balance-plus-row commit, conservation and pre/post-commit fault checks"
     },
     {
       "id": "NFR3.4",
       "status": "OK",
-      "target": "reliability-design.md R2: repeatable setup with no duplicate credit and explicit holder-readiness risk"
+      "target": "reliability-design.md R2: repeatable PUT setup and repair of a missing holder entry after wallet commit, without another credit"
     },
     {
       "id": "NFR4.1",
       "status": "OK",
-      "target": "reliability-design.md R1: one attempt per confirmation, retained key/details and no automatic uncertain replay"
+      "target": "reliability-design.md R1: one attempt per confirmation, no saved U1 outcome, uncertain-result reconciliation without resubmission, and fresh U2 intents/keys on transition"
     },
     {
       "id": "NFR9.2",

@@ -33,6 +33,7 @@ jobs:
       - run: uv sync --locked --all-groups
       - run: uv run pytest
       - run: uv run ruff check .
+      - run: uv run ruff format --check raad_platform tests app.py
       - run: uv run mypy .
       - run: uv run pip-audit
       - run: uv run cdk synth --all
