@@ -9,8 +9,8 @@ Engineer 2 owns RaadMobile. Start the mobile half of U1 now, in a short-lived br
 The existing contract is published in RaadMoneyService on branch aidlc/u1-contract-handoff at commit `5dd760d2086c3b1fd2f017ed3999c07d0d4ee2d8`, verified against GitHub on 2026-11-14. Read `openapi/raad-money-v1.yaml` at that exact commit; generate the Dart request/response models from it rather than hand-maintaining another wire schema. This commit is an available development pin; the formal contract pre-release tag and full conformance remain separate delivery checks.
 
 - [Published OpenAPI file](https://github.com/00az/RaadMoneyService/blob/5dd760d2086c3b1fd2f017ed3999c07d0d4ee2d8/openapi/raad-money-v1.yaml)
-- [Shared approved implementation plan](code-generation-plan.md)
-- [Exact test commands and coverage floors](unit-test-instructions.md)
+
+This guide is the current published mobile work allocation. The revised shared plan and test instructions are still local backend work; older copies on this branch do not mean the mobile mock/screen work must wait.
 
 The published OpenAPI describes the completed v1 contract. The updated partial-U1 implementation and its contract annotations are still local work and have not yet been pushed. Use this published pin to begin screens/client/mock work, then update the pin at the integration handoff. U1 implements only the walking-skeleton subset below. Persistent transfer replay, full amount-limit rules and cursor pagination are U2 work. Do not enable those features from the full schema during U1.
 
@@ -21,7 +21,7 @@ The published OpenAPI describes the completed v1 contract. The updated partial-U
 - Implement wallet/balance, exact-email recipient entry, recipient review and confirmation, transfer result, and the first history page. A cancelled review sends no transfer.
 - Parse SAR text into whole integer halalas; format with integer arithmetic and two fractional digits. Do not calculate money with floating point.
 - Send the Cognito access token as Bearer authorization. Do not send caller identity fields. Keep the API base URL and Cognito settings configurable using the C4 nonsecret environment shape; use local mock configuration while real dev values are pending.
-- Write the four widget/unit files and `integration_test/walking_skeleton_test.dart` named in the test instructions. Add the explicit mobile coverage check. Run the journey on both iOS and Android when the real dev handoff is ready.
+- Write `test/sign_in_test.dart`, `test/wallet_screen_test.dart`, `test/transfer_flow_test.dart`, `test/history_screen_test.dart` and `integration_test/walking_skeleton_test.dart`. Enforce at least 80% mobile line coverage. Run the journey on both iOS and Android when the real dev handoff is ready.
 
 ## Mock behavior that must match U1
 
