@@ -29,6 +29,7 @@ _request_start = 0.0
 _request_path = "/money/v1"
 _request_method = ""
 _jwk_clients: dict[str, PyJWKClient] = {}
+_origin_cache: tuple[str, str, float] | None = None
 SDK_CONFIG = Config(connect_timeout=0.25, read_timeout=0.5, retries={"total_max_attempts": 1})
 
 
@@ -47,6 +48,9 @@ _fault_delay("init")
 
 def entry(event: dict[str, Any], context: object) -> dict[str, Any]:
     """Origin entry wrapper; delay is outside the diagnostic adapter handler."""
+    rejected = _origin_rejection(event)
+    if rejected is not None:
+        return rejected
     probe = (event.get("headers") or {}).get("x-u1-probe-run", "")
     enabled = bool(probe) and probe == os.environ.get("U1_DEV_FAULT_RUN_ID")
     if enabled:
@@ -60,6 +64,51 @@ def entry(event: dict[str, Any], context: object) -> dict[str, Any]:
             "AWS_LAMBDA_FUNCTION_VERSION", ""
         )
     return result
+
+
+def _origin_secret() -> str:
+    """Read only the origin secret; finite caching bounds coordinated rotation."""
+    global _origin_cache
+    arn = os.environ["ORIGIN_SECRET_ARN"]
+    now = time.monotonic()
+    if _origin_cache and _origin_cache[0] == arn and now < _origin_cache[2]:
+        return _origin_cache[1]
+    value = boto3.client("secretsmanager", config=SDK_CONFIG).get_secret_value(SecretId=arn)[
+        "SecretString"
+    ]
+    if not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9]{64}", value):
+        raise ValueError("invalid origin configuration")
+    _origin_cache = (arn, value, now + 60)
+    return value
+
+
+def _origin_rejection(event: dict[str, Any]) -> dict[str, Any] | None:
+    """Reject bypass traffic before auth, forwarding, or public SLI publication."""
+    headers = event.get("headers") or {}
+    supplied = next((v for k, v in headers.items() if k.lower() == "x-raad-origin"), "")
+    status, code, message = 403, "FORBIDDEN", "The request is not permitted."
+    try:
+        if not os.environ.get("ORIGIN_SECRET_ARN"):
+            raise KeyError("origin configuration unavailable")
+        if supplied and hmac.compare_digest(supplied.encode(), _origin_secret().encode()):
+            return None
+    except (KeyError, ValueError, BotoCoreError, ClientError):
+        status, code, message = (
+            503,
+            "SERVICE_UNAVAILABLE",
+            "The service is temporarily unavailable.",
+        )
+    correlation = _correlation(headers)
+    # Do not log the header, secret, or event, nor count direct-origin traffic as public samples.
+    return {
+        "statusCode": status,
+        "headers": {
+            "content-type": "application/json",
+            "x-correlation-id": correlation,
+            "cache-control": "no-store",
+        },
+        "body": json.dumps({"code": code, "message": message, "correlationId": correlation}),
+    }
 
 
 def _publish_metrics(status: int, elapsed_ms: int, path: str, method: str) -> None:
@@ -192,6 +241,9 @@ def _protected_correlation(correlation_id: str) -> tuple[str, str]:
 def handle(event: dict[str, Any], _context: object) -> dict[str, Any]:
     """Handle one HTTP API event; payloads and credentials are never logged."""
     global _request_start, _request_path, _request_method
+    rejected = _origin_rejection(event)
+    if rejected is not None:
+        return rejected
     headers = event.get("headers") or {}
     _request_start = time.monotonic()
     _request_path = event.get("rawPath", "/money/v1")

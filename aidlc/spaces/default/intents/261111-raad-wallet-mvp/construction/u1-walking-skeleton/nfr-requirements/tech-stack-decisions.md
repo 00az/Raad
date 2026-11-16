@@ -10,7 +10,7 @@ The team has already selected the languages, application framework and infrastru
 |---|---|---|
 | Shared platform | Python with AWS CDK | Affirmed team practices; infrastructure remains versioned with its owning repo. |
 | Money service | Python; MoneyApi, Ledger and WalletDirectory retain their approved boundaries | Domain Design and U1 Functional Design isolate the money core and personal directory data. |
-| Mobile app | Dart/Flutter for iOS and Android | Affirmed team choice; U1 contains only the English skeleton screens. |
+| Mobile app | Dart/Flutter for iOS and Android | Affirmed team choice; U1 supplies the initial skeleton screens; the delivered frontend is Arabic and English throughout, completed by U3 (77a32fc9). |
 | Public interface | C1 OpenAPI 3.1, HTTPS/JSON at /money/v1; Dart client generated from a pinned contract | Contract Design; handwritten mobile request/response models are not substituted. |
 | Python environment | uv with committed lockfile; one supported pinned Python version across Python repos | Team practices. The concrete runtime version is verified and pinned during implementation/infrastructure selection. |
 | Python checks | Ruff, strict mypy, pytest, Hypothesis, dependency audit and CDK security checks | Existing quality requirements; no coverage floor is lowered. |
@@ -34,6 +34,10 @@ The team has already selected the languages, application framework and infrastru
 | NFR14.3 | Each backend and mobile repo retains at least 80% line coverage; the Ledger money-movement core also retains at least 95% line and branch coverage. Money-core work is test-first; other layers use the affirmed test-after cadence. | Each repo's full local suite and matching CI checks report the applicable floors. No implementation or coverage result is claimed here. |
 | NFR14.4 | Infrastructure changes are Python CDK code with the existing security checks. Repo changes follow the team's PR, review, short-lived branch and squash-merge practices. | Build and Test / CI Pipeline capture actual check evidence. This document performs no commit, merge or deployment. |
 | NFR11.2 | Chosen SDKs, stores and telemetry do not require collecting personal attributes beyond email and display name. | Review configuration/schema requirements before selecting a dependency or service. |
+
+## Current environment choices
+
+Use an AWS-generated HTTPS distribution hostname without custom-domain purchase or hosted-zone creation. Default-certificate TLS compatibility must be proven against NFR2.1 before release; the requirement is not reduced to fit a cheaper option. Operational alerts use jjii0@hotmail.com, public access requests use abdulaziz.alrubai@outlook.com, and new prd wallets get one 1000.00 simulated SAR opening allocation, like dev/stg. Actual environment outputs come from provisioning, never examples. The SDK-compatible own-profile API correction is the identity baseline; live capability still needs evidence.
 
 ## Boundaries and open inputs
 

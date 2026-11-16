@@ -1,0 +1,33 @@
+{
+  "stage": "functional-design",
+  "unit": "u5-landing-page",
+  "upstream_ids": [
+    "AC6.2.1",
+    "AC6.2.2",
+    "AC6.3.1",
+    "AC6.3.2"
+  ],
+  "coverage": [
+    {
+      "id": "AC6.2.1",
+      "status": "OK",
+      "target": "BR5.5"
+    },
+    {
+      "id": "AC6.2.2",
+      "status": "N/A",
+      "target": "U3 owns tester mobile builds; U5 owns its static site only"
+    },
+    {
+      "id": "AC6.3.1",
+      "status": "OK",
+      "target": "BR5.1, BR5.2, BR5.4"
+    },
+    {
+      "id": "AC6.3.2",
+      "status": "OK",
+      "target": "BR5.3"
+    }
+  ],
+  "reverse": []
+}

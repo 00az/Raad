@@ -24,7 +24,7 @@ Measure the complete five-action cross-table transfer commit as the Ledger depen
 
 | Alert | Condition | Severity | Routes to |
 |---|---|---|---|
-| Server errors | At least 3 edge 5xx responses in each of 2 consecutive 1-minute periods, with at least 3 requests in each breaching period; recover after 2 consecutive non-breaching periods | Warning | Environment SNS topic subscribed to the team monitored email |
+| Server errors | At least 3 edge 5xx responses in each of 2 consecutive 1-minute periods, with at least 3 requests in each breaching period; recover after 2 consecutive non-breaching periods | Warning | Environment SNS topic subscribed to jjii0@hotmail.com |
 | Slow transfers | More than 5% of transfer responses exceed 2,000 ms in each of 2 consecutive 5-minute periods, with at least 20 responses per period; recover after 2 eligible non-breaching periods | Warning | Environment SNS topic subscribed to the team monitored email |
 | Technical transfer failure | At least 1 technical transfer failure or unknown outcome in a 1-minute period; includes edge upstream timeout/unreachable. Recover after 2 consecutive non-breaching periods. | High | Environment SNS topic subscribed to the team monitored email |
 
@@ -74,3 +74,12 @@ For public p50/p95 panels use the deduplicated telemetry records over the select
 - `construction/u1-walking-skeleton/nfr-design/reliability-design.md`: uncertain transfer outcomes and disposable dev recovery.
 - [CloudFront real-time logs](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/real-time-logs.html): boundary duration, completion timestamp, selectable fields, sampling, Kinesis delivery and best-effort limitations.
 - [CloudFront standard logging reference](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/standard-logs-reference.html): standard-log delivery delays.
+
+## Ownership and Lifecycle Handoff
+
+| Concern | U1 versus full release |
+|---|---|
+| U1 alarms | Retain the basic dev thresholds above; no new availability SLA or completed alarm-delivery claim. |
+| U4 full monitoring | U4 monitoring-design.md adds provider/rate-limit/event/collector health, full production error-rate windows, three-window recovery and monthly idle coverage. These are later extensions, not silently substituted U1 acceptance evidence. |
+| Cost | Kinesis provisioned shard and monitoring resources can incur charges even idle. Current no-cost instruction blocks provisioning; see U4 cost worksheet. |
+| Retained correlation keys | Keep every version needed to investigate retained logs; immediately previous only is insufficient if rotated more than once during retention. No raw correlation ID logged. |

@@ -17,7 +17,7 @@ rules:
     category: policy
     applies_to: Wallet and WalletHolder
     trigger: Wallet setup flow
-    logic: IF wallet open succeeds THEN create or verify the holder using identity claims from the verified token/event; IF holder registration fails THEN return a safe setup failure and allow an idempotent retry that does not re-credit the wallet.
+    logic: IF wallet open succeeds THEN create or verify the holder using the verified credential's subject and matching verified profile source, or the authenticated event; IF holder registration fails THEN return a safe setup failure and allow an idempotent retry that does not re-credit the wallet.
     violation_behaviour: Do not report setup success until both wallet and holder are ready; return the contract's safe unavailable/setup error.
     source: FR1.5, AC1.2.5
   - id: BR2.3
@@ -27,7 +27,7 @@ rules:
     trigger: Holder registration
     logic: Normalize by trimming Unicode surrounding whitespace, NFC normalization, and lowercase comparison; IF emailKey belongs to a different userId THEN refuse registration without merging or changing either holder.
     violation_behaviour: Return the contract's conflict outcome without personal data in logs.
-    source: FR1.6, AC1.2.6
+    source: FR1.6, AC1.2.5
   - id: BR2.4
     statement: Recipient resolution is exact and case/space-insensitive.
     category: validation
@@ -49,8 +49,8 @@ rules:
     category: validation
     applies_to: TransferRequest
     trigger: Transfer request
-    logic: IF amountHalalas is not an integer in the inclusive range THEN persist AMOUNT_OUT_OF_RANGE as the first keyed business outcome; otherwise evaluate the transfer.
-    violation_behaviour: Return the documented amount-range refusal and leave balances/history unchanged.
+    logic: IF amountHalalas is not an integer THEN return C1 400 VALIDATION_ERROR before any key/outcome or money write. For an integer outside 100 through 50000, persist 422 AMOUNT_OUT_OF_RANGE only after the unknown-recipient check; then evaluate own-wallet and insufficient-balance refusals in that order.
+    violation_behaviour: Malformed/non-integer input consumes no key. Out-of-range integer input saves the first business refusal; all refusals leave balances/history unchanged.
     source: FR3.2, FR3.12, AC3.3.1, AC3.3.2, AC3.3.3
   - id: BR2.7
     statement: A transfer is atomic and never makes either balance negative or changes the total money.
@@ -65,7 +65,7 @@ rules:
     category: constraint
     applies_to: TransferRequest
     trigger: Transfer request
-    logic: IF the pair is new THEN reserve it conditionally; IF the pair exists with the same fingerprint THEN return its original outcome; IF its fingerprint differs THEN return IDEMPOTENCY_KEY_REUSED without replacing the first result.
+    logic: IF the pair is new THEN conditionally create it with the final outcome, atomically with the financial write for success, never leaving a durable pending reservation; IF the pair exists with the same fingerprint THEN return its original outcome; IF its fingerprint differs THEN return IDEMPOTENCY_KEY_REUSED without replacing the first result.
     violation_behaviour: Concurrent duplicates converge on the same saved result; the money movement and history entry occur at most once.
     source: FR3.7, FR3.9, FR3.10, NFR4, AC3.6.1, AC3.6.2, AC3.6.4, AC3.8.2, AC3.8.3
   - id: BR2.9
@@ -89,7 +89,7 @@ rules:
     category: authorization
     applies_to: UserConfirmedEventReceipt
     trigger: UserConfirmed event consumption
-    logic: IF eventId/userId is already processed THEN no-op; IF event environment differs from service environment THEN reject; otherwise run the same safe wallet setup and record the receipt idempotently.
+    logic: Validate source/environment first. An eventId already bound to another user is a rejected conflict. The eventId and userId mappings are unique within the environment; atomically record the first consistent pair after safe wallet/directory setup. A duplicate pair or later distinct event for the same initialized user is a no-op; concurrent consumers reread the first consistent receipt and never create a second wallet or opening credit.
     violation_behaviour: Invalid events go to dead-letter handling; accepted-event retries never create another wallet or starting credit.
     source: FR1.5, NFR4, AC1.2.3, AC1.2.4
   - id: BR2.12
@@ -97,7 +97,7 @@ rules:
     category: policy
     applies_to: WalletHolder, UserConfirmedEventReceipt, MoneyApi
     trigger: Any request or event handling
-    logic: Keep email/displayName only in WalletHolder; logs may include eventId, environment, and opaque user hash or final userId characters, never email, displayName, token, or full userId.
+    logic: Keep email/displayName only in WalletDirectory-owned current holders and immutable profile versions; Ledger request outcomes contain no personal fields, only an opaque profile-version reference for MoneyApi to reconstruct the original recipient response; logs may include eventId, environment, and opaque user hash or final userId characters, never email, displayName, token, or full userId.
     violation_behaviour: Do not emit request/event payloads or personal data in diagnostics.
     source: NFR10, NFR11
 ```

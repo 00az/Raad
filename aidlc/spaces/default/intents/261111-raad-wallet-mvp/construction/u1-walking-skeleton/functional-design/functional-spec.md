@@ -48,7 +48,7 @@ Text fallback: WalletHolder owns a Wallet; each Wallet can send and receive many
 | BR1.1 | Every money request must carry a valid, unexpired sign-in credential | Authorization |
 | BR1.2 | Caller identity is taken from the credential, not a request field | Authorization |
 | BR2.1 | One wallet per holder; 100,000 halalas on first request; atomic under concurrency | Policy |
-| BR2.2 | Failed wallet creation leaves no partial wallet | Constraint |
+| BR2.2 | Pre-commit failure leaves no wallet; retained wallet with missing directory entry is repaired without another credit | Constraint |
 | BR3.1 | Both balance changes and one immutable Transactions row commit atomically | Constraint |
 | BR3.2 | Refuse transfer when balance < amount; exact balance is accepted | Validation |
 | BR3.3 | Total money across all wallets is conserved after every operation | Constraint |
@@ -149,9 +149,12 @@ Input: authenticated request after wallet setup, with internal `holder_id` and `
 ### Wallet Lifecycle
 
 ```
-[Absent] --first authenticated request--> [Creating] --success--> [Active]
-                                                     --failure--> [Absent] (retry safe)
-[Active] --balance unchanged between transfers
+[Absent] --PUT setup--> [Creating] --wallet committed--> [Directory pending]
+[Creating] --pre-commit failure--> [Absent]
+[Directory pending] --PUT ensures holder--> [Active]
+[Directory pending] --directory failure--> [Directory pending] (retain balance)
+[Active] --PUT retry--> [Active] (no new opening credit)
+[Active] --transfer--> [Active with updated balance]
 ```
 
 There is no "closed" or "suspended" state in U1. A wallet in the Active state remains active.
@@ -200,6 +203,10 @@ The test-user setup script creates two confirmed test users in an environment. P
 
 ## Assumptions & Open Questions
 
+- The SDK-token-compatible own-profile API correction is the current sign-in design: independently verify the access credential, then read the configured own-profile source and match its subject and verified email. The earlier OAuth-only profile selection is superseded; live provider capability remains unverified.
+- The person confirmed a one-time 1000.00 simulated SAR opening balance for new wallets in prd as well as dev/stg (77a32fc9). Repeated setup never credits an existing wallet.
+- The final frontend must support Arabic and English throughout (77a32fc9); U3 completes that layer on top of U1's existing screens.
+- The public API uses an AWS-assigned HTTPS hostname without domain purchase (951a2dfd), with origin-only access enforcement retained. Infrastructure Design owns the TLS compatibility proof and generated environment values.
 - The concrete AWS sign-in service and SDK implementing C3 are confirmed in U4's Infrastructure Design. U1's sign-in check depends on the token format and verifier (C5); the check is written against the C5 contract.
 - The exact data store for Ledger and WalletDirectory is decided in Infrastructure Design. The functional model here is storage-agnostic.
 - The test-user setup script reads passwords from a secrets store. The specific secrets manager is chosen in Infrastructure Design.

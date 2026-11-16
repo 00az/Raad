@@ -1,34 +1,23 @@
-# Reliability Design — U2 Money Service
+# reliability design — u2-money-service
 
 Conversation language: English.
 
-## Atomic Money and Idempotency
+## Atomic success and replay
+Ledger transaction adapter alone mutates money: conditionally debit/credit, canonical Transactions row, required unique reference markers, both wallet sequence/version changes and final immutable request outcome in one transaction. No separately durable reserved/pending key. Precommit failure has no financial effect. Timeout after possible commit requires strong outcome reread with original key; never send a new key to resolve uncertainty. Competing conditional result writers reread and replay the winner or report fingerprint conflict.
 
-Use DynamoDB `TransactWriteItems` for successful transfers. One transaction conditionally confirms the sender balance and absent request key, debits and credits the two wallets, creates the Transfer and both history index items, and records the immutable successful TransferRequest outcome. A transfer never becomes visible unless all writes commit. On a transaction conflict, perform a strongly consistent read of the request key: if a matching outcome now exists, replay it; if a different fingerprint exists, return `IDEMPOTENCY_KEY_REUSED`; if no key exists, re-evaluate the sender balance and either retry a safe transaction or persist the first refusal.
+## Refusal and setup behavior
+Validate authentication/schema first; malformed/noninteger amount returns 400 without a consumed key. Missing caller wallet also consumes none. Existing-key replay/conflict precedes new business evaluation. For a new valid request, C1 refusal order is unknown recipient, integer amount range, self-transfer, then balance. Save a final business refusal conditionally without money/history mutation; re-evaluate optimistic conflicts before choosing a new final result.
+Wallet setup is wallet commit followed by Directory readiness. A retained DirectoryPending wallet is repaired by PUT without another credit; precommit-absent setup may retry creation. Exactly one opening 100000-halala simulated credit per wallet in every environment including prd. Record C2 receipt only after ready; same event ID/different user conflicts, later distinct event/same initialized user is a no-op. Accepted events retry for 24 hours then DLQ/alarm; publish failure does not fail account confirmation, and PUT is the safety net.
 
-Do not create a separate durable `reserved` idempotency row before the money transaction. The conditional full transaction is the reservation and outcome commit, so a crash before commit leaves no abandoned key that could stall retries. Persist business refusals as a single conditional request outcome without changing balances or writing history.
+## Recovery
+Retain and enable PITR for all three persistent stg/prd tables, including Directory profile versions, outcomes/receipts and canonical transfer history. Dev reset only by explicit authorization. Restore to a common selected instant into new tables; a timestamp alone is not cross-table atomicity proof. Reconcile opening credits plus every canonical debit/credit with wallet balances, ordinals/references, outcomes, profile references and receipts before cutover. If inconsistent, select an earlier consistent point within RPO or fail the release gate; never reset or fabricate adjustments.
+Selected targets remain RPO <=5 minutes, RTO <=3 hours and prd calendar-month availability >=99.5%. Measure detection, restoration, validation and cutover in a timed drill. PITR alone does not prove the 5-minute RPO; verify latest restorable point and actual lost committed work. Infrastructure supplies alarms and retained configuration. No active-active failover is claimed.
 
-Define refusal precedence deterministically: malformed/authentication failures first; `WALLET_NOT_FOUND` next without consuming a key; existing-key replay/conflict next; then amount-range refusal; then recipient-not-found/self-transfer; then insufficient funds. Once a business outcome is saved for a key, every identical repeat returns that outcome. The first request's fingerprint is based on API major version, normalized recipient email, and amountHalalas, stored only as a one-way digest.
+## Bounded failures
+Read/setup retry at most once for permitted timeout/500/503, jitter 250–750 ms within deadline; honor Retry-After, no automatic 429 retry and no automatic transfer retry. Business refusals do not open technical-failure alarms. Financial dependency failure fails closed; no stale balance success or queued money writes.
 
-## Wallet Setup and Event Delivery
-
-Use one conditional transaction across Ledger and Directory tables for wallet setup: create the wallet with 100000 halalas only if absent, create/verify the unique WalletHolder only if the normalized email key is unclaimed, and record the C2 event receipt. A different event ID for an already provisioned user sees the existing user-keyed wallet and never credits again. A same-user concurrent event and `PUT /wallet` converge through conditional writes. If any transaction action fails, no partial wallet/holder/receipt set commits; the public `PUT /wallet` can safely retry.
-
-Configure the C2 event source for at-least-once delivery, bounded retries for 24 hours, and dead-letter handling for invalid/exhausted events. The event path is asynchronous; C1 setup remains authoritative if event publication was lost before bus acceptance. Alarm on dead-letter movement using only event ID and environment.
-
-## Recovery and Failover
-
-Enable DynamoDB point-in-time recovery for both persistent tables in `stg` and `prd`. Restore both tables to the same selected point in time, validate wallet/holder/ledger invariants, then switch the service configuration to the restored table names. Keep `dev` disposable and isolated. Run a timed restore exercise proving **RPO ≤5 minutes** and **RTO ≤3 hours**; do not declare production-ready until measured restore time meets the target. PITR's latest restorable time is typically five minutes behind current time and supports a 35-day recovery window; restore creates new tables, so the cutover and validation steps are part of the RTO. [DynamoDB backup and restore](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Backup-and-Restore.html).
-
-The 99.5% monthly production availability target permits less than 3 hours 22 minutes of downtime in a 28-day month; the 3-hour RTO leaves a limited margin. Alerting, recovery rehearsal, and non-destructive table replacement are required to protect that margin.
-
-## Failure Handling
-
-- Bound all dependency calls to 1 second and the Lambda execution to its configured hard timeout. Return a safe structured error when a dependency is unavailable.
-- Retry only idempotent reads or operations with a persisted key; use bounded exponential backoff with jitter for C2 delivery. Never automatically retry a transfer without its original idempotency key.
-- Treat insufficient balance, invalid recipient, self-transfer, and amount-range outcomes as business results, not transient errors or circuit-breaker failures.
-- Health/readiness signals distinguish a live handler from a service unable to reach required persistence. Readiness failure is visible to alarms; it does not make a public health endpoint reveal internals.
+## Acceptance and readiness
+Money remains integer halalas, conserved across transfers except one-time opening credits, never negative. Test property-based and concurrent real-store cases; money-core coverage >=95% line AND branch, each owning repo >=80% line with strict typing/lint/audit/pinned-contract checks and the affirmed PR process. Store offset-bearing UTC instants. Separate process liveness from authenticated internal persistence readiness; dependency probes return safe status only and never expose resource names or profile data. Public technical failure contributes to availability even when handler liveness passes.
 
 ## Sources
-
-`reliability-requirements.md`, `performance-requirements.md`, `functional-spec.md`, `rules.md`, `contract-summary.md` (C1/C2/C5), and `tech-stack-decisions.md` define atomicity, event retries, recovery, and timeouts. DynamoDB transactions provide ACID behavior within a Region: [DynamoDB transaction constraints](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Constraints.html).
+This unit's six nfr-requirements documents and tech-stack-decisions.md; functional-design/functional-spec.md and rules.md; shared inception/contract-design/contract-summary.md and domain-design/components.md; U1 nfr-design/nfr-design-questions.md (free DNS decision b8664859). No target is lowered by this revision.

@@ -202,17 +202,17 @@
     {
       "id": "AC3.2.1",
       "status": "GAP",
-      "target": "Engineer 2 mobile implementation/device evidence is absent; no mobile source was changed. See code-summary.md and mobile-start-now.md."
+      "target": "Engineer 2 mobile skeleton is present at observed commit 8ce7db6; real dev configuration and device acceptance remain unverified. No mobile source was changed in this continuation. See code-summary.md and mobile-start-now.md."
     },
     {
       "id": "AC3.2.2",
       "status": "GAP",
-      "target": "Engineer 2 mobile implementation/device evidence is absent; no mobile source was changed. See code-summary.md and mobile-start-now.md."
+      "target": "Engineer 2 mobile skeleton is present at observed commit 8ce7db6; real dev configuration and device acceptance remain unverified. No mobile source was changed in this continuation. See code-summary.md and mobile-start-now.md."
     },
     {
       "id": "AC3.2.3",
       "status": "GAP",
-      "target": "Engineer 2 mobile implementation/device evidence is absent; no mobile source was changed. See code-summary.md and mobile-start-now.md."
+      "target": "Engineer 2 mobile skeleton is present at observed commit 8ce7db6; real dev configuration and device acceptance remain unverified. No mobile source was changed in this continuation. See code-summary.md and mobile-start-now.md."
     },
     {
       "id": "AC3.4.1",
@@ -266,18 +266,18 @@
     },
     {
       "id": "AC6.1.1",
-      "status": "GAP",
-      "target": "Backend source and local tests are in the registered sibling manifest; complete assigned acceptance still requires Engineer 2 mobile and/or real dev verification. See code-summary.md; no human-approved deferral is inferred."
+      "status": "Deferred",
+      "target": "Person message fcf6b4bc: skip only AWS deployment/live verification; continue local Code Generation. Real dev iOS/Android journeys require deployed API, C4 and fresh fixtures. Not executed or counted as passed."
     },
     {
       "id": "AC6.1.2",
-      "status": "GAP",
-      "target": "Backend source and local tests are in the registered sibling manifest; complete assigned acceptance still requires Engineer 2 mobile and/or real dev verification. See code-summary.md; no human-approved deferral is inferred."
+      "status": "Deferred",
+      "target": "Person message fcf6b4bc: skip only AWS deployment/live verification; continue local Code Generation. Deployed API smoke requires successful authorized deployment and credentials. Not executed or counted as passed."
     },
     {
       "id": "AC6.1.3",
-      "status": "GAP",
-      "target": "Backend source and local tests are in the registered sibling manifest; complete assigned acceptance still requires Engineer 2 mobile and/or real dev verification. See code-summary.md; no human-approved deferral is inferred."
+      "status": "Deferred",
+      "target": "Person message fcf6b4bc: skip only AWS deployment/live verification; continue local Code Generation. Real sign-in/API/store journey requires actual AWS environment; local stubs are not acceptance. Not executed or counted as passed."
     },
     {
       "id": "AC6.4.1",
@@ -291,13 +291,13 @@
     },
     {
       "id": "NFR6.1",
-      "status": "GAP",
-      "target": "Current implementation and local checks are recorded in code-summary.md; remaining live capability, packaging/nag, full deadline/fault, mobile, load, notification or release evidence has not passed. This is unfinished work, not an accepted deferral."
+      "status": "Deferred",
+      "target": "Person message fcf6b4bc: skip only AWS deployment/live verification; continue local Code Generation. Real public p95 and funded load acceptance require deployed public endpoint and fixtures. Not executed or counted as passed."
     },
     {
       "id": "NFR6.2",
-      "status": "GAP",
-      "target": "Current implementation and local checks are recorded in code-summary.md; remaining live capability, packaging/nag, full deadline/fault, mobile, load, notification or release evidence has not passed. This is unfinished work, not an accepted deferral."
+      "status": "Deferred",
+      "target": "Person message fcf6b4bc: skip only AWS deployment/live verification; continue local Code Generation. Live valid-funded-attempt and refusal/error reconciliation requires deployed load execution. Not executed or counted as passed."
     },
     {
       "id": "NFR6.3",
@@ -306,8 +306,8 @@
     },
     {
       "id": "NFR7.1",
-      "status": "GAP",
-      "target": "Current implementation and local checks are recorded in code-summary.md; remaining live capability, packaging/nag, full deadline/fault, mobile, load, notification or release evidence has not passed. This is unfinished work, not an accepted deferral."
+      "status": "Deferred",
+      "target": "Person message fcf6b4bc: skip only AWS deployment/live verification; continue local Code Generation. Actual100-user/10-active-user acceptance requires deployed fixtures and live workload. Not executed or counted as passed."
     },
     {
       "id": "NFR7.2",
@@ -317,7 +317,7 @@
     {
       "id": "NFR9.1",
       "status": "GAP",
-      "target": "Engineer 2 mobile implementation/device evidence is absent; no mobile source was changed. See code-summary.md and mobile-start-now.md."
+      "target": "Engineer 2 mobile skeleton is present at observed commit 8ce7db6; real dev configuration and device acceptance remain unverified. No mobile source was changed in this continuation. See code-summary.md and mobile-start-now.md."
     },
     {
       "id": "NFR1.1",
@@ -341,8 +341,8 @@
     },
     {
       "id": "NFR2.1",
-      "status": "OK",
-      "target": "infrastructure/raad_platform/stacks.py"
+      "status": "Deferred",
+      "target": "Person message fcf6b4bc: skip only AWS deployment/live verification; continue local Code Generation. Local configuration now enforces custom TLS1.2; actual controlled hostname/ACM issuance and protocol probe remain live prerequisites. Not executed or counted as passed."
     },
     {
       "id": "NFR2.2",
@@ -352,7 +352,7 @@
     {
       "id": "NFR2.3",
       "status": "GAP",
-      "target": "Engineer 2 mobile implementation/device evidence is absent; no mobile source was changed. See code-summary.md and mobile-start-now.md."
+      "target": "Engineer 2 mobile skeleton is present at observed commit 8ce7db6; real dev configuration and device acceptance remain unverified. No mobile source was changed in this continuation. See code-summary.md and mobile-start-now.md."
     },
     {
       "id": "NFR10.1",
@@ -422,7 +422,7 @@
     {
       "id": "NFR4.1",
       "status": "GAP",
-      "target": "Engineer 2 mobile implementation/device evidence is absent; no mobile source was changed. See code-summary.md and mobile-start-now.md."
+      "target": "Engineer 2 mobile skeleton is present at observed commit 8ce7db6; real dev configuration and device acceptance remain unverified. No mobile source was changed in this continuation. See code-summary.md and mobile-start-now.md."
     },
     {
       "id": "NFR9.2",
@@ -432,12 +432,12 @@
     {
       "id": "NFR9.3",
       "status": "GAP",
-      "target": "Engineer 2 mobile implementation/device evidence is absent; no mobile source was changed. See code-summary.md and mobile-start-now.md."
+      "target": "Engineer 2 mobile skeleton is present at observed commit 8ce7db6; real dev configuration and device acceptance remain unverified. No mobile source was changed in this continuation. See code-summary.md and mobile-start-now.md."
     },
     {
       "id": "NFR14.2",
-      "status": "GAP",
-      "target": "Current implementation and local checks are recorded in code-summary.md; remaining live capability, packaging/nag, full deadline/fault, mobile, load, notification or release evidence has not passed. This is unfinished work, not an accepted deferral."
+      "status": "Deferred",
+      "target": "Person message fcf6b4bc: skip only AWS deployment/live verification; continue local Code Generation. scripts/verify-dev.sh requires real dev API plus iOS/Android journeys. Not executed or counted as passed."
     },
     {
       "id": "BR1.1",
@@ -482,7 +482,7 @@
     {
       "id": "BR3.5",
       "status": "GAP",
-      "target": "Engineer 2 mobile implementation/device evidence is absent; no mobile source was changed. See code-summary.md and mobile-start-now.md."
+      "target": "Engineer 2 mobile skeleton is present at observed commit 8ce7db6; real dev configuration and device acceptance remain unverified. No mobile source was changed in this continuation. See code-summary.md and mobile-start-now.md."
     },
     {
       "id": "BR4.1",
@@ -506,18 +506,18 @@
     },
     {
       "id": "NFR8.1",
-      "status": "GAP",
-      "target": "Current implementation and local checks are recorded in code-summary.md; remaining live capability, packaging/nag, full deadline/fault, mobile, load, notification or release evidence has not passed. This is unfinished work, not an accepted deferral."
+      "status": "Deferred",
+      "target": "Person message fcf6b4bc: skip only AWS deployment/live verification; continue local Code Generation. Live dashboard signals require deployed smoke/load. Not executed or counted as passed."
     },
     {
       "id": "NFR8.2",
-      "status": "GAP",
-      "target": "Current implementation and local checks are recorded in code-summary.md; remaining live capability, packaging/nag, full deadline/fault, mobile, load, notification or release evidence has not passed. This is unfinished work, not an accepted deferral."
+      "status": "Deferred",
+      "target": "Person message fcf6b4bc: skip only AWS deployment/live verification; continue local Code Generation. Actual alarm/notification delivery requires approved AWS environment and subscribed destination. Not executed or counted as passed."
     },
     {
       "id": "NFR8.3",
-      "status": "GAP",
-      "target": "Current implementation and local checks are recorded in code-summary.md; remaining live capability, packaging/nag, full deadline/fault, mobile, load, notification or release evidence has not passed. This is unfinished work, not an accepted deferral."
+      "status": "Deferred",
+      "target": "Person message fcf6b4bc: skip only AWS deployment/live verification; continue local Code Generation. Live edge/service correlation investigation requires deployed runtime and logs. Not executed or counted as passed."
     },
     {
       "id": "NFR10.2",
@@ -537,12 +537,12 @@
     {
       "id": "NFR14.4",
       "status": "GAP",
-      "target": "Current implementation and local checks are recorded in code-summary.md; remaining live capability, packaging/nag, full deadline/fault, mobile, load, notification or release evidence has not passed. This is unfinished work, not an accepted deferral."
+      "target": "Local PythonCDK/security synthesis passes for both backends, with resource-specific documented exceptions. GitHub PR/review/CI execution remains unperformed; no pushed pipeline or merge is claimed. See code-summary.md."
     },
     {
       "id": "NFR15.1",
       "status": "GAP",
-      "target": "Engineer 2 mobile implementation/device evidence is absent; no mobile source was changed. See code-summary.md and mobile-start-now.md."
+      "target": "Engineer 2 mobile skeleton is present at observed commit 8ce7db6; real dev configuration and device acceptance remain unverified. No mobile source was changed in this continuation. See code-summary.md and mobile-start-now.md."
     }
   ],
   "reverse": []

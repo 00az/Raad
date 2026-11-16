@@ -41,3 +41,50 @@ def test_metrics_have_only_environment_dimension() -> None:
 
 def test_email_subscription_is_not_created_without_input() -> None:
     template().resource_count_is("AWS::SNS::Subscription", 0)
+
+
+def test_sns_publishing_requires_secure_transport():
+    policies = template().find_resources("AWS::SNS::TopicPolicy")
+    statements = next(iter(policies.values()))["Properties"]["PolicyDocument"]["Statement"]
+    assert any(
+        s.get("Effect") == "Deny"
+        and s.get("Action") == "sns:Publish"
+        and s.get("Condition") == {"Bool": {"aws:SecureTransport": "false"}}
+        for s in statements
+    )
+
+
+def test_scheduler_can_invoke_only_exact_unqualified_processor():
+    policies = template().find_resources("AWS::IAM::Policy")
+    invokes = [
+        s
+        for p in policies.values()
+        for s in p["Properties"]["PolicyDocument"]["Statement"]
+        if s.get("Action") == "lambda:InvokeFunction"
+    ]
+    assert len(invokes) == 1
+    assert invokes[0]["Resource"] != "*"
+    assert ":*" not in str(invokes[0]["Resource"])
+
+
+def test_api_limited_wildcard_exception_keeps_query_and_metric_controls():
+    rendered = template().to_json()
+    wildcard = [
+        s
+        for p in template().find_resources("AWS::IAM::Policy").values()
+        for s in p["Properties"]["PolicyDocument"]["Statement"]
+        if s.get("Resource") == "*"
+    ]
+    assert len(wildcard) == 2
+    assert all("logs:GetQueryResults" not in s.get("Action", []) for s in wildcard)
+    assert any(
+        s.get("Condition") == {"StringEquals": {"cloudwatch:namespace": "Raad/Platform"}}
+        for s in wildcard
+    )
+    exceptions = [
+        entry
+        for r in rendered["Resources"].values()
+        for entry in r.get("Metadata", {}).get("cdk_nag", {}).get("rules_to_suppress", [])
+        if entry["id"] == "AwsSolutions-IAM5"
+    ]
+    assert exceptions and all(entry["applies_to"] == ["Resource::*"] for entry in exceptions)

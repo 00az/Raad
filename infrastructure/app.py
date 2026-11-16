@@ -5,7 +5,12 @@ import os
 import aws_cdk as cdk
 from cdk_nag import AwsSolutionsChecks
 
-from raad_platform.stacks import IdentityStack, MonitoringStack, PublicEdgeStack
+from raad_platform.stacks import (
+    IdentityStack,
+    MonitoringStack,
+    PublicEdgeStack,
+    validate_public_domain,
+)
 
 app = cdk.App()
 environment = os.environ.get("RAAD_ENVIRONMENT", "dev")
@@ -22,19 +27,13 @@ cognito_domain_prefix = app.node.try_get_context("cognitoDomainPrefix") or os.en
 )
 service_parameter = f"/raad/{environment}/money-api/function-url"
 required = {
-    "RAAD_DOMAIN_NAME": domain_name,
-    "RAAD_HOSTED_ZONE_ID": hosted_zone_id,
-    "RAAD_CERTIFICATE_ARN": certificate_arn,
     "RAAD_ALERT_EMAIL": alert_email,
     "RAAD_COGNITO_DOMAIN_PREFIX": cognito_domain_prefix,
 }
 missing = [name for name, value in required.items() if not value]
 if missing:
     raise ValueError(f"Supply environment deployment inputs: {', '.join(missing)}")
-if ":us-east-1:" not in certificate_arn:
-    raise ValueError(
-        "RAAD_CERTIFICATE_ARN must refer to the us-east-1 CloudFront viewer certificate"
-    )
+validate_public_domain(environment, domain_name, hosted_zone_id, certificate_arn)
 aws_region = os.environ.get("CDK_DEFAULT_REGION", "us-east-1")
 if aws_region != "us-east-1":
     raise ValueError("the CloudFront viewer certificate and global WAF ACL require us-east-1")

@@ -1,23 +1,18 @@
-# Scalability Design — U2 Money Service
+# scalability design — u2-money-service
 
 Conversation language: English.
 
-## Compute and Data Distribution
+## Capacity and isolation
+Stateless per-environment Lambda, initial reserved concurrency 20 subject to actual account quota and measured demo load. DynamoDB on-demand, owner/entity partitions, no global counter, no scans, no active-active region or extra cache tier. Alarm before changing limits. Scale changes retain all conditional money invariants.
 
-Keep each request handler stateless and horizontally scalable. Lambda concurrency is bounded per environment to protect downstream stores; start with the existing development guardrail of 20 reserved concurrent executions and set staging/production limits from load-check evidence and account quotas. Do not increase concurrency without verifying the 10-user target and DynamoDB throttling behavior.
+## Stable history with eventually consistent indexes
+One canonical Transactions row carries senderWalletId/recipientWalletId, completedAt/transferId and per-role completion ordinals. Each wallet carries transferSequence and lastCompletedSortKey. In the successful transaction, condition on both wallet versions, increment both sequences and insert the canonical row with their next ordinals plus the final request outcome and required reference markers. Indexes are projections of this row, not separately writable transfer copies.
+A new completion key must sort strictly after both wallets' previous completion keys. Generate a trusted UTC completion instant and a tie-breaking ID that meets that condition; if a prior timestamp is ahead of the trusted clock, wait within the deadline or fail safely without a commit. Never invent a future completion timestamp to force progress.
+First-page strong wallet read fixes sequence N and maximum sort key. Query both role indexes at or below that snapshot, strict below the last returned key thereafter, with bounded limit+1 per stream; merge by completedAt DESC/transferId DESC. Strongly batch-read candidates from the canonical table, authorize wallet ownership and verify exact descending wallet ordinals N,N-1,... for each returned slot. GSI lag, missing/corrupt rows or ordinal mismatch triggers bounded reread then safe 503; do not return a partial page or an end cursor. A valid end has exhausted expected ordinal down to zero. This detects missing index entries instead of treating GSI reads as strongly consistent.
+Authenticated opaque 24-hour cursor binds environment/caller, original snapshot sequence/key, next expected ordinal, last key, limit/sort and expiry. New writes have later keys and do not enter the chain. User restarts fresh paging after cursor expiry.
 
-Use DynamoDB on-demand capacity for the MVP. Partition by environment-scoped owner or entity key, not a global constant. Wallet reads/writes are keyed by user; holder lookup is keyed by normalized email; transfer history uses per-user access keys for sent and received entries. Avoid table scans and a single global counter. Keep all monetary invariants in conditional/transactional writes so horizontal compute scaling cannot bypass them.
-
-History is a bounded fan-out over the caller's sent and received index streams, merged by `(completedAt DESC, transferId DESC)` within the cursor snapshot. The cursor determines last keys for both streams; page size remains at most 100 and counterparties are resolved in a bounded batch. A user with many transfers cannot cause an unbounded response.
-
-## Capacity Guardrails
-
-The only accepted load target is 100 users total and approximately 10 concurrent users. Scale-up signals are Lambda throttles/concurrency, API p95 latency, DynamoDB throttles, and transaction cancellation rate. Capacity above the target requires a new load test and explicit review of per-user partition hot spots. No cache, read replica, queue, shard layer, or regional active-active replication is introduced for this MVP.
-
-## Service Extension
-
-New RAAD services attach through the shared edge's path mapping and own their compute/data. MoneyService keeps the C1 path and contract stable; it does not add coupling to AI or Qattah. New clients continue to use the published C1 contract.
+## Migration and proof
+Quiesce financial writes for U1-to-U2 migration. Assign historical per-wallet ordinals in existing ascending C1 order, seed counters/high-watermarks without changing balances/IDs/times, build both GSIs and prove contiguous coverage before switching readers. Retain old reference reads until cutover verified. Test ties, opposing concurrent transfers, delayed index projections, lost response, >1000 records and cursor tampering. This algorithm is a code-generation obligation; no claim it is implemented or load-proven.
 
 ## Sources
-
-`scalability-requirements.md`, `performance-requirements.md`, `functional-spec.md`, `rules.md`, `contract-summary.md`, and `tech-stack-decisions.md` define capacity, stable paging, and extension boundaries.
+This unit's six nfr-requirements documents and tech-stack-decisions.md; functional-design/functional-spec.md and rules.md; shared inception/contract-design/contract-summary.md and domain-design/components.md; U1 nfr-design/nfr-design-questions.md (free DNS decision b8664859). No target is lowered by this revision.

@@ -6,6 +6,7 @@ from typing import Any
 
 from aws_cdk import (
     BundlingOptions,
+    CfnOutput,
     Duration,
     Stack,
 )
@@ -72,9 +73,49 @@ from aws_cdk import (
 from aws_cdk import (
     aws_wafv2 as wafv2,
 )
+from cdk_nag import NagSuppressions
 from constructs import Construct
 
 from raad_platform.telemetry.handler import FIELDS
+
+
+def validate_public_domain(environment: str, domain: str, zone: str, certificate: str) -> None:
+    """Require a controlled hostname/certificate pair; an existing DNS zone is optional."""
+    if not domain or not certificate:
+        raise ValueError(
+            "Supply domain and custom certificate together; default TLS is unsupported"
+        )
+    if "://" in domain or "/" in domain or "." not in domain or domain.endswith(".cloudfront.net"):
+        raise ValueError("Supply a controlled custom hostname")
+    if ":us-east-1:" not in certificate:
+        raise ValueError("CloudFront viewer certificate must be in us-east-1")
+
+
+def _execution_role(scope: Construct, identifier: str, log_group: logs.ILogGroup) -> iam.Role:
+    """Bound log writes to this function's precreated group, without managed policies."""
+    role = iam.Role(scope, identifier, assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"))
+    log_group.grant_write(role)
+    return role
+
+
+def _runtime_pin_exception(function: lambda_.Function) -> None:
+    # Supported AL2023 pin, not an obsolete runtime; managed patches remain enabled.
+    NagSuppressions.add_resource_suppressions(
+        function,
+        [
+            {
+                "id": "AwsSolutions-L1",
+                "reason": "Approved tested Python3.12 AL2023 pin is AWS-supported until 2028-10-31 with managed patches. Dependency audit and package tests gate release; a major upgrade requires synchronized local/CI runtime pins.",
+            }
+        ],
+    )
+
+
+def _rotation_exception(secret: secretsmanager.Secret, reason: str) -> None:
+    # Protocol keys require coordinated users, unlike an AWS-managed database target.
+    NagSuppressions.add_resource_suppressions(
+        secret, [{"id": "AwsSolutions-SMG4", "reason": reason}]
+    )
 
 
 class IdentityStack(Stack):
@@ -147,6 +188,21 @@ class IdentityStack(Stack):
                 generate_string_key="key",
             ),
         )
+        # Paid Plus is outside simulated dev; production identity requires review.
+        if environment == "dev":
+            NagSuppressions.add_resource_suppressions(
+                self.user_pool,
+                [
+                    {
+                        "id": "AwsSolutions-COG8",
+                        "reason": "Simulated dev-only wallet has no real payments and paid Plus is not authorized. Strong password policy, verified email, independent SDK-token checks and WAF perimeter are implemented and regression-tested. Production identity security has a separate gate.",
+                    }
+                ],
+            )
+        _rotation_exception(
+            self.correlation_secret,
+            "Both independent runtimes share a versioned HMAC profile; rotation preserves current/previous keys through 14-day log retention. No AWS-managed rotation target exists for this protocol. Coordinated rollout/investigation is a deferred release check; no automatic rotation is claimed.",
+        )
 
 
 class MonitoringStack(Stack):
@@ -169,6 +225,15 @@ class MonitoringStack(Stack):
             target_key=kms.Key(self, "LogsKey", enable_key_rotation=True),
         )
         self.topic = sns.Topic(self, "Alerts", topic_name=f"raad-{environment}-alerts")
+        self.topic.add_to_resource_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.DENY,
+                principals=[iam.AnyPrincipal()],
+                actions=["sns:Publish"],
+                resources=[self.topic.topic_arn],
+                conditions={"Bool": {"aws:SecureTransport": "false"}},
+            )
+        )
         if alert_email:
             self.topic.add_subscription(subscriptions.EmailSubscription(alert_email))
         self.dashboard = cloudwatch.Dashboard(
@@ -261,20 +326,24 @@ class MonitoringStack(Stack):
         processor_logs = logs.LogGroup(
             self, "TelemetryLogs", retention=logs.RetentionDays.TWO_WEEKS
         )
+        processor_role = _execution_role(self, "TelemetryExecutionRole", processor_logs)
         self.processor = lambda_.Function(
             self,
             "PublicLatencyProcessor",
             runtime=lambda_.Runtime.PYTHON_3_12,
+            architecture=lambda_.Architecture.X86_64,
             handler="handler.handle",
             code=lambda_.Code.from_asset("raad_platform/telemetry"),
             timeout=Duration.seconds(20),
             reserved_concurrent_executions=2,
             log_group=processor_logs,
+            role=processor_role,
             environment={
                 "ENVIRONMENT": environment,
                 "SAMPLE_LOG_GROUP": self.public_samples.log_group_name,
             },
         )
+        _runtime_pin_exception(self.processor)
         self.processor.add_event_source(
             event_sources.KinesisEventSource(
                 self.telemetry_stream,
@@ -287,13 +356,13 @@ class MonitoringStack(Stack):
         self.public_samples.grant_write(self.processor)
         self.processor.add_to_role_policy(
             iam.PolicyStatement(
-                actions=["logs:StartQuery"],
+                actions=["logs:StartQuery", "logs:GetQueryResults"],
                 resources=[self.public_samples.log_group_arn],
             )
         )
         self.processor.add_to_role_policy(
             iam.PolicyStatement(
-                actions=["logs:GetQueryResults", "logs:StopQuery"],
+                actions=["logs:StopQuery"],
                 resources=["*"],
             )
         )
@@ -303,6 +372,18 @@ class MonitoringStack(Stack):
                 resources=["*"],
                 conditions={"StringEquals": {"cloudwatch:namespace": "Raad/Platform"}},
             )
+        )
+        # StopQuery has no resource type. Queries/results and metric namespace are bounded.
+        NagSuppressions.add_resource_suppressions(
+            processor_role,
+            [
+                {
+                    "id": "AwsSolutions-IAM5",
+                    "appliesTo": ["Resource::*"],
+                    "reason": "StopQuery has no resource type. Existing namespace metric publishing uses no dataset ARN and is restricted to Raad/Platform. StartQuery/GetQueryResults target only the safe sample group. No money access is granted.",
+                }
+            ],
+            apply_to_children=True,
         )
         group = scheduler.CfnScheduleGroup(
             self, "TelemetryScheduleGroup", name=f"raad-{environment}-telemetry"
@@ -318,7 +399,12 @@ class MonitoringStack(Stack):
                 },
             ),
         )
-        self.processor.grant_invoke(schedule_role)
+        schedule_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["lambda:InvokeFunction"],
+                resources=[self.processor.function_arn],
+            )
+        )
         scheduler.CfnSchedule(
             self,
             "TelemetrySchedule",
@@ -399,10 +485,12 @@ class PublicEdgeStack(Stack):
         **kwargs: Any,
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
+        validate_public_domain(environment, domain_name, hosted_zone_id, certificate_arn)
         code = lambda_.Code.from_asset(
             "raad_platform/edge",
             bundling=BundlingOptions(
                 image=lambda_.Runtime.PYTHON_3_12.bundling_image,
+                platform="linux/amd64",
                 command=[
                     "bash",
                     "-c",
@@ -410,10 +498,24 @@ class PublicEdgeStack(Stack):
                 ],
             ),
         )
+        origin_secret = secretsmanager.Secret(
+            self,
+            "OriginVerificationSecret",
+            secret_name=f"raad/{environment}/cloudfront-origin",
+            generate_secret_string=secretsmanager.SecretStringGenerator(
+                password_length=64, exclude_punctuation=True
+            ),
+        )
+        _rotation_exception(
+            origin_secret,
+            "CloudFront origin header and edge expected key require coordinated distribution/secret rollout; AWS has no managed rotation target for this protocol. Constant-time checks, bounded 60-second cache and fail-closed mismatch are tested; live rotation verification is deferred.",
+        )
+        edge_role = _execution_role(self, "EdgeExecutionRole", monitoring.log_group)
         self.edge = lambda_.Function(
             self,
             "MoneyEdge",
             runtime=lambda_.Runtime.PYTHON_3_12,
+            architecture=lambda_.Architecture.X86_64,
             handler="handler.entry",
             code=code,
             timeout=Duration.seconds(9),
@@ -424,12 +526,16 @@ class PublicEdgeStack(Stack):
                 "CLIENT_ID": identity.client.user_pool_client_id,
                 "SERVICE_URL_PARAMETER": service_parameter,
                 "CORRELATION_SECRET_ARN": identity.correlation_secret.secret_arn,
+                "ORIGIN_SECRET_ARN": origin_secret.secret_arn,
                 "LOG_LEVEL": "INFO",
             },
             log_group=monitoring.log_group,
+            role=edge_role,
         )
-        live_edge = self.edge.current_version.add_alias("live")
+        _runtime_pin_exception(self.edge)
+        live_edge = self.edge.add_alias("live")
         identity.correlation_secret.grant_read(self.edge)
+        origin_secret.grant_read(self.edge)
         self.edge.add_to_role_policy(
             iam.PolicyStatement(
                 actions=["ssm:GetParameter"],
@@ -483,6 +589,30 @@ class PublicEdgeStack(Stack):
                 "MoneyRootIntegration", live_edge, timeout=Duration.seconds(10)
             ),
         )
+        access_logs = logs.LogGroup(
+            self,
+            "ApiAccessLogs",
+            log_group_name=f"/raad/{environment}/http-api",
+            retention=logs.RetentionDays.TWO_WEEKS,
+        )
+        stage = api.default_stage.node.default_child if api.default_stage else None
+        assert isinstance(stage, apigwv2.CfnStage)
+        stage.access_log_settings = apigwv2.CfnStage.AccessLogSettingsProperty(
+            destination_arn=access_logs.log_group_arn,
+            format='{"requestId":"$context.requestId","status":"$context.status","latencyMs":"$context.responseLatency"}',
+        )
+        # JWT/origin authentication is deliberately in the edge for C1-safe errors.
+        for child in api.node.find_all():
+            if isinstance(child, apigwv2.CfnRoute):
+                NagSuppressions.add_resource_suppressions(
+                    child,
+                    [
+                        {
+                            "id": "AwsSolutions-APIG4",
+                            "reason": "Integration independently verifies RS256 issuer/client/type/expiry and the origin secret before forwarding. Keeping auth in edge preserves mandatory C1 errors. Tests cover token rejection, spoofed identity and direct-origin rejection.",
+                        }
+                    ],
+                )
         self.api = api
         acl = wafv2.CfnWebACL(
             self,
@@ -527,69 +657,71 @@ class PublicEdgeStack(Stack):
                 ),
             ],
         )
-        if domain_name and hosted_zone_id and certificate_arn:
-            delivery_role = iam.Role(
-                self,
-                "CloudFrontTelemetryRole",
-                assumed_by=iam.ServicePrincipal(
-                    "cloudfront.amazonaws.com",
-                    conditions={"StringEquals": {"aws:SourceAccount": self.account}},
-                ),
-            )
-            monitoring.telemetry_stream.grant_write(delivery_role)
-            realtime = cloudfront.CfnRealtimeLogConfig(
-                self,
-                "TransferRealtimeLogs",
-                name=f"raad-{environment}-transfers",
-                sampling_rate=100,
-                fields=list(FIELDS),
-                end_points=[
-                    cloudfront.CfnRealtimeLogConfig.EndPointProperty(
-                        stream_type="Kinesis",
-                        kinesis_stream_config=cloudfront.CfnRealtimeLogConfig.KinesisStreamConfigProperty(
-                            role_arn=delivery_role.role_arn,
-                            stream_arn=monitoring.telemetry_stream.stream_arn,
-                        ),
-                    )
-                ],
-            )
-            certificate = acm.Certificate.from_certificate_arn(
-                self, "ViewerCertificate", certificate_arn
-            )
-            distribution = cloudfront.Distribution(
-                self,
-                "Distribution",
-                domain_names=[domain_name],
-                certificate=certificate,
-                default_behavior=cloudfront.BehaviorOptions(
-                    origin=origins.HttpOrigin(
-                        f"{api.api_id}.execute-api.{Stack.of(self).region}.amazonaws.com",
-                        protocol_policy=cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+        delivery_role = iam.Role(
+            self,
+            "CloudFrontTelemetryRole",
+            assumed_by=iam.ServicePrincipal(
+                "cloudfront.amazonaws.com",
+                conditions={"StringEquals": {"aws:SourceAccount": self.account}},
+            ),
+        )
+        monitoring.telemetry_stream.grant_write(delivery_role)
+        realtime = cloudfront.CfnRealtimeLogConfig(
+            self,
+            "TransferRealtimeLogs",
+            name=f"raad-{environment}-transfers",
+            sampling_rate=100,
+            fields=list(FIELDS),
+            end_points=[
+                cloudfront.CfnRealtimeLogConfig.EndPointProperty(
+                    stream_type="Kinesis",
+                    kinesis_stream_config=cloudfront.CfnRealtimeLogConfig.KinesisStreamConfigProperty(
+                        role_arn=delivery_role.role_arn,
+                        stream_arn=monitoring.telemetry_stream.stream_arn,
                     ),
-                    viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-                    cache_policy=cloudfront.CachePolicy.CACHING_DISABLED,
-                    origin_request_policy=cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
-                    allowed_methods=cloudfront.AllowedMethods.ALLOW_ALL,
-                ),
-                minimum_protocol_version=cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
-                web_acl_id=acl.attr_arn,
-            )
-            distribution.add_behavior(
-                "/money/v1/transfers",
-                origins.HttpOrigin(
+                )
+            ],
+        )
+        certificate = acm.Certificate.from_certificate_arn(
+            self, "ViewerCertificate", certificate_arn
+        )
+        distribution = cloudfront.Distribution(
+            self,
+            "Distribution",
+            domain_names=[domain_name],
+            certificate=certificate,
+            default_behavior=cloudfront.BehaviorOptions(
+                origin=origins.HttpOrigin(
                     f"{api.api_id}.execute-api.{Stack.of(self).region}.amazonaws.com",
                     protocol_policy=cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+                    custom_headers={"X-Raad-Origin": origin_secret.secret_value.unsafe_unwrap()},
                 ),
                 viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                 cache_policy=cloudfront.CachePolicy.CACHING_DISABLED,
                 origin_request_policy=cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
                 allowed_methods=cloudfront.AllowedMethods.ALLOW_ALL,
-            )
-            distribution_resource = distribution.node.default_child
-            assert isinstance(distribution_resource, cloudfront.CfnDistribution)
-            distribution_resource.add_property_override(
-                "DistributionConfig.CacheBehaviors.0.RealtimeLogConfigArn", realtime.ref
-            )
+            ),
+            minimum_protocol_version=cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
+            web_acl_id=acl.attr_arn,
+        )
+        distribution.add_behavior(
+            "/money/v1/transfers",
+            origins.HttpOrigin(
+                f"{api.api_id}.execute-api.{Stack.of(self).region}.amazonaws.com",
+                protocol_policy=cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+                custom_headers={"X-Raad-Origin": origin_secret.secret_value.unsafe_unwrap()},
+            ),
+            viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+            cache_policy=cloudfront.CachePolicy.CACHING_DISABLED,
+            origin_request_policy=cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+            allowed_methods=cloudfront.AllowedMethods.ALLOW_ALL,
+        )
+        distribution_resource = distribution.node.default_child
+        assert isinstance(distribution_resource, cloudfront.CfnDistribution)
+        distribution_resource.add_property_override(
+            "DistributionConfig.CacheBehaviors.0.RealtimeLogConfigArn", realtime.ref
+        )
+        if hosted_zone_id:
             alias = route53.CfnRecordSet.AliasTargetProperty(
                 dns_name=distribution.distribution_domain_name,
                 hosted_zone_id="Z2FDTNDATAQYW2",
@@ -611,6 +743,25 @@ class PublicEdgeStack(Stack):
                 type="AAAA",
                 alias_target=alias,
             )
+        # Standard logs expose viewer IP/query/user-agent, forbidden by this privacy profile.
+        NagSuppressions.add_resource_suppressions(
+            distribution,
+            [
+                {
+                    "id": "AwsSolutions-CFR3",
+                    "reason": "Approved privacy design excludes viewer IP/query/user-agent standard logs. Transfers have 100%-sampled seven-field realtime logs, with safe API/edge logs for other responses. Missing delivery blocks latency acceptance; field allowlists/privacy are tested.",
+                }
+            ],
+        )
+        self.distribution = distribution
+        self.public_api_url = "https://" + domain_name
+        ssm.StringParameter(
+            self,
+            "PublicApiUrl",
+            parameter_name=f"/raad/{environment}/public-api-url",
+            string_value=self.public_api_url,
+        )
+        CfnOutput(self, "PublicApiUrlOutput", value=self.public_api_url)
         self.web_acl = acl
         assert self.edge.role is not None
         ssm.StringParameter(
@@ -625,7 +776,8 @@ class PublicEdgeStack(Stack):
             parameter_name=f"/raad/{environment}/correlation-hmac/arn",
             string_value=identity.correlation_secret.secret_arn,
         )
-        profile_url = f"https://{cognito_domain_prefix}.auth.{Stack.of(self).region}.amazoncognito.com/oauth2/userInfo"
+        # SDK SRP/admin authentication tokens authorize GetUser, not OAuth userInfo.
+        profile_url = f"https://cognito-idp.{Stack.of(self).region}.amazonaws.com/"
         issuer = f"https://cognito-idp.{Stack.of(self).region}.amazonaws.com/{identity.user_pool.user_pool_id}"
         verifier = {
             "configVersion": "1.0",

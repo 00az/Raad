@@ -22,6 +22,15 @@ The skeleton uses confirmed test accounts, the shared sign-in service, the publi
 | NFR12.1 | U1 retains its basic public API firewall and fails safely on edge refusal. It does not introduce U4's complete account-operation, recipient-lookup or per-caller rate-limit implementation. | Check that U1's edge is protected and that configured refusals carry C1-safe errors. Trace the complete per-caller protections to U4 and their service-side integration to U2. |
 | NFR14.1 | No credentials are committed. Laptop AWS access uses the affirmed sign-in mechanism and deployment uses short-lived CI credentials. Infrastructure security checks remain mandatory. | Run repository secret checks and the established dependency/CDK checks; inspect CI authentication configuration when it is built. |
 
+## Current identity and perimeter requirements
+
+| ID | Requirement | Verification |
+|---|---|---|
+| NFR1.5 | The actual SDK-issued access token must work with the configured own-profile source; independently verified subject, provider response subject and verified email must agree. An OAuth-only endpoint is not interchangeable with an SDK-compatible own-profile API. | Mint a token through the actual mobile/fixture authentication flow, prove public wallet PUT/GET, and test profile unavailability without exposing data. |
+| NFR12.2 | Direct money-origin access must not bypass the CloudFront firewall, rate/telemetry boundary or identity checks. Missing/counterfeit origin credentials fail closed before private work. | Deployed direct-origin and public-boundary probes plus credential-rotation/header-overwrite checks. |
+
+The person selected an AWS-assigned cloudfront.net hostname with no domain purchase. NFR2.1 remains TLS 1.2 or later: actual default-certificate protocol behavior must be proved in NFR/Infrastructure Design, or left as a blocking compatibility gap. Default HTTPS is not itself proof of the minimum.
+
 ## Error disclosure
 
 C1 errors contain stable code, safe message and correlationId, with optional field errors. The app branches on code, never provider text. Responses and logs reveal no stack trace, internal route, token or personal detail. Unknown recipient handling follows the approved C1 boundary and the accepted account-enumeration decision; this stage does not introduce a new privacy behavior.

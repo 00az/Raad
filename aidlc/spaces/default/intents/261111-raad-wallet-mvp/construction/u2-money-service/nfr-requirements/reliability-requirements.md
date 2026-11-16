@@ -16,6 +16,13 @@ Conversation language: English.
 | NFR5.4 | Repeated or simultaneous use of the same sender/key cannot move money twice; the first business result is stable and replayable. | Sequential, simultaneous, and lost-response replay tests pass against a real local data-store container. |
 | NFR5.5 | Accepted `UserConfirmed` events may be delivered more than once, but create one wallet and one starting credit; event failures do not make confirmation appear to fail. | Duplicate event tests and the C2 retry/dead-letter path demonstrate one wallet and one credit. |
 
+## Final-outcome and profile-version consistency
+
+| ID | Requirement | Acceptance |
+|---|---|---|
+| NFR4.3 | No durable pending reservation can strand a transfer key. A final outcome is conditionally created only with the complete atomic success or business refusal; concurrent losers reread the winner. | Kill before commit and after commit/before response; repeat the same and a conflicting fingerprint; verify no stranded key or duplicate movement. |
+| NFR4.4 | Immutable profile versions are ensured before Ledger prepares a reference, protected for the request-outcome lifetime, and reconstructed by MoneyApi. A missing referenced version causes a safe unavailable replay, never a new financial attempt. | Profile-edit/replay and version-loss tests preserve original fields or refuse safely, without changing balances. |
+
 ## Failure Handling and Degradation
 
 | ID | Requirement | Acceptance |

@@ -61,6 +61,12 @@
       "path": "scripts/verify-dev.sh"
     },
     {
+      "path": "scripts/run_mobile_dev.py"
+    },
+    {
+      "path": "infrastructure/tests/test_mobile_dev_runner.py"
+    },
+    {
       "path": "money-service@checkout/.github/workflows/ci.yml"
     },
     {
@@ -158,6 +164,12 @@
     },
     {
       "path": "infrastructure/raad_platform/telemetry/handler.py"
+    },
+    {
+      "path": "infrastructure/raad_platform/telemetry/driver.py"
+    },
+    {
+      "path": "infrastructure/tests/test_public_latency_driver.py"
     },
     {
       "path": "infrastructure/tests/test_public_latency_processor.py"

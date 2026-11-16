@@ -1,0 +1,14 @@
+{
+  "stage": "infrastructure-design",
+  "unit": "u2-money-service",
+  "upstream_ids": [
+    "NFR6.4"
+  ],
+  "coverage": [
+    {
+      "id": "NFR6.4",
+      "status": "OK",
+      "target": "MoneyApi Lambda configured with 1-second downstream call timeouts and 7-second handler timeout; CloudWatch p95 latency alarm/dashboard tracks the 2-second target"
+    }
+  ]
+}

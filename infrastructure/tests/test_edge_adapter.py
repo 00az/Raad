@@ -10,15 +10,21 @@ import pytest
 
 from raad_platform.edge import handler
 
+READ_ORIGIN_SECRET = handler._origin_secret
+
 
 @pytest.fixture(autouse=True)
-def isolate_key_cache():
+def isolate_key_cache(monkeypatch):
     handler._jwk_clients.clear()
+    handler._origin_cache = None
+    monkeypatch.setenv("ORIGIN_SECRET_ARN", "origin-secret")
+    monkeypatch.setattr(handler, "_origin_secret", lambda: "a" * 64)
 
 
 def event() -> dict:
     return {
         "headers": {
+            "X-Raad-Origin": "a" * 64,
             "Authorization": "Bearer signed-token",
             "X-Correlation-Id": "request-123",
             "X-User-Id": "spoofed",
@@ -33,9 +39,74 @@ def test_missing_token_returns_safe_401(monkeypatch) -> None:
     monkeypatch.setattr(
         handler, "_profile", lambda: (_ for _ in ()).throw(AssertionError("must not read target"))
     )
-    result = handler.handle({**event(), "headers": {}}, None)
+    result = handler.handle({**event(), "headers": {"X-Raad-Origin": "a" * 64}}, None)
     assert result["statusCode"] == 401
     assert "wallet" not in result["body"]
+
+
+@pytest.mark.parametrize("value", [None, "wrong", "a" * 63, "a" * 64 + ",wrong"])
+def test_direct_origin_is_refused_before_auth_forwarding_or_public_metrics(
+    monkeypatch, capsys, value
+):
+    request = event()
+    request["headers"].pop("X-Raad-Origin")
+    if value is not None:
+        request["headers"]["x-raad-origin"] = value
+    profile = Mock(side_effect=AssertionError("must not authenticate"))
+    forward = Mock(side_effect=AssertionError("must not forward"))
+    metrics = Mock(side_effect=AssertionError("must not count bypass traffic"))
+    monkeypatch.setattr(handler, "_profile", profile)
+    monkeypatch.setattr(handler.requests, "request", forward)
+    monkeypatch.setattr(handler, "_publish_metrics", metrics)
+    result = handler.entry(request, None)
+    assert result["statusCode"] == 403
+    assert json.loads(result["body"])["code"] == "FORBIDDEN"
+    profile.assert_not_called()
+    forward.assert_not_called()
+    metrics.assert_not_called()
+    assert capsys.readouterr().out == ""
+    assert "a" * 64 not in result["body"]
+
+
+@pytest.mark.parametrize("kind", ["missing-config", "missing-secret", "malformed-secret"])
+def test_origin_configuration_fails_closed_without_disclosing_secret(monkeypatch, capsys, kind):
+    if kind == "missing-config":
+        monkeypatch.delenv("ORIGIN_SECRET_ARN")
+    elif kind == "missing-secret":
+        monkeypatch.setattr(handler, "_origin_secret", Mock(side_effect=KeyError("private")))
+    else:
+        monkeypatch.setattr(handler, "_origin_secret", READ_ORIGIN_SECRET)
+        monkeypatch.setattr(
+            handler.boto3,
+            "client",
+            lambda *a, **kw: Mock(get_secret_value=Mock(return_value={"SecretString": "private"})),
+        )
+    result = handler.handle(event(), None)
+    assert result["statusCode"] == 503
+    assert "private" not in result["body"] + capsys.readouterr().out
+
+
+def test_origin_secret_cache_expires_and_never_uses_stale_value_on_read_failure(monkeypatch):
+    client = Mock(
+        get_secret_value=Mock(
+            side_effect=[
+                {"SecretString": "a" * 64},
+                {"SecretString": "b" * 64},
+                KeyError("unavailable"),
+            ]
+        )
+    )
+    factory = Mock(return_value=client)
+    clock = Mock(side_effect=[10, 20, 71, 132])
+    monkeypatch.setattr(handler.boto3, "client", factory)
+    monkeypatch.setattr(handler.time, "monotonic", clock)
+    assert READ_ORIGIN_SECRET() == "a" * 64
+    assert READ_ORIGIN_SECRET() == "a" * 64
+    assert READ_ORIGIN_SECRET() == "b" * 64
+    with pytest.raises(KeyError):
+        READ_ORIGIN_SECRET()
+    assert client.get_secret_value.call_count == 3
+    assert factory.call_args.kwargs["config"].retries["total_max_attempts"] == 1
 
 
 def test_missing_service_parameter_fails_closed(monkeypatch) -> None:

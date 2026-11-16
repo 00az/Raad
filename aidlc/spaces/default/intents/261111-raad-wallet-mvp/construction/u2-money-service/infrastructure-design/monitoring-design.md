@@ -1,4 +1,4 @@
-# Monitoring Design — U2 Money Service
+# monitoring design — u2-money-service
 
 Conversation language: English.
 
@@ -6,48 +6,41 @@ Conversation language: English.
 
 | Metric | Source | Threshold | Why it matters |
 |---|---|---|---|
-| Eligible C1 request availability | API edge and MoneyApi outcomes | Monthly production SLO 99.5%; define eligible request set consistently in dashboard | Tracks the approved availability target. |
-| C1 request p95 latency | Edge and Lambda custom metric, by operation/status | Warn when p95 exceeds 2 seconds under the approved 10-concurrent-user test; evaluate over 5 minutes | Protects the transfer latency target. |
-| Lambda errors and throttles | CloudWatch Lambda metrics | Alarm on sustained errors or any throttles during normal MVP traffic; tune after baseline | Finds handler faults and concurrency caps that block requests. |
-| DynamoDB throttles / transaction cancellations | CloudWatch DynamoDB metrics plus service counters | Alarm on throttling; alert on sustained unexpected transaction cancellations after excluding known business conflicts | Detects persistence pressure and anomalous write contention. |
-| Transfer persistence failures | MoneyApi custom metric | Any confirmed persistence failure, with 5-minute aggregation | Atomic money movement must fail safely and visibly. |
-| C2 retries and DLQ messages | EventBridge/SQS metrics and consumer custom metric | Alarm on any DLQ visible message; trend retries by environment | Detects account setup events that exhausted retries. |
-| Business refusals | MoneyApi outcome counters | Dashboard only; exclude normal business refusals from server error alarms | Distinguishes expected outcomes from service failure. |
-
-All custom dimensions are restricted to environment, operation and status. Never dimension by user, email, amount, recipient, transfer reference or idempotency key.
+| Requests/refusals/errors | MoneyApi safe EMF counters by environment/operation/result | Account for every response | Business refusal does not hide technical failure. |
+| Public latency | U4 native CloudFront observations plus complete acceptance join | p95<=2000ms at demo load, cold samples retained | Handler duration is diagnostic only. |
+| Integrity/replay | Fixed Ledger codes for missing row/profile/ordinal and conflicts | Technical failures visible | No partial successful history or new replay movement. |
+| C2 failures | Workqueue age, both DLQs, consumer errors/rule delivery failures | Any DLQ>=1/min | Delivery acceptance is not processing success. |
+| Recovery | Timed drill | RPO<=5min/RTO<=3h | PITR alone does not prove targets. |
 
 ## Alerts
 
 | Alert | Condition | Severity | Routes to |
 |---|---|---|---|
-| API server errors | 5xx rate exceeds 1% for 5 minutes or at least 5 errors in 5 minutes | High | Environment SNS topic; email configured only after account owner supplies it |
-| API latency | p95 over 2 seconds for 5 minutes | Medium | Environment SNS topic; supplied monitoring email |
-| Lambda throttles | Any throttles sustained across 2 one-minute periods | High | Environment SNS topic; supplied monitoring email |
-| DynamoDB throttling | Any read/write throttle over 2 one-minute periods | High | Environment SNS topic; supplied monitoring email |
-| Transfer persistence failure | One confirmed failed atomic persistence operation, excluding expected business refusal | High | Environment SNS topic; supplied monitoring email |
-| Account-confirmed DLQ | At least one visible message | High | Environment SNS topic; supplied monitoring email; inspect using event ID only |
-| C2 retry growth | Retry count rises above the post-deploy baseline for 10 minutes | Medium | Environment dashboard and SNS topic |
-
-Thresholds are initial operational triggers. Calibrate against the approved load test in `stg`; do not weaken the 2-second p95 or 99.5% SLO to quiet alerts. The SNS subscription remains a named external setup input until a real address is provided.
+| Server errors | >=1% and>=20 requests in each of two5min windows | High | Shared SNS, jjii0@hotmail.com |
+| Technical transfer failures | >=3 in each of two5min windows | High | Same |
+| Public latency | p95>2000ms in two complete5min windows,>=20 samples each | Warning | Same |
+| Runtime/store throttles | >=1/min in two windows | High | Same |
+| Delivery/processing DLQ | >=1 in1min | High | Same; operator reconciliation |
+| Missing observation heartbeat | Absent>=3min | High | Same |
 
 ## SLIs / SLOs
 
 | SLI | SLO target | Measurement window |
 |---|---|---|
-| Eligible production API requests served successfully | 99.5% | Calendar month; publish eligible-request definition with dashboard |
-| Transfer request p95 latency at target load | ≤2 seconds | 5-minute rolling windows during load test and ongoing production reporting |
-| Persistent-data recovery point | RPO ≤5 minutes | Recovery exercise and after a material data-store change |
-| Service recovery time | RTO ≤3 hours | Timed restore exercise; includes validation and traffic cutover |
-| C2 event handling | Retry accepted events for up to 24 hours, then expose in DLQ | Per-event lifecycle |
+| Transfer latency/success | p95<=2000ms, every valid funded transfer succeeds | >=200 funded attempts/>=10min at100 registered/10 active; combined idle-start/sustained and sustained separately |
+| Availability | prd>=99.5%; maintenance/dependency failures included | Calendar month; idle wallet probes separately labelled |
+| Recovery | RPO<=5min/RTO<=3h | Actual coherent three-table restore drill |
 
 ## Logs & Tracing
 
-Use JSON CloudWatch logs with correlation ID, environment, operation, status, duration and opaque caller reference. Do not log bodies, email, display name, token/claims, user ID, amount, cursor, recipient or raw idempotency key. Keep separate log groups by environment; use shorter retention in `dev`, and set `stg`/`prd` retention before deployment. Correlation IDs connect edge and service logs; distributed tracing is deferred for MVP.
-
-## Dashboards
-
-Create one dashboard per environment showing request volume, 4xx/5xx rates, p50/p95 latency against the 2-second target, Lambda concurrency/errors/throttles, DynamoDB throttles/cancellations, transfer success and refusal counts, C2 retries/DLQ depth, and production availability/SLO history. Display balances only as aggregate service outcomes; never expose individual user or transaction values.
+| Item | Configuration |
+|---|---|
+| Allowlist | UTC/environment/component/operation/safe code/duration/protected correlation version/key; eventId for event diagnostics only. No profile/body/token/money/key/cursor. |
+| Retention |14days dev/30days stg-prd, encrypted, named-role access. |
+| Missing/recovery | Incomplete/low-volume=>INSUFFICIENT_DATA, separate heartbeat alarm. Three complete healthy windows recover ordinary alarms; DLQ needs operator reconciliation. |
+| Dashboard | Counts/refusals/errors/public p50/p95+coverage/cold diagnostics/throttles/transaction conflicts/events/restore status. No tracing backend. |
+| Evidence | Actual stg breach/recovery email to confirmed subscription remains unrun; fake/API/device checks do not substitute. |
 
 ## Sources
 
-This monitoring design implements `observability-design.md`, `performance-design.md`, `security-design.md`, `scalability-design.md`, `reliability-design.md` and `logical-components.md`. Metric boundaries follow `components.md` and `functional-spec.md`; event and API ownership follows `contract-summary.md`.
+U2 observability/reliability designs and U4 monitoring; C1/C2/C5.

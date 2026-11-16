@@ -19,9 +19,7 @@ test -f "$raad_mobile/integration_test/walking_skeleton_test.dart" || { echo "Co
 
 # Every invocation creates new isolated API/iOS/Android pairs through supported setup.
 # Passwords stay in Secrets Manager; neither arguments nor this script print them.
-uv run --project "$raad_service" python "$raad_service/scripts/setup_dev_users.py"
+raad_setup_result="$(uv run --project "$raad_service" python "$raad_service/scripts/setup_dev_users.py")"
 RAAD_FIXTURE_PHASE=api uv run --project "$raad_service" python "$raad_service/scripts/verify_dev.py"
 
-cd "$raad_mobile"
-RAAD_FIXTURE_PHASE=ios flutter test integration_test/walking_skeleton_test.dart -d "$RAAD_IOS_DEVICE_ID" --dart-define-from-file=config/dev.json
-RAAD_FIXTURE_PHASE=android flutter test integration_test/walking_skeleton_test.dart -d "$RAAD_ANDROID_DEVICE_ID" --dart-define-from-file=config/dev.json
+uv run --project "$raad_workspace/infrastructure" python "$raad_workspace/scripts/run_mobile_dev.py" --setup-result "$raad_setup_result" --mobile "$raad_mobile"

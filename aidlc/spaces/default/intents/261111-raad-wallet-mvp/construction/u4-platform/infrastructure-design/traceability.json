@@ -1,0 +1,123 @@
+{
+  "stage": "infrastructure-design",
+  "unit": "u4-platform",
+  "upstream_ids": [
+    "NFR6.10",
+    "NFR7.10",
+    "NFR9.10",
+    "NFR1.10",
+    "NFR2.10",
+    "NFR2.11",
+    "NFR12.10",
+    "NFR12.11",
+    "NFR10.10",
+    "NFR11.10",
+    "NFR14.10",
+    "NFR7.11",
+    "NFR13.10",
+    "NFR5.10",
+    "NFR4.10",
+    "NFR9.11",
+    "NFR15.10",
+    "NFR8.10",
+    "NFR8.11"
+  ],
+  "coverage": [
+    {
+      "id": "NFR6.10",
+      "status": "OK",
+      "target": "infrastructure-specification.md: deployment/resource ownership, configuration and acceptance gates"
+    },
+    {
+      "id": "NFR7.10",
+      "status": "OK",
+      "target": "infrastructure-specification.md: deployment/resource ownership, configuration and acceptance gates"
+    },
+    {
+      "id": "NFR9.10",
+      "status": "OK",
+      "target": "infrastructure-specification.md: deployment/resource ownership, configuration and acceptance gates"
+    },
+    {
+      "id": "NFR1.10",
+      "status": "GAP",
+      "target": "infrastructure-specification.md Capability and Provisioning Gates: P7 native old-code invalidation unverified; no supported trigger fallback established, identity release blocked pending capability proof or approved C3 redesign."
+    },
+    {
+      "id": "NFR2.10",
+      "status": "OK",
+      "target": "infrastructure-specification.md: deployment/resource ownership, configuration and acceptance gates"
+    },
+    {
+      "id": "NFR2.11",
+      "status": "OK",
+      "target": "infrastructure-specification.md: deployment/resource ownership, configuration and acceptance gates"
+    },
+    {
+      "id": "NFR12.10",
+      "status": "OK",
+      "target": "infrastructure-specification.md: deployment/resource ownership, configuration and acceptance gates"
+    },
+    {
+      "id": "NFR12.11",
+      "status": "OK",
+      "target": "infrastructure-specification.md: deployment/resource ownership, configuration and acceptance gates"
+    },
+    {
+      "id": "NFR10.10",
+      "status": "OK",
+      "target": "monitoring-design.md: metrics, alert windows, privacy, UTC and evidence"
+    },
+    {
+      "id": "NFR11.10",
+      "status": "OK",
+      "target": "infrastructure-specification.md: deployment/resource ownership, configuration and acceptance gates"
+    },
+    {
+      "id": "NFR14.10",
+      "status": "OK",
+      "target": "cicd-pipeline.md: owning-repo checks, coverage, actual packaging and release gates"
+    },
+    {
+      "id": "NFR7.11",
+      "status": "OK",
+      "target": "infrastructure-specification.md: deployment/resource ownership, configuration and acceptance gates"
+    },
+    {
+      "id": "NFR13.10",
+      "status": "OK",
+      "target": "infrastructure-specification.md: deployment/resource ownership, configuration and acceptance gates"
+    },
+    {
+      "id": "NFR5.10",
+      "status": "OK",
+      "target": "infrastructure-specification.md: deployment/resource ownership, configuration and acceptance gates"
+    },
+    {
+      "id": "NFR4.10",
+      "status": "OK",
+      "target": "infrastructure-specification.md: deployment/resource ownership, configuration and acceptance gates"
+    },
+    {
+      "id": "NFR9.11",
+      "status": "OK",
+      "target": "infrastructure-specification.md: deployment/resource ownership, configuration and acceptance gates"
+    },
+    {
+      "id": "NFR15.10",
+      "status": "OK",
+      "target": "monitoring-design.md: metrics, alert windows, privacy, UTC and evidence"
+    },
+    {
+      "id": "NFR8.10",
+      "status": "OK",
+      "target": "monitoring-design.md: metrics, alert windows, privacy, UTC and evidence"
+    },
+    {
+      "id": "NFR8.11",
+      "status": "OK",
+      "target": "monitoring-design.md: metrics, alert windows, privacy, UTC and evidence"
+    }
+  ],
+  "reverse": []
+}

@@ -42,3 +42,13 @@ def test_hmac_secret_is_environment_scoped() -> None:
     template().has_resource_properties(
         "AWS::SecretsManager::Secret", {"Name": "raad/dev/correlation-hmac"}
     )
+
+
+def test_dev_only_plus_exception_preserves_identity_controls():
+    rendered = template().to_json()
+    pool = next(r for r in rendered["Resources"].values() if r["Type"] == "AWS::Cognito::UserPool")
+    assert pool["Properties"]["Policies"]["PasswordPolicy"]["MinimumLength"] == 12
+    assert pool["Properties"]["AutoVerifiedAttributes"] == ["email"]
+    entries = pool["Metadata"]["cdk_nag"]["rules_to_suppress"]
+    assert [entry["id"] for entry in entries] == ["AwsSolutions-COG8"]
+    assert "dev-only" in entries[0]["reason"]

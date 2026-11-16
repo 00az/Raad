@@ -45,3 +45,7 @@ Performance reports wait at most two minutes after the run for telemetry reconci
 - `construction/u1-walking-skeleton/nfr-design/performance-design.md`, `security-design.md`, `scalability-design.md`, `reliability-design.md` and `observability-design.md`: concrete checks and operating limits.
 - `inception/contract-design/contract-summary.md`: pinned C1 contract and cross-repository release controls.
 - `aidlc/spaces/default/memory/team.md`: pull request, branch, deploy and review practices.
+
+## Provisioning and Provider Gates
+
+Before any deploy or asset publication, require explicit cost clearance; current instruction is no cost. Use a non-root short-lived deployment role, never the earlier inspection identity. External DNS must supply actual controlled hostname/validation records and issued custom certificate with TLS1.2 rejection probes; hostedZoneId is not required or purchased. The P7 earlier-code invalidation capability is unverified and blocks full identity release if unmet; no pre-confirmation trigger is assumed. Update the existing CDK native GetUser/external-DNS path in Code Generation, then actual bundle/synth/nag/diff and origin-header delivery proof. Three repo SHAs and independent API/iOS/Android fixtures remain mandatory; fake device journeys do not pass scripts/verify-dev.sh.
