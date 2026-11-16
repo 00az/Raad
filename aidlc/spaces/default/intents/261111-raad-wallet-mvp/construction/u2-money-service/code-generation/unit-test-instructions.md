@@ -17,6 +17,24 @@ Repository: `RaadMoneyService` (`00az/RaadMoneyService`). Use the repository's e
 
 Read `pyproject.toml`, `uv.lock`, and CI workflow before fixing exact commands. Run the repository's documented lint, strict type check, unit-test/coverage, integration-test, dependency-audit, CDK synth/assertions/`cdk-nag`, and OpenAPI validation commands. Integration checks requiring Docker must be reported as not run if Docker is unavailable, with the reason. Record every command actually run and its result in `code-summary.md`; distinguish unavailable checks from failures and from unrun checks.
 
+## Exact Commands (fixed at Code Generation from `pyproject.toml`, `uv.lock` and `.github/workflows/ci.yml`)
+
+Run from the `RaadMoneyService` checkout with the locked environment (`uv sync --locked --all-groups`). Integration tests need DynamoDB Local on `127.0.0.1:8000`: `docker compose up -d dynamodb-local` (the compose healthcheck probes `/shell/`, which this image answers with 400, so do not wait on `--wait`; the endpoint is ready when it answers).
+
+| Check | Command | Gate |
+|---|---|---|
+| Format | `uv run ruff format --check src tests scripts` | any change blocks |
+| Lint | `uv run ruff check src tests scripts` | any finding blocks |
+| Strict types | `uv run mypy src` | any error blocks |
+| Full suite and repository floor | `uv run pytest tests/unit tests/integration` | `pyproject.toml` `--cov-fail-under=80` |
+| Money-core floor (unit-scoped runner) | `uv run pytest tests/unit/test_ledger_rules.py tests/unit/test_u2_money_rules.py tests/unit/test_u2_money_core.py tests/unit/test_u2_transfer_service.py --cov-reset --cov=raad_money.ledger --cov=raad_money.transfers --cov-branch --cov-report=json:artifacts/coverage/money-core.json --cov-report=term-missing --cov-fail-under=95` | 95% combined |
+| Money-core line and branch, per module | `uv run python scripts/check_ledger_coverage.py artifacts/coverage/money-core.json` | each of `ledger.py` and `transfers.py` >=95% line AND >=95% branch |
+| Dependency audit | `uv run pip-audit` | any finding blocks |
+| Contract | `uv run openapi-spec-validator openapi/raad-money-v1.yaml` (also inside the suite) | invalid document blocks |
+| CDK synth, bundling and cdk-nag | `uv run cdk synth` with the CI fixture inputs `RAAD_EDGE_ROLE_ARN`, `RAAD_CORRELATION_SECRET_ARN`, `RAAD_EVENT_BUS_ARN`, `RAAD_ALARM_TOPIC_ARN` | any unsuppressed AwsSolutions finding blocks |
+
+The money-movement core measured for the 95% floors is `raad_money.ledger` (amount validation, balance arithmetic, transfer rules, outcomes and fingerprints) and `raad_money.transfers` (duplicate-request handling). No coverage-ignore pragma is used anywhere in the repository.
+
 ## Test Matrix
 
 | Area | Cases |

@@ -168,7 +168,7 @@
 | unit | owner | code-generation | gate |
 | --- | --- | --- | --- |
 | u1-walking-skeleton | - | [x] | [x] |
-| u2-money-service | - | [ ] | [ ] |
+| u2-money-service | - | [-] | [-] |
 | u4-platform | - | [ ] | [ ] |
 | u5-landing-page | - | [ ] | [ ] |
 | u3-mobile-app | - | [ ] | [ ] |

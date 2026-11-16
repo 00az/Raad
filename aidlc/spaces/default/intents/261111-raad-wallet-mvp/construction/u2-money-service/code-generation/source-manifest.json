@@ -1,0 +1,127 @@
+{
+  "stage": "code-generation",
+  "unit": "u2-money-service",
+  "version": 1,
+  "writes": [
+    {
+      "path": "money-service@checkout/.github/workflows/ci.yml"
+    },
+    {
+      "path": "money-service@checkout/.github/workflows/deploy-dev.yml"
+    },
+    {
+      "path": "money-service@checkout/app.py"
+    },
+    {
+      "path": "money-service@checkout/openapi/raad-money-v1.yaml"
+    },
+    {
+      "path": "money-service@checkout/artifacts/coverage/money-core.json"
+    },
+    {
+      "path": "money-service@checkout/scripts/check_ledger_coverage.py"
+    },
+    {
+      "path": "money-service@checkout/scripts/migrate_transactions.py"
+    },
+    {
+      "path": "money-service@checkout/scripts/verify_dev.py"
+    },
+    {
+      "path": "money-service@checkout/src/raad_money/api.py"
+    },
+    {
+      "path": "money-service@checkout/src/raad_money/consumer.py"
+    },
+    {
+      "path": "money-service@checkout/src/raad_money/cursor.py"
+    },
+    {
+      "path": "money-service@checkout/src/raad_money/email_address.py"
+    },
+    {
+      "path": "money-service@checkout/src/raad_money/history.py"
+    },
+    {
+      "path": "money-service@checkout/src/raad_money/infrastructure.py"
+    },
+    {
+      "path": "money-service@checkout/src/raad_money/ledger.py"
+    },
+    {
+      "path": "money-service@checkout/src/raad_money/storage.py"
+    },
+    {
+      "path": "money-service@checkout/src/raad_money/store_errors.py"
+    },
+    {
+      "path": "money-service@checkout/src/raad_money/transfers.py"
+    },
+    {
+      "path": "money-service@checkout/src/raad_money/wallet_setup.py"
+    },
+    {
+      "path": "money-service@checkout/tests/integration/conftest.py"
+    },
+    {
+      "path": "money-service@checkout/tests/integration/test_dynamodb_transactions.py"
+    },
+    {
+      "path": "money-service@checkout/tests/integration/test_edge_forwarding.py"
+    },
+    {
+      "path": "money-service@checkout/tests/integration/test_transactions_migration.py"
+    },
+    {
+      "path": "money-service@checkout/tests/integration/test_u2_api.py"
+    },
+    {
+      "path": "money-service@checkout/tests/integration/test_u2_consumer.py"
+    },
+    {
+      "path": "money-service@checkout/tests/integration/test_u2_directory.py"
+    },
+    {
+      "path": "money-service@checkout/tests/integration/test_u2_history.py"
+    },
+    {
+      "path": "money-service@checkout/tests/integration/test_u2_transfers.py"
+    },
+    {
+      "path": "money-service@checkout/tests/integration/test_wallet_directory.py"
+    },
+    {
+      "path": "money-service@checkout/tests/unit/test_consumer.py"
+    },
+    {
+      "path": "money-service@checkout/tests/unit/test_ledger_repository.py"
+    },
+    {
+      "path": "money-service@checkout/tests/unit/test_money_api.py"
+    },
+    {
+      "path": "money-service@checkout/tests/unit/test_service_stack.py"
+    },
+    {
+      "path": "money-service@checkout/tests/unit/test_smoke_script.py"
+    },
+    {
+      "path": "money-service@checkout/tests/unit/test_transactions_migration.py"
+    },
+    {
+      "path": "money-service@checkout/tests/unit/test_u2_history.py"
+    },
+    {
+      "path": "money-service@checkout/tests/unit/test_u2_money_core.py"
+    },
+    {
+      "path": "money-service@checkout/tests/unit/test_u2_money_rules.py"
+    },
+    {
+      "path": "money-service@checkout/tests/unit/test_u2_transfer_service.py"
+    },
+    {
+      "path": "money-service@checkout/tests/unit/test_wallet_directory.py"
+    }
+  ]
+}
