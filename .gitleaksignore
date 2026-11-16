@@ -1,0 +1,5 @@
+# False positives only. Each line is one gitleaks fingerprint (commit:file:rule:line).
+# Add a line only after checking the finding is not a secret, and say why here.
+
+# U2 NFR requirements prose: "missing/corrupt versions" read as a generic API key.
+cd05aafb0ed7b8222890905fcffd1797de6b31b4:aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u2-money-service/nfr-requirements/security-requirements.md:generic-api-key:34
