@@ -40,6 +40,12 @@ What destination should receive the required dead-letter notification?
 **Answered:** 2026-11-13 12:46:37 UTC
 **Mode:** chat
 
+## Current decisions and external capability checks
+
+The person subsequently supplied operational email jjii0@hotmail.com and selected investigation of a free controlled subdomain (message b8664859). No domain purchase or paid provisioning is authorized. Public contact abdulaziz.alrubai@outlook.com is separate. These decisions are already answered, not new questions to repeat.
+
+Actual hostname reservation, certificate issuance, provider capabilities (especially P7 earlier-code invalidation), paid-account/credit eligibility and real deployment evidence remain external provisioning/release gates. A person cannot answer a provider capability into existence. No unsupported pre-confirmation trigger or zero-cost AWS claim is selected. U4 infrastructure-specification.md records the conditional resources, explicit P7 gap and cost worksheet.
+
 ## Consolidated Summary Confirmation
 
 Does this all look correct before I generate the artifact?

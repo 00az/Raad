@@ -27,7 +27,7 @@ There is no additional numerical latency target for sign-in, wallet reads, recip
 
 ## Dependencies and accepted risks
 
-The functional specification and rules describe the U1 workflows and money invariants. Their accepted review concerns about setup, public field mapping and fixture initialization remain open risks. This document does not edit those artifacts or claim that the concerns have been fixed. The measured implementation must identify which C1 operations and payloads the test actually used.
+The functional specification and rules define the U1 workflows, dedicated transaction row and money invariants. Measure the complete atomic transfer write, including both balances and the Transactions row, rather than timing only the balance updates. Prepare both parties' wallets and directory entries before a transfer; API, iOS and Android journeys use independent fresh fixture pairs. The measured implementation must identify its exact pinned partial C1 pre-release and payloads; full replay conformance remains U2 work.
 
 ## Sources
 

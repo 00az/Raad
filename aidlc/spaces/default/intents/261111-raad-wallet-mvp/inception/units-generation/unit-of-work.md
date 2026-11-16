@@ -2,7 +2,7 @@
 
 Conversation language: English.
 
-This document groups the building blocks in `components.md` (MobileApp, MoneyApi, Ledger, WalletDirectory and LandingPage) and the shared platform into five units of work. It follows the plan approved in `units-generation-questions.md` (Q1 A, Q2 B, Q3 A and Plan Approval) and keeps to the boundary decisions in `decisions.md` (ADR-001 to ADR-007), the requirements in `requirements.md`, the stories in `stories.md` and the practices in `team-practices.md`.
+This document groups the building blocks in `components.md` (MobileApp, MoneyApi, Ledger, WalletDirectory and LandingPage) and the shared platform into five units of work. It follows the plan approved in `units-generation-questions.md` (Q1 A, Q2 B, Q3 A and Plan Approval) and keeps to the boundary decisions in `decisions.md` (ADR-001 to ADR-008), the requirements in `requirements.md`, the stories in `stories.md` and the practices in `team-practices.md`.
 
 The dependencies between units are in `unit-of-work-dependency.md`, and the stories each unit implements are in `unit-of-work-story-map.md`. This document does not choose which unit is built after the skeleton, or who builds it: Delivery Planning decides both.
 
@@ -26,7 +26,7 @@ Sizes compare the units with each other only (S, M, L, XL).
 |---|---|---|---|---|---|
 | MobileApp | Sign-in, wallet, send (form, review, result) and history screens, in English | | Every other screen and state | | |
 | MoneyApi | Sign-in check, wallet setup on the first request (safety net), balance, recipient lookup, one transfer, first history page | Remaining operations and refusals, account-confirmed entry point, safe errors | | | |
-| Ledger | Open a wallet, balance, all-or-nothing transfer with the balance check, first history page | Amount limits, own-wallet refusal, request keys and replay, simultaneous-transfer tests, history paging | | | |
+| Ledger | Open a wallet, balance, provision the dedicated `Transactions` table keyed by `transferId`, atomic transfer row and wallet balance writes, first history page | Amount limits, own-wallet refusal, request keys and replay, simultaneous-transfer tests, sender/recipient wallet history indexes on the same table and history paging | | | |
 | WalletDirectory | Register a holder, find by email, names for a history page | Refusal of an address already held by another user | | | |
 | LandingPage | | | | | The whole page |
 | Shared platform (infrastructure) | Sign-in pool with email and password, public API address with `/money`, a basic firewall | | | Remaining sign-in settings, rate limits, firewall rules, signal wiring, `stg` and `prd` setup | |
@@ -36,7 +36,7 @@ Sizes compare the units with each other only (S, M, L, XL).
 | Entity | Owning component | Introduced in | Extended in |
 |---|---|---|---|
 | Wallet | Ledger | U1, including one wallet per owner when two first requests arrive together | none |
-| Transfer | Ledger | U1 | U2 (history paging) |
+| Transfer | Ledger | U1: one immutable row per completed transfer in the dedicated `Transactions` table, keyed by `transferId` | U2: sender/recipient wallet history indexes and paging on the same table |
 | TransferRequest | Ledger | U2 | none |
 | WalletHolder | WalletDirectory | U1 | U2 (refusal of a taken address) |
 | PendingTransfer | MobileApp | U3 | none |
@@ -59,7 +59,7 @@ Sizes compare the units with each other only (S, M, L, XL).
   - opens a wallet with 100,000 halalas once per owner, also when two first requests arrive together;
   - reads the balance;
   - makes a transfer as one all-or-nothing change with the balance check, so a balance never goes below zero;
-  - records the completed Transfer with its reference;
+  - provisions the dedicated `Transactions` table and records each completed Transfer as one immutable row keyed by `transferId`, with its reference, sender and recipient wallet IDs, whole-halalah amount and completion time, atomically with both wallet balance changes (ADR-008); current balances remain on Wallet records;
   - lists completed transfers newest first.
 - WalletDirectory: registers a holder; finds one by the whole email address, ignoring surrounding spaces and capitals; returns names for a list of user ids.
 - The app's sign-in, wallet, send (form, review, result) and history screens, in English, against `dev`.
@@ -67,13 +67,14 @@ Sizes compare the units with each other only (S, M, L, XL).
 - The `dev` deploy path of the three repos.
 - The checks that prove the slice: an API smoke script against the deployed `dev` API, and a Flutter integration test on a simulator against `dev`. This is the team's proposed verification; it becomes the Construction Verification Command only when the person authorises it at Construction.
 
-**Deployment model.** Each repo's part deploys on its own; `Raad`'s part goes first.
+**Deployment model.** Each repo's part deploys on its own; `Raad`'s part goes first. U1 provisions the dedicated `Transactions` table in the money service's own stacks; the Ledger owns its writes.
 
 **Implementation notes.**
 
 - The money-movement core (amount validation, balance arithmetic, transfer rules) is written test-first, with at least 95% line and branch coverage and the property test that the total money never changes (team practices).
-- The API description written in Contract Design is the source of truth. U1 builds its balance, recipient lookup, transfer and first-history-page operations. The transfer call already carries the request key the contract defines; the replay rules come in U2.
+- The API description written in Contract Design is the source of truth. U1 builds its balance, recipient lookup, transfer and first-history-page operations as a partial pre-release. It accepts and validates the request key but stores no `TransferRequest` or key-to-transfer outcome; U2 introduces that record and the replay rules. U1's atomic write covers the completed transfer row and both balances only.
 - The send button turns off after one tap, so the skeleton cannot send twice by accident. Full duplicate protection comes in U2 and U3.
+- Until U2 provides replay protection, the skeleton client must not resubmit a transfer after an uncertain result; it refreshes balance and history to reconcile. The transition to U2 starts fresh transfer intents and keys, and never invents replay outcomes for historical U1 transfers without saved keys and fingerprints.
 - Test-user passwords never enter a repo or a log (project rules).
 
 ## U2 `u2-money-service`
@@ -85,9 +86,9 @@ Sizes compare the units with each other only (S, M, L, XL).
 - Ledger:
   - amount limits of 100 to 50,000 halalas;
   - refusal of a transfer to one's own wallet;
-  - TransferRequest: the first outcome of each sender and request key is kept, a repeat returns it, a repeat with different details is refused, and only one record exists per sender and key, even under simultaneous requests;
+  - introduces `TransferRequest` and the complete C1 idempotency guarantee: the first outcome of each sender and request key is kept, a repeat returns it, a repeat with different details is refused, and only one record exists per sender and key, even under simultaneous requests; a successful outcome is written atomically with the existing `Transactions` row and both wallet balances, while refused outcomes change no balances and create no completed transfer;
   - tests of simultaneous transfers against a real data-store container;
-  - history pages from a position marker.
+  - adds the sender-wallet and recipient-wallet history indexes to U1's existing `Transactions` table and implements history pages from a position marker; both histories refer to the same immutable row and `transferId`, with no second transfer-history store.
 - MoneyApi:
   - the refusal for an unknown recipient, and every other refusal, each with a stable code and a safe message;
   - the account-confirmed entry point (ADR-003), callable only by the same environment's sign-in service, with nothing personal written to logs;
@@ -96,7 +97,7 @@ Sizes compare the units with each other only (S, M, L, XL).
 - The complete API description committed to `RaadMoneyService`, which the app generates its client from.
 - The money service's stacks for `dev`, `stg` and `prd`.
 
-**Deployment model.** Standalone; the service's own stacks, after the platform in each environment.
+**Deployment model.** Standalone; the service's own stacks, after the platform in each environment. U2 extends U1's existing `Transactions` table with the sender/recipient history indexes through those stacks and preserves its transfer rows and wallet balances.
 
 **Implementation notes.** The replay test, the concurrency test and the rejection tests required by the practices are written here, test-first for the money core. This unit builds the account-confirmed entry point and tests it directly; how the sign-in service's signal reaches it is decided in infrastructure design, together with U4 (domain-design finding R-02).
 
@@ -184,7 +185,7 @@ At the Domain Design gate, the person accepted the architecture review's open fi
 
 ## Sources
 
-- `components.md` and `decisions.md` in `inception/domain-design/`: the building blocks, entities and ADR-001 to ADR-007.
+- `components.md` and `decisions.md` in `inception/domain-design/`: the building blocks, entities and ADR-001 to ADR-008, including the dedicated `Transactions` table.
 - `requirements.md` in `inception/requirements-analysis/` and `stories.md` in `inception/user-stories/`.
 - `team-practices.md` in `inception/practices-discovery/`: repos, walking skeleton, testing posture and deployment.
 - `units-generation-questions.md` in this stage's directory: Q1 to Q3 and the approved plan.

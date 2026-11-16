@@ -7,15 +7,15 @@ instead of in chat, write your answer after `[Answer]:` and tell me in chat when
 
 Approve the code plan for u1-walking-skeleton?
 
-- Builds: the first integrated RAAD wallet slice across platform, money service and Flutter app, with repo work split between both engineers.
-- Touches: Engineer 1 / AI developer on `Raad` and `RaadMoneyService`; Engineer 2 (co-engineer) on `RaadMobile` at `../mobile`.
-- Tests: at least 40 unit/widget cases, local-store/API integration tests, and dev smoke and Flutter integration checks.
+- Builds: local U1 code repairs for secure external-DNS/custom-certificate configuration, matching Lambda packaging and infrastructure security findings; preserves the existing atomic wallet slice.
+- Touches: platform/service CDK, configuration, CI and tests in `Raad` and `RaadMoneyService`; mobile source remains Engineer 2-owned.
+- Tests: local platform/service suites, real DynamoDB Local integration, independent Ledger coverage, lint/types/audit, real Docker packaging and cdk-nag. AWS deployment and live verification are exp...
 
 Full plan: aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/code-generation/code-generation-plan.md
 Test instructions: aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/code-generation/unit-test-instructions.md
 
-[Approval Fingerprint]: sha256:v3:f91e6e5af43234e1df7a841f37d1fbe4b19dbbdb77ed164cab7481419ccd48e7
-[Planned Source]: 6d2e01ad2d1f35aa408f234c55dc678b1b336f629208b019ab733a72b8d263fc
+[Approval Fingerprint]: sha256:v3:b892d442037ae5b1b0c9ca79001301eda9697fe4994fa5810272cd122dbf950c
+[Planned Source]: 3f3c371c528d08c149936dc934349389d6ee7636c76849844a1b845c3405c3ae
 
 - A. Approve Plan
 - B. Request Changes

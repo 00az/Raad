@@ -1,0 +1,99 @@
+{
+  "stage": "nfr-requirements",
+  "unit": "u5-landing-page",
+  "upstream_ids": [
+    "NFR1",
+    "NFR2",
+    "NFR3",
+    "NFR4",
+    "NFR5",
+    "NFR6",
+    "NFR7",
+    "NFR8",
+    "NFR9",
+    "NFR10",
+    "NFR11",
+    "NFR12",
+    "NFR13",
+    "NFR14",
+    "NFR15"
+  ],
+  "coverage": [
+    {
+      "id": "NFR1",
+      "status": "N/A",
+      "target": "Static public page has no wallet authentication; U1/U2/U4 own wallet access."
+    },
+    {
+      "id": "NFR2",
+      "status": "OK",
+      "target": "NFR2.10 in security-requirements.md"
+    },
+    {
+      "id": "NFR3",
+      "status": "N/A",
+      "target": "No monetary data or arithmetic in U5."
+    },
+    {
+      "id": "NFR4",
+      "status": "N/A",
+      "target": "No transfer requests or financial side effects in U5."
+    },
+    {
+      "id": "NFR5",
+      "status": "N/A",
+      "target": "99.5% calendar-month SLA applies to API/wallet U2/U4; U5 static rollback/smoke constraints are separately specified."
+    },
+    {
+      "id": "NFR6",
+      "status": "N/A",
+      "target": "2-second transfer SLO applies to API U1/U2/U4, not static-page response time."
+    },
+    {
+      "id": "NFR7",
+      "status": "OK",
+      "target": "NFR7.10 in performance-requirements.md; NFR7.11 in scalability-requirements.md"
+    },
+    {
+      "id": "NFR8",
+      "status": "OK",
+      "target": "NFR8.10 in observability-requirements.md"
+    },
+    {
+      "id": "NFR9",
+      "status": "OK",
+      "target": "NFR9.10 in performance-requirements.md; NFR9.11 in security-requirements.md; NFR9.12 in reliability-requirements.md"
+    },
+    {
+      "id": "NFR10",
+      "status": "OK",
+      "target": "NFR10.10 in security-requirements.md"
+    },
+    {
+      "id": "NFR11",
+      "status": "OK",
+      "target": "NFR11.10 in security-requirements.md"
+    },
+    {
+      "id": "NFR12",
+      "status": "N/A",
+      "target": "Per-caller sign-in/transfer abuse limits are U4-owned; U5 has no account/money endpoint."
+    },
+    {
+      "id": "NFR13",
+      "status": "N/A",
+      "target": "Service path extensibility belongs to U4; U5 is a standalone static site."
+    },
+    {
+      "id": "NFR14",
+      "status": "OK",
+      "target": "NFR14.10 in security-requirements.md"
+    },
+    {
+      "id": "NFR15",
+      "status": "N/A",
+      "target": "No transfer/operational timestamp presentation in the static page; hosting logs inherit platform UTC policy."
+    }
+  ],
+  "reverse": []
+}

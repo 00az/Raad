@@ -1,0 +1,142 @@
+{
+  "stage": "code-generation",
+  "unit": "u2-money-service",
+  "version": 1,
+  "writes": [
+    {
+      "path": "RaadMoneyService@checkout/.github/workflows/ci.yml"
+    },
+    {
+      "path": "RaadMoneyService@checkout/.github/workflows/deploy-dev.yml"
+    },
+    {
+      "path": "RaadMoneyService@checkout/.gitignore"
+    },
+    {
+      "path": "RaadMoneyService@checkout/README.md"
+    },
+    {
+      "path": "RaadMoneyService@checkout/app.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/contracts/pinned/c2-identity-events/c2-identity-events-v1.asyncapi.yaml"
+    },
+    {
+      "path": "RaadMoneyService@checkout/contracts/pins.yaml"
+    },
+    {
+      "path": "RaadMoneyService@checkout/openapi/raad-money-v1.yaml"
+    },
+    {
+      "path": "RaadMoneyService@checkout/scripts/check_ledger_coverage.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/scripts/migrate_transactions.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/scripts/verify_dev.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/src/raad_money/api.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/src/raad_money/consumer.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/src/raad_money/cursor.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/src/raad_money/email_address.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/src/raad_money/history.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/src/raad_money/infrastructure.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/src/raad_money/ledger.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/src/raad_money/storage.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/src/raad_money/store_errors.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/src/raad_money/transfers.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/src/raad_money/wallet_setup.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/tests/integration/conftest.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/tests/integration/test_dynamodb_transactions.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/tests/integration/test_edge_forwarding.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/tests/integration/test_transactions_migration.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/tests/integration/test_u2_api.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/tests/integration/test_u2_consumer.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/tests/integration/test_u2_directory.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/tests/integration/test_u2_history.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/tests/integration/test_u2_transfers.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/tests/integration/test_wallet_directory.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/tests/unit/test_c2_contract.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/tests/unit/test_consumer.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/tests/unit/test_ledger_repository.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/tests/unit/test_money_api.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/tests/unit/test_service_stack.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/tests/unit/test_smoke_script.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/tests/unit/test_transactions_migration.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/tests/unit/test_u2_history.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/tests/unit/test_u2_money_core.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/tests/unit/test_u2_money_rules.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/tests/unit/test_u2_transfer_service.py"
+    },
+    {
+      "path": "RaadMoneyService@checkout/tests/unit/test_wallet_directory.py"
+    },
+    {
+      "path": "contracts/c2-identity-events-v1.asyncapi.yaml"
+    }
+  ]
+}

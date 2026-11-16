@@ -1,0 +1,272 @@
+{
+  "stage": "nfr-design",
+  "unit": "u2-money-service",
+  "upstream_ids": [
+    "NFR6.1",
+    "NFR6.2",
+    "NFR6.3",
+    "NFR6.4",
+    "NFR1.1",
+    "NFR1.2",
+    "NFR1.3",
+    "NFR2.1",
+    "NFR2.2",
+    "NFR11.1",
+    "NFR11.2",
+    "NFR9.1",
+    "NFR12.1",
+    "NFR12.2",
+    "NFR7.1",
+    "NFR7.2",
+    "NFR7.3",
+    "NFR7.4",
+    "NFR13.1",
+    "NFR3.1",
+    "NFR3.2",
+    "NFR4.1",
+    "NFR4.2",
+    "NFR5.1",
+    "NFR5.2",
+    "NFR5.3",
+    "NFR5.4",
+    "NFR5.5",
+    "NFR9.2",
+    "NFR9.3",
+    "NFR9.4",
+    "NFR15.1",
+    "NFR11.3",
+    "NFR1.4",
+    "NFR4.3",
+    "NFR4.4",
+    "NFR14.1",
+    "NFR14.2",
+    "NFR14.3",
+    "NFR10.1",
+    "NFR8.1",
+    "NFR8.2",
+    "NFR8.3",
+    "NFR8.4"
+  ],
+  "coverage": [
+    {
+      "id": "NFR6.1",
+      "status": "OK",
+      "target": "scalability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR6.2",
+      "status": "OK",
+      "target": "performance-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR6.3",
+      "status": "OK",
+      "target": "performance-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR6.4",
+      "status": "OK",
+      "target": "performance-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR1.1",
+      "status": "OK",
+      "target": "security-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR1.2",
+      "status": "OK",
+      "target": "security-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR1.3",
+      "status": "OK",
+      "target": "security-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR2.1",
+      "status": "OK",
+      "target": "security-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR2.2",
+      "status": "OK",
+      "target": "security-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR11.1",
+      "status": "OK",
+      "target": "security-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR11.2",
+      "status": "OK",
+      "target": "security-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR9.1",
+      "status": "OK",
+      "target": "security-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR12.1",
+      "status": "OK",
+      "target": "security-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR12.2",
+      "status": "OK",
+      "target": "security-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR7.1",
+      "status": "OK",
+      "target": "scalability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR7.2",
+      "status": "OK",
+      "target": "scalability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR7.3",
+      "status": "OK",
+      "target": "scalability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR7.4",
+      "status": "OK",
+      "target": "scalability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR13.1",
+      "status": "OK",
+      "target": "scalability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR3.1",
+      "status": "OK",
+      "target": "reliability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR3.2",
+      "status": "OK",
+      "target": "reliability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR4.1",
+      "status": "OK",
+      "target": "reliability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR4.2",
+      "status": "OK",
+      "target": "reliability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR5.1",
+      "status": "OK",
+      "target": "reliability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR5.2",
+      "status": "OK",
+      "target": "reliability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR5.3",
+      "status": "OK",
+      "target": "reliability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR5.4",
+      "status": "OK",
+      "target": "reliability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR5.5",
+      "status": "OK",
+      "target": "reliability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR9.2",
+      "status": "OK",
+      "target": "reliability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR9.3",
+      "status": "OK",
+      "target": "reliability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR9.4",
+      "status": "OK",
+      "target": "reliability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR15.1",
+      "status": "OK",
+      "target": "reliability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR11.3",
+      "status": "OK",
+      "target": "security-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR1.4",
+      "status": "OK",
+      "target": "security-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR4.3",
+      "status": "OK",
+      "target": "reliability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR4.4",
+      "status": "OK",
+      "target": "reliability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR14.1",
+      "status": "OK",
+      "target": "logical-components.md and security-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR14.2",
+      "status": "OK",
+      "target": "logical-components.md and security-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR14.3",
+      "status": "OK",
+      "target": "logical-components.md and security-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR10.1",
+      "status": "OK",
+      "target": "observability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR8.1",
+      "status": "OK",
+      "target": "observability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR8.2",
+      "status": "OK",
+      "target": "observability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR8.3",
+      "status": "OK",
+      "target": "observability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    },
+    {
+      "id": "NFR8.4",
+      "status": "OK",
+      "target": "observability-design.md: concrete patterns and acceptance handoff; design coverage only, not execution evidence"
+    }
+  ]
+}

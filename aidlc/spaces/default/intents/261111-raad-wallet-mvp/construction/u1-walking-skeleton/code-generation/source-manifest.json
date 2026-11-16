@@ -1,55 +1,193 @@
 {
+  "stage": "code-generation",
   "unit": "u1-walking-skeleton",
-  "paths": [
-    "Raad/.github/workflows/ci.yml",
-    "Raad/.github/workflows/deploy-dev.yml",
-    "Raad/infrastructure/.env.example",
-    "Raad/infrastructure/README.md",
-    "Raad/infrastructure/app.py",
-    "Raad/infrastructure/cdk.json",
-    "Raad/infrastructure/pyproject.toml",
-    "Raad/infrastructure/uv.lock",
-    "Raad/infrastructure/raad_platform/__init__.py",
-    "Raad/infrastructure/raad_platform/stacks.py",
-    "Raad/infrastructure/raad_platform/edge/__init__.py",
-    "Raad/infrastructure/raad_platform/edge/handler.py",
-    "Raad/infrastructure/raad_platform/edge/requirements.txt",
-    "Raad/infrastructure/tests/conftest.py",
-    "Raad/infrastructure/tests/test_edge_adapter.py",
-    "Raad/infrastructure/tests/test_identity_stack.py",
-    "Raad/infrastructure/tests/test_monitoring_stack.py",
-    "Raad/infrastructure/tests/test_public_edge_stack.py",
-    "Raad/scripts/verify-dev.sh",
-    "RaadMoneyService/.github/workflows/ci.yml",
-    "RaadMoneyService/.github/workflows/deploy-dev.yml",
-    "RaadMoneyService/app.py",
-    "RaadMoneyService/cdk.json",
-    "RaadMoneyService/docker-compose.yml",
-    "RaadMoneyService/openapi/raad-money-v1.yaml",
-    "RaadMoneyService/pyproject.toml",
-    "RaadMoneyService/uv.lock",
-    "RaadMoneyService/scripts/setup_dev_users.py",
-    "RaadMoneyService/scripts/verify_dev.py",
-    "RaadMoneyService/src/requirements.txt",
-    "RaadMoneyService/src/raad_money/__init__.py",
-    "RaadMoneyService/src/raad_money/api.py",
-    "RaadMoneyService/src/raad_money/identity.py",
-    "RaadMoneyService/src/raad_money/infrastructure.py",
-    "RaadMoneyService/src/raad_money/ledger.py",
-    "RaadMoneyService/src/raad_money/storage.py",
-    "RaadMoneyService/tests/unit/conftest.py",
-    "RaadMoneyService/tests/unit/test_c1_contract.py",
-    "RaadMoneyService/tests/unit/test_identity.py",
-    "RaadMoneyService/tests/unit/test_ledger_repository.py",
-    "RaadMoneyService/tests/unit/test_ledger_rules.py",
-    "RaadMoneyService/tests/unit/test_money_api.py",
-    "RaadMoneyService/tests/unit/test_service_stack.py",
-    "RaadMoneyService/tests/unit/test_wallet_directory.py",
-    "RaadMoneyService/tests/integration/conftest.py",
-    "RaadMoneyService/tests/integration/test_c1_api.py",
-    "RaadMoneyService/tests/integration/test_dynamodb_transactions.py",
-    "RaadMoneyService/tests/integration/test_edge_forwarding.py",
-    "RaadMoneyService/tests/integration/test_wallet_directory.py",
-    "RaadMobile/README.md"
+  "version": 1,
+  "writes": [
+    {
+      "path": ".github/workflows/ci.yml"
+    },
+    {
+      "path": ".github/workflows/deploy-dev.yml"
+    },
+    {
+      "path": "infrastructure/.env.example"
+    },
+    {
+      "path": "infrastructure/README.md"
+    },
+    {
+      "path": "infrastructure/app.py"
+    },
+    {
+      "path": "infrastructure/cdk.json"
+    },
+    {
+      "path": "infrastructure/pyproject.toml"
+    },
+    {
+      "path": "infrastructure/uv.lock"
+    },
+    {
+      "path": "infrastructure/raad_platform/__init__.py"
+    },
+    {
+      "path": "infrastructure/raad_platform/stacks.py"
+    },
+    {
+      "path": "infrastructure/raad_platform/edge/__init__.py"
+    },
+    {
+      "path": "infrastructure/raad_platform/edge/handler.py"
+    },
+    {
+      "path": "infrastructure/raad_platform/edge/requirements.txt"
+    },
+    {
+      "path": "infrastructure/tests/conftest.py"
+    },
+    {
+      "path": "infrastructure/tests/test_edge_adapter.py"
+    },
+    {
+      "path": "infrastructure/tests/test_identity_stack.py"
+    },
+    {
+      "path": "infrastructure/tests/test_monitoring_stack.py"
+    },
+    {
+      "path": "infrastructure/tests/test_public_edge_stack.py"
+    },
+    {
+      "path": "scripts/verify-dev.sh"
+    },
+    {
+      "path": "scripts/run_mobile_dev.py"
+    },
+    {
+      "path": "infrastructure/tests/test_mobile_dev_runner.py"
+    },
+    {
+      "path": "money-service@checkout/.github/workflows/ci.yml"
+    },
+    {
+      "path": "money-service@checkout/.github/workflows/deploy-dev.yml"
+    },
+    {
+      "path": "money-service@checkout/app.py"
+    },
+    {
+      "path": "money-service@checkout/cdk.json"
+    },
+    {
+      "path": "money-service@checkout/docker-compose.yml"
+    },
+    {
+      "path": "money-service@checkout/openapi/raad-money-v1.yaml"
+    },
+    {
+      "path": "money-service@checkout/pyproject.toml"
+    },
+    {
+      "path": "money-service@checkout/uv.lock"
+    },
+    {
+      "path": "money-service@checkout/scripts/setup_dev_users.py"
+    },
+    {
+      "path": "money-service@checkout/scripts/verify_dev.py"
+    },
+    {
+      "path": "money-service@checkout/src/requirements.txt"
+    },
+    {
+      "path": "money-service@checkout/src/raad_money/__init__.py"
+    },
+    {
+      "path": "money-service@checkout/src/raad_money/api.py"
+    },
+    {
+      "path": "money-service@checkout/src/raad_money/identity.py"
+    },
+    {
+      "path": "money-service@checkout/src/raad_money/infrastructure.py"
+    },
+    {
+      "path": "money-service@checkout/src/raad_money/ledger.py"
+    },
+    {
+      "path": "money-service@checkout/src/raad_money/storage.py"
+    },
+    {
+      "path": "money-service@checkout/tests/unit/conftest.py"
+    },
+    {
+      "path": "money-service@checkout/tests/unit/test_c1_contract.py"
+    },
+    {
+      "path": "money-service@checkout/tests/unit/test_identity.py"
+    },
+    {
+      "path": "money-service@checkout/tests/unit/test_ledger_repository.py"
+    },
+    {
+      "path": "money-service@checkout/tests/unit/test_ledger_rules.py"
+    },
+    {
+      "path": "money-service@checkout/tests/unit/test_money_api.py"
+    },
+    {
+      "path": "money-service@checkout/tests/unit/test_service_stack.py"
+    },
+    {
+      "path": "money-service@checkout/tests/unit/test_wallet_directory.py"
+    },
+    {
+      "path": "money-service@checkout/tests/integration/conftest.py"
+    },
+    {
+      "path": "money-service@checkout/tests/integration/test_c1_api.py"
+    },
+    {
+      "path": "money-service@checkout/tests/integration/test_dynamodb_transactions.py"
+    },
+    {
+      "path": "money-service@checkout/tests/integration/test_edge_forwarding.py"
+    },
+    {
+      "path": "money-service@checkout/tests/integration/test_wallet_directory.py"
+    },
+    {
+      "path": "mobile@checkout/README.md"
+    },
+    {
+      "path": "infrastructure/raad_platform/telemetry/__init__.py"
+    },
+    {
+      "path": "infrastructure/raad_platform/telemetry/handler.py"
+    },
+    {
+      "path": "infrastructure/raad_platform/telemetry/driver.py"
+    },
+    {
+      "path": "infrastructure/tests/test_public_latency_driver.py"
+    },
+    {
+      "path": "infrastructure/tests/test_public_latency_processor.py"
+    },
+    {
+      "path": "infrastructure/tests/test_public_latency_stack.py"
+    },
+    {
+      "path": "money-service@checkout/scripts/check_ledger_coverage.py"
+    },
+    {
+      "path": "money-service@checkout/scripts/migrate_transactions.py"
+    },
+    {
+      "path": "money-service@checkout/tests/unit/test_transactions_migration.py"
+    },
+    {
+      "path": "money-service@checkout/tests/integration/test_transactions_migration.py"
+    }
   ]
 }

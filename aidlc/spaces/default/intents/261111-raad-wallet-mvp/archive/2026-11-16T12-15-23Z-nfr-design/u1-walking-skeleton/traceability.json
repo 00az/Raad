@@ -1,0 +1,237 @@
+{
+  "stage": "nfr-design",
+  "unit": "u1-walking-skeleton",
+  "upstream_ids": [
+    "NFR6.1",
+    "NFR6.2",
+    "NFR6.3",
+    "NFR7.1",
+    "NFR7.2",
+    "NFR9.1",
+    "NFR1.1",
+    "NFR1.2",
+    "NFR1.3",
+    "NFR1.4",
+    "NFR2.1",
+    "NFR2.2",
+    "NFR2.3",
+    "NFR10.1",
+    "NFR11.1",
+    "NFR12.1",
+    "NFR14.1",
+    "NFR7.3",
+    "NFR3.1",
+    "NFR3.2",
+    "NFR7.4",
+    "NFR13.1",
+    "NFR5.1",
+    "NFR5.2",
+    "NFR3.3",
+    "NFR3.4",
+    "NFR4.1",
+    "NFR9.2",
+    "NFR9.3",
+    "NFR14.2",
+    "NFR8.1",
+    "NFR8.2",
+    "NFR8.3",
+    "NFR10.2",
+    "NFR15.1",
+    "NFR14.3",
+    "NFR14.4",
+    "NFR11.2"
+  ],
+  "coverage": [
+    {
+      "id": "NFR6.1",
+      "status": "OK",
+      "target": "performance-design.md P1/P4: public 2000 ms p95 budget and deployed valid-transfer measurement"
+    },
+    {
+      "id": "NFR6.2",
+      "status": "OK",
+      "target": "performance-design.md P4: valid funded successes, business refusals and technical failures reported separately"
+    },
+    {
+      "id": "NFR6.3",
+      "status": "OK",
+      "target": "performance-design.md P1: 9-second edge, 7-second service and finite per-dependency deadlines within the 15-second client bound"
+    },
+    {
+      "id": "NFR7.1",
+      "status": "OK",
+      "target": "performance-design.md P4: 100 prepared users and 10 active users on real dev"
+    },
+    {
+      "id": "NFR7.2",
+      "status": "OK",
+      "target": "performance-design.md P2: first-page query, default 20 and maximum 100"
+    },
+    {
+      "id": "NFR9.1",
+      "status": "OK",
+      "target": "performance-design.md P3: one eligible safe retry, no automatic transfer retry"
+    },
+    {
+      "id": "NFR1.1",
+      "status": "OK",
+      "target": "security-design.md S1/S6: independent full access-token verification at edge and MoneyApi"
+    },
+    {
+      "id": "NFR1.2",
+      "status": "OK",
+      "target": "security-design.md S1: caller sub exclusively selects owned wallet/history"
+    },
+    {
+      "id": "NFR1.3",
+      "status": "OK",
+      "target": "security-design.md S3: configured verified profile source and own-profile subject binding, P1/P2/P13 handoff"
+    },
+    {
+      "id": "NFR1.4",
+      "status": "OK",
+      "target": "security-design.md S1/S2: immutable validated configuration, bounded public key cache and safe unavailability"
+    },
+    {
+      "id": "NFR2.1",
+      "status": "OK",
+      "target": "security-design.md S4: TLS 1.2 minimum and certificate/hostname checks"
+    },
+    {
+      "id": "NFR2.2",
+      "status": "OK",
+      "target": "security-design.md S4: encrypted persistent stores and resource-evidence handoff"
+    },
+    {
+      "id": "NFR2.3",
+      "status": "OK",
+      "target": "security-design.md S4: phone secure storage and transient password handling"
+    },
+    {
+      "id": "NFR10.1",
+      "status": "OK",
+      "target": "security-design.md S4/S6: allowlisted sanitized logs and privacy scans"
+    },
+    {
+      "id": "NFR11.1",
+      "status": "OK",
+      "target": "security-design.md S3: WalletDirectory-only email/displayName and opaque Ledger identities"
+    },
+    {
+      "id": "NFR12.1",
+      "status": "OK",
+      "target": "security-design.md S5: U1 basic firewall, safe refusals and U2/U4 full-rate-control handoff"
+    },
+    {
+      "id": "NFR14.1",
+      "status": "OK",
+      "target": "security-design.md S4: short-lived access, secret scan and mandatory dependency/CDK checks"
+    },
+    {
+      "id": "NFR7.3",
+      "status": "OK",
+      "target": "scalability-design.md C1/C4: bounded candidate capacity, demo-load and latency proof"
+    },
+    {
+      "id": "NFR3.1",
+      "status": "OK",
+      "target": "scalability-design.md C2: persistent owner uniqueness and atomic one-time opening credit"
+    },
+    {
+      "id": "NFR3.2",
+      "status": "OK",
+      "target": "scalability-design.md C2: guarded all-or-nothing Ledger transaction under concurrency"
+    },
+    {
+      "id": "NFR7.4",
+      "status": "OK",
+      "target": "scalability-design.md C3: owner-scoped bounded history and one counterparty batch"
+    },
+    {
+      "id": "NFR13.1",
+      "status": "OK",
+      "target": "scalability-design.md C3: service-owned API and shared /money mapping interface"
+    },
+    {
+      "id": "NFR5.1",
+      "status": "OK",
+      "target": "reliability-design.md R4: explicit manual dev rebuild with no SLA/RTO/RPO"
+    },
+    {
+      "id": "NFR5.2",
+      "status": "OK",
+      "target": "reliability-design.md R3/R4: safe failures never trigger automatic balance/environment resets"
+    },
+    {
+      "id": "NFR3.3",
+      "status": "OK",
+      "target": "reliability-design.md R1/R5: dedicated immutable Transactions row keyed by transferId, atomic balance-plus-row commit, conservation and pre/post-commit fault checks"
+    },
+    {
+      "id": "NFR3.4",
+      "status": "OK",
+      "target": "reliability-design.md R2: repeatable PUT setup and repair of a missing holder entry after wallet commit, without another credit"
+    },
+    {
+      "id": "NFR4.1",
+      "status": "OK",
+      "target": "reliability-design.md R1: one attempt per confirmation, no saved U1 outcome, uncertain-result reconciliation without resubmission, and fresh U2 intents/keys on transition"
+    },
+    {
+      "id": "NFR9.2",
+      "status": "OK",
+      "target": "reliability-design.md R1/R3: finite dependency bounds and honest uncertain-outcome disclosure"
+    },
+    {
+      "id": "NFR9.3",
+      "status": "OK",
+      "target": "performance-design.md P3 and reliability-design.md R2: bounded safe retry and Retry-After behavior"
+    },
+    {
+      "id": "NFR14.2",
+      "status": "OK",
+      "target": "reliability-design.md R4: scripts/verify-dev.sh, independent API/iOS/Android fixtures and commit evidence"
+    },
+    {
+      "id": "NFR8.1",
+      "status": "OK",
+      "target": "observability-design.md O1/O4: dev volume/error/latency/failure dashboard with sample counts"
+    },
+    {
+      "id": "NFR8.2",
+      "status": "OK",
+      "target": "observability-design.md O3: explicit alarm windows, sample minima, recovery and tested email delivery"
+    },
+    {
+      "id": "NFR8.3",
+      "status": "OK",
+      "target": "observability-design.md O2/O5: unchanged public correlation IDs and protected consistent edge/service log correlation"
+    },
+    {
+      "id": "NFR10.2",
+      "status": "OK",
+      "target": "observability-design.md O2/O3: safe bounded metric dimensions and aggregate-only notifications"
+    },
+    {
+      "id": "NFR15.1",
+      "status": "OK",
+      "target": "observability-design.md O2/O5: UTC persistence/logs and device-local display verification"
+    },
+    {
+      "id": "NFR14.3",
+      "status": "OK",
+      "target": "reliability-design.md R5 and logical-components.md L3: preserved 80 percent repo and 95 percent money-core coverage with mixed cadence"
+    },
+    {
+      "id": "NFR14.4",
+      "status": "OK",
+      "target": "logical-components.md L3 and security-design.md S4: owning-repo CDK, quality checks and affirmed delivery process"
+    },
+    {
+      "id": "NFR11.2",
+      "status": "OK",
+      "target": "security-design.md S3/S4 and logical-components.md L3: minimal profile collection constrains all physical selections"
+    }
+  ],
+  "reverse": []
+}

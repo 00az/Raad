@@ -13,7 +13,7 @@ The following is an initial engineering allocation for an established wallet, no
 | Public edge, including its token verification | 200 |
 | Independent MoneyApi token verification | 100 |
 | Caller-wallet and recipient resolution | 250 |
-| Guarded atomic Ledger change | 1,000 |
+| Guarded atomic Ledger change, including both balances and the Transactions row | 1,000 |
 | Serialization and response transit through the edge | 200 |
 | Unallocated margin | 250 |
 | Total | 2,000 |
@@ -36,7 +36,7 @@ Only PUT /wallet, GET /wallet, POST /recipients/resolve and GET /transfers are e
 
 ## P4 — Deployed performance check
 
-Prepare 100 confirmed dev users with wallets and holder entries through supported setup, using credentials from the selected secrets store. Use an isolated, run-labelled fixture set. Verify readiness before timing: the unresolved setup concerns in Functional Design must not be hidden by direct store inserts. Ten active users run a representative balance, recipient, valid transfer and first-history-page cycle for 10 minutes, with a 1-second think interval between completed cycles. Do not submit a second operation for a user's transfer before the first finishes. Include at least 200 valid funded transfer attempts; extend the run if necessary. Use balanced sender/recipient pairs or sufficient known balances to avoid accidental insufficient-funds results. Record achieved concurrency and operation counts, rather than claiming a requests-per-second capacity.
+Prepare 100 confirmed dev users with wallets and holder entries through PUT /wallet, using credentials from the selected secrets store. Use an isolated, run-labelled fixture set and verify readiness before timing; do not insert fixtures directly into stores. Ten active users run a representative balance, recipient, valid transfer and first-history-page cycle for 10 minutes, with a 1-second think interval between completed cycles. Do not submit a second operation for a user's transfer before the first finishes. An uncertain U1 outcome blocks further sends from that fixture pending reconciliation; never retry it to sustain the load. Include at least 200 valid funded transfer attempts; extend the run if necessary. Use balanced sender/recipient pairs or sufficient known balances to avoid accidental insufficient-funds results. Record achieved concurrency and operation counts, rather than claiming a requests-per-second capacity.
 
 Run an idle-start observation before the sustained run and retain both results. No warm-up samples are silently discarded. Capture public-edge total latency, valid-transfer status, expected business refusals, technical failures, sample count and nearest-rank p95. Acceptance requires both the combined idle-start/sustained population and the sustained population to have p95 at most 2,000 ms, with every valid funded transfer successful. Also report the idle-start subset separately and flag its slow results; this design grants no cold-start exemption from NFR6.1. Measure other endpoints diagnostically. Fault/load tools must not log payloads or credentials.
 
@@ -44,7 +44,7 @@ Record commit IDs for all three repos, environment, fixture run ID, timestamps, 
 
 ## Dependencies and limits
 
-Public C1 fields and methods remain authoritative. The approved Functional Design has unresolved holder setup, GET/PUT, public mapping, display, fixtures, ordering and integer-conversion concerns. These documents do not edit it or claim the concerns are closed. A failed setup or contract check is a failed prerequisite for this performance demonstration.
+Public C1 fields and methods remain authoritative for the pinned U1 partial pre-release. Time the complete atomic balance-plus-transaction write and keep U2 saved-outcome/replay claims out of U1 results. A failed setup or contract check is a failed prerequisite for the performance demonstration. The approved Functional Design supplies integer-text money conversion, stable history tie ordering and separate fixtures.
 
 ## Sources
 
@@ -54,5 +54,5 @@ Public C1 fields and methods remain authoritative. The approved Functional Desig
 - construction/u1-walking-skeleton/nfr-requirements/reliability-requirements.md: NFR9.2–9.3, disposable dev and verification command.
 - construction/u1-walking-skeleton/nfr-requirements/observability-requirements.md: boundary measurements and safe telemetry.
 - construction/u1-walking-skeleton/nfr-requirements/tech-stack-decisions.md: existing Python/Flutter stack and deferred physical selections.
-- construction/u1-walking-skeleton/functional-design/functional-spec.md: workflows and integrated check, with accepted concerns retained.
+- construction/u1-walking-skeleton/functional-design/functional-spec.md: workflows, atomic transaction row, independent fixtures and integrated check.
 - inception/contract-design/contract-summary.md: C1 methods, schemas, 15-second timeout and retry policy; C5 verification.

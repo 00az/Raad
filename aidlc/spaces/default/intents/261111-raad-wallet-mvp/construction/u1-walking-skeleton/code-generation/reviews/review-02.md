@@ -1,0 +1,54 @@
+## Review
+
+**Verdict:** NOT-READY
+**Reviewer:** aidlc-architecture-reviewer-agent
+**Date:** 2026-11-15T14:26:09Z
+**Iteration:** 1
+**Verdict Dictated:** no
+
+### Findings
+
+| ID | Severity | Location | Finding | Required action | Status |
+|---|---|---|---|---|---|
+| R-01 | Major | aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/code-generation/code-summary.md > Verification | The local C1 wallet setup check returned 503, so the first-wallet path that enables the walking skeleton is still unverified. | Diagnose the failing wallet setup path, make the local C1 setup check pass, and record the successful rerun. | Resolved (reviewer) |
+| R-02 | Major | aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/code-generation/code-summary.md > Remaining U1 work; ../mobile/README.md > U1 goal | The mobile repository contains only the handoff README; there is no app or Flutter test suite, and the dev integration checks have not run. The approved plan’s mobile and end-to-end steps remain incomplete, so this is not yet a working cross-repository walking skeleton. | Complete the mobile screens and tests from the handoff, then verify the app and Money API together against the dev environment before calling U1 complete. | Accepted risk |
+| R-03 | Major | ../money-service/src/raad_money/api.py > POST /money/v1/transfers | The handler validates the Idempotency-Key format but does not persist or look up the key; every repeated request calls `ledger.transfer` again and returns `idempotency-replayed: false`. A retry after an unknown response can debit the sender twice, despite C1 defining same-key replay behavior. | Before exposing transfer to the mobile flow, implement durable same-key replay and key-conflict handling with a repeated-request integration test, or keep the endpoint unavailable until that behavior is implemented. | Accepted risk |
+| R-04 | Minor | aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/code-generation/unit-test-instructions.md > Commands, Ledger-specific coverage row | The documented Ledger coverage command targets `src/raad_money/ledger`, while the verified command used `raad_money.ledger` and disabled the project-wide addopts. The instructions therefore do not reproduce the reported 100% Ledger result as written. | Replace the Ledger command with the verified package target and options, and confirm the command runs from the documented repository directory. | Resolved (reviewer) |
+| R-05 | Minor | aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u1-walking-skeleton/code-generation/unit-test-instructions.md > Commands, MoneyService unit row | The reviewer could not rerun the MoneyService unit command: pytest-cov failed to erase `../money-service/.coverage` with `PermissionError` because the checkout is read-only in this review environment. The 81-pass, 93.20% result is recorded in `code-summary.md` but was not independently reproduced here. | Re-run the recorded unit command in a writable MoneyService checkout and retain the resulting test and coverage output with the verification evidence. | Resolved (reviewer) |
+| R-06 | Critical | money-service@checkout/src/raad_money/identity.py > TokenVerifier.authenticate; money-service@checkout/scripts/setup_dev_users.py > admin_initiate_auth; infrastructure/raad_platform/stacks.py > EnvironmentVerifier | The real sign-in and profile paths are incompatible. Setup and API smoke obtain access tokens using `ADMIN_USER_PASSWORD_AUTH`, and the mobile adapter uses SDK SRP authentication. MoneyApi always sends those access tokens to Cognito `/oauth2/userInfo`. AWS documents that user-pool API authentication tokens are not accepted there; userInfo requires an `openid` scope. Configuring OAuth scopes on the app client does not turn these SDK calls into the approved authorization-code/PKCE flow. No token-customization trigger exists in the inspected identity stack. Consequently the configured real sign-in token cannot satisfy MoneyApi's required profile lookup, so wallet setup and subsequent wallet requests fail before the intended journey, even though mocked identity tests pass. This is inferred from the current call chain and documented provider behavior, not claimed as an executed AWS failure. | Align the actual sign-in and fixture authentication with the selected profile source: implement the approved authorization-code/PKCE path with the required scopes, or explicitly select and implement a provider own-profile API compatible with the SDK-issued access token while retaining independent signature/subject validation. Add a capability test using a token minted by the actual configured flow and prove wallet PUT/GET through the public edge before release. | New |
+| R-07 | Major | infrastructure/raad_platform/stacks.py > PublicEdgeStack MoneyHttpApi and Distribution; infrastructure/raad_platform/edge/handler.py > handle | The firewall and public-latency boundary can be bypassed through the generated `execute-api` URL. The HTTP API leaves its default endpoint enabled, its routes directly invoke the edge Lambda, and neither the CloudFront origin nor the edge establishes an origin-only credential or equivalent restriction. WAF and real-time transfer logs attach only to CloudFront. A caller can therefore invoke the same money route directly, avoiding the configured WAF/rate rule and the claimed public-boundary observation path; bearer verification still applies, but it does not enforce the perimeter. AWS confirms the generated endpoint is publicly invocable by default. | Restrict origin access so requests reaching the money route must pass the intended CloudFront boundary. Add tests proving a direct origin request is refused while a CloudFront request works, and include that check in deployed security verification. Preserve the existing origin's functionality when choosing the restriction; simply disabling its current hostname would also break CloudFront. | New |
+
+> R-01 Reviewer note: The exact local integration command now passes all three C1 API cases, including wallet setup, within its 22 passing integration assertions. This establishes local setup behavior; it does not establish the real Cognito path described below.
+
+> R-01 Earlier decision: Accepted risk
+
+> R-04 Reviewer note: The documented Ledger command now uses `--cov-reset --cov=raad_money.ledger --cov-branch`; I ran it unchanged: 25 passed, 100% line and branch coverage, JSON written. The independent checker also exits 0 with both floors at 100%.
+
+> R-04 Earlier decision: Accepted risk
+
+> R-05 Reviewer note: I independently ran the current exact eight-file service unit command in the registered checkout: 122 passed, 89.62% combined coverage, exit 0. The previous reviewer write-permission obstacle did not recur.
+
+> R-05 Earlier decision: Accepted risk
+
+### Validation Tool Results
+
+| Tool | Result | Interpretation |
+|---|---|---|
+| `uv run pytest --cov=raad_platform --cov=../scripts --cov-report=term-missing`, from `infrastructure/` | Exit 0; 115 passed; 85.04% combined coverage. | Independently reproduces platform and host-runner coverage above the unchanged 80% floor. |
+| `uv run ruff check raad_platform tests app.py ../scripts`, from `infrastructure/` | Exit 0; all checks passed. | The corrected workflow lint target includes the host scripts. |
+| `uv run mypy raad_platform app.py ../scripts`, from `infrastructure/` | Exit 0; no issues in 9 source files. | The corrected workflow type-check target is runnable. |
+| Exact eight-file service unit command in `unit-test-instructions.md`, from `../money-service/` | Exit 0; 122 passed; 89.62% combined coverage. | Local provider, identity, storage and migration assertions pass; identity tests do not establish provider capability. |
+| Exact five-file service integration command in `unit-test-instructions.md`, from `../money-service/` | 22 assertions passed against DynamoDB Local; exit 1 because isolated integration coverage is 61.70%, below the configured whole-package 80% floor. | Atomicity, concurrency, local C1 setup and migration assertions passed. This command is not a passing coverage run. No threshold was changed; the disposable container was stopped after the run. |
+| Exact Ledger scoped JSON coverage command, then `uv run python scripts/check_ledger_coverage.py artifacts/coverage/u1-ledger.json` | Both exit 0; 25 tests passed; checker reports 100.00% line and 100.00% branch. | Independently establishes both Ledger floors. |
+| Recorded Construction Verification Command `scripts/verify-dev.sh` | Exit 1 at line 11: missing `RAAD_IOS_DEVICE_ID`. | No setup, AWS fixture mutation or device journey ran. The integrated skeleton is not verified. Mobile/device and deployed performance commands were not run because the required real runtime/device inputs are absent; no passing result is claimed. |
+| Real Lambda bundling, deployed capabilities and GitHub jobs | Not independently executed in this review; current summary records the expired public ECR token and missing deployment inputs. | Existing packaging, cdk-nag, deployment and load acceptance remain unproven as the summary already states. |
+
+### Evidence
+
+The authentication conclusion follows the source call chain: the service verifier unconditionally makes the userInfo request; both setup and smoke use admin SDK authentication; `mobile@checkout/lib/auth/cognito_auth_service.dart` uses `authenticateUser`; the identity stack configures OAuth scopes but no scope-customization trigger. The approved infrastructure specification instead selects authorization code with PKCE and `openid`, `email`, `profile` scopes. AWS states that [userInfo requires an openid-scoped token and does not accept API-authentication tokens](https://docs.aws.amazon.com/cognito/latest/developerguide/userinfo-endpoint.html); its [scope reference describes the SDK-authentication scope](https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-pools-define-resource-servers.html).
+
+The perimeter conclusion follows the directly routed HTTP API and CloudFront-only WebACL/log attachment. The edge checks token and request shape, but does not check that CloudFront supplied the request. AWS documents the [default HTTP API endpoint's public invocation behavior](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-disable-default-endpoint.html).
+
+### Summary
+
+The CI parity change is locally validated and the local money/storage tests pass. The actual Cognito flow cannot currently supply the configured profile lookup, and the public origin bypasses the configured perimeter; these are concrete integration defects to resolve before treating the deployed walking skeleton as ready. The summary correctly preserves incomplete device, deployment and performance work.

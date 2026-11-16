@@ -37,6 +37,17 @@ X. Other (please specify)
 
 [Answer]: A (**Mode:** chat)
 
+## Q7. [Architect] How should completed transfers be represented in the ledger?
+
+The ledger needs a direct identity for each transaction and must still return a wallet's sent and received history efficiently while retaining the wallet's current balance for atomic transfers.
+
+A. Keep the current balance on Wallet and store each completed transfer as one immutable row in a dedicated `Transactions` table keyed by `transferId`; retain sender and recipient wallet IDs for history lookups through indexes chosen in Infrastructure Design. Update the two balances and the transaction row atomically. (Recommended: each transfer is independently addressable, while balances remain efficient to read.)
+B. Keep transaction rows in a wallet-keyed table, using a composite wallet ID and transfer ID to find them.
+C. Make the transaction entries the only balance record and calculate each current balance by summing entries.
+X. Other (please specify)
+
+[Answer]: A (**Mode:** chat; selected by the person on 2026-11-13)
+
 ## Q3. [Architect] Is the shared platform in `Raad` a building block?
 
 The platform holds the sign-in user pool, the public API address and its mappings, the firewall and rate limits, and the event bus. All of it is configuration written as infrastructure code, with no business rules of its own.

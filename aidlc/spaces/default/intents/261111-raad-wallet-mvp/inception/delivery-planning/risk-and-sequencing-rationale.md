@@ -4,6 +4,8 @@ Conversation language: English.
 
 ## Sequencing Heuristic
 
+Each **Bolt** is one build pass over a unit, ending in something that runs; the **walking skeleton** is the first thin slice proving the three repos together on real `dev` infrastructure.
+
 The Bolt sequence uses a **risk-first** ordering after the walking skeleton, guided by the dependency graph. The rationale is qualitative rather than scored (Q2 B): WSJF scoring would be useful if the units competed for the same resource or had comparable risk profiles, but the DAG structure constrains the feasible orderings enough that qualitative judgment is sufficient.
 
 ## Bolt 1 — U1 Walking Skeleton (risk: architectural integration)
@@ -38,6 +40,10 @@ The Bolt sequence uses a **risk-first** ordering after the walking skeleton, gui
 
 ## Deviation from Topological Order
 
+The `Transactions` decision (ADR-008) keeps the same unit boundaries: U1 provisions the table and atomic transfer/balance writes; U2 adds saved idempotency outcomes and sender/recipient history indexes. The completed C1 replay guarantee belongs to U2. U1's partial pre-release must reconcile uncertain results without resubmitting them, and the U2 transition uses fresh intents and keys without manufacturing outcomes for old transfers.
+
+The two engineers can build U1's backend/platform and mobile tracks in separate repos using the same pinned C1 pre-release. This reduces waiting inside U1 without changing the serial unit order. Contract-based client tests enable mobile development; the real `dev` demonstration remains the condition for completing the slice. See `team-allocation.md`.
+
 The sequence U1 → U2 → U4 → U5 → U3 is fully topologically valid. No deviation exists. U5 could be built immediately after U1 (it has no code dependency), but placing it after U2 and U4 keeps the team's focus on the high-risk backend work first.
 
 ## Summary
@@ -56,3 +62,5 @@ The sequence U1 → U2 → U4 → U5 → U3 is fully topologically valid. No dev
 - `team-practices.md` in `inception/practices-discovery/`: Walking Skeleton, Testing Posture
 - `delivery-planning-questions.md` in this directory: Q1 D, Q2 B, Q6
 - `bolt-plan.md` in this directory
+- `contract-summary.md` in `inception/contract-design/`: C1 idempotency, canonical files and release pins; C2 and C5 provider/consumer boundaries.
+- `components.md` and `decisions.md` in `inception/domain-design/`: Ledger ownership and ADR-008.

@@ -1,0 +1,81 @@
+{
+  "stage": "infrastructure-design",
+  "unit": "u5-landing-page",
+  "upstream_ids": [
+    "NFR7.10",
+    "NFR9.10",
+    "NFR2.10",
+    "NFR1.10",
+    "NFR11.10",
+    "NFR10.10",
+    "NFR14.10",
+    "NFR9.11",
+    "NFR7.11",
+    "NFR5.10",
+    "NFR9.12",
+    "NFR8.10"
+  ],
+  "coverage": [
+    {
+      "id": "NFR7.10",
+      "status": "OK",
+      "target": "infrastructure-specification.md: deployment/resource ownership, configuration and acceptance gates"
+    },
+    {
+      "id": "NFR9.10",
+      "status": "OK",
+      "target": "infrastructure-specification.md: deployment/resource ownership, configuration and acceptance gates"
+    },
+    {
+      "id": "NFR2.10",
+      "status": "OK",
+      "target": "infrastructure-specification.md: deployment/resource ownership, configuration and acceptance gates"
+    },
+    {
+      "id": "NFR1.10",
+      "status": "OK",
+      "target": "infrastructure-specification.md: deployment/resource ownership, configuration and acceptance gates"
+    },
+    {
+      "id": "NFR11.10",
+      "status": "OK",
+      "target": "infrastructure-specification.md: deployment/resource ownership, configuration and acceptance gates"
+    },
+    {
+      "id": "NFR10.10",
+      "status": "OK",
+      "target": "monitoring-design.md: metrics, alert windows, privacy, UTC and evidence"
+    },
+    {
+      "id": "NFR14.10",
+      "status": "OK",
+      "target": "cicd-pipeline.md: owning-repo checks, coverage, actual packaging and release gates"
+    },
+    {
+      "id": "NFR9.11",
+      "status": "OK",
+      "target": "infrastructure-specification.md: deployment/resource ownership, configuration and acceptance gates"
+    },
+    {
+      "id": "NFR7.11",
+      "status": "OK",
+      "target": "infrastructure-specification.md: deployment/resource ownership, configuration and acceptance gates"
+    },
+    {
+      "id": "NFR5.10",
+      "status": "OK",
+      "target": "infrastructure-specification.md: deployment/resource ownership, configuration and acceptance gates"
+    },
+    {
+      "id": "NFR9.12",
+      "status": "OK",
+      "target": "infrastructure-specification.md: deployment/resource ownership, configuration and acceptance gates"
+    },
+    {
+      "id": "NFR8.10",
+      "status": "OK",
+      "target": "monitoring-design.md: metrics, alert windows, privacy, UTC and evidence"
+    }
+  ],
+  "reverse": []
+}

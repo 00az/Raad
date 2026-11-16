@@ -8,9 +8,13 @@ The account currently has no Route 53 hosted zones and no ACM certificates in `u
 
 ## Local configuration
 
-Copy `.env.example` to `.env.local`, then provide a domain, hosted-zone ID, us-east-1 ACM certificate ARN, alert email, and an available Cognito domain prefix before deploying. Load the values into your shell with `set -a; source .env.local; set +a`. Do not put AWS credentials in either file. Authenticate with the approved AWS CLI login or use a least-privilege role; do not deploy as the root user.
+Copy `.env.example` to `.env.local`, then supply a controlled hostname and us-east-1 viewer certificate together, the alert email and an available Cognito domain prefix. Leave hosted-zone ID blank for external DNS; an optional existing Route53 zone creates aliases without creating a hosted zone. Partial domain/certificate input is rejected. Do not put credentials in either file.
 
-The example records the account and region confirmed above. The remaining values are deliberately blank because they do not exist in the account or require your choice. The public edge stack refuses to synthesize until those inputs are set.
+The CloudFront default certificate has a provider-fixed TLSv1 policy and cannot enforce the approved TLS>=1.2 requirement, so it is refused. Both DNS modes require the custom certificate with TLS1.2_2021, WAF, the origin credential, disabled authenticated-route caching and seven-field transfer telemetry. Actual free-hostname control and certificate issuance are deferred; local fixtures establish neither.
+
+After an independently authorized deployment, read the actual `/raad/dev/public-api-url` SSM parameter or `PublicApiUrlOutput` stack output for smoke runners and mobile C4 configuration. With external DNS, retain the ACM validation CNAME and point the controlled hostname to the actual distribution hostname; these live actions remain deferred. No invented runtime hostname or fixture certificate is deployment-ready.
+
+Bundled edge/service Lambda code explicitly uses X86_64 and Docker linux/amd64, matching existing x86 CI runners. Local synthesis packages assets and runs cdk-nag; its success is required independently of unit tests. Resource-specific documented exceptions retain the supported tested Python3.12 pin, coordinated protocol-secret rotation, dev-only no-paid-Plus identity, AWS API wildcard limitations, privacy-safe logging and edge authentication. No blanket or TLS exception is allowed. No deployment, asset upload or paid resource creation is authorized by these instructions. Live release gates and exact local evidence are recorded in the intent's code summary.
 
 ## CI deployment setup
 

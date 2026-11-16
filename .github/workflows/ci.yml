@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   checks:
@@ -15,14 +16,17 @@ jobs:
       run:
         working-directory: infrastructure
     env:
-      RAAD_DOMAIN_NAME: api.dev.example.test
-      RAAD_HOSTED_ZONE_ID: Z0123456789
+      # Synthetic secure external-DNS fixture; no hostname/certificate ownership claim.
+      CDK_DEFAULT_ACCOUNT: "111111111111"
+      RAAD_DOMAIN_NAME: api.dev.raad.example.test
       RAAD_CERTIFICATE_ARN: arn:aws:acm:us-east-1:111111111111:certificate/00000000-0000-0000-0000-000000000000
       RAAD_ALERT_EMAIL: build@example.test
       RAAD_COGNITO_DOMAIN_PREFIX: raad-build-example-test
       CDK_DEFAULT_REGION: us-east-1
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
@@ -31,9 +35,12 @@ jobs:
           node-version: 22
       - run: npm install --global aws-cdk
       - run: uv sync --locked --all-groups
-      - run: uv run pytest
-      - run: uv run ruff check .
-      - run: uv run mypy .
+      - run: uv run pytest --cov=raad_platform --cov=../scripts --cov-report=term-missing
+      - run: uv run ruff check raad_platform tests app.py ../scripts
+      - run: uv run ruff format --check raad_platform tests app.py ../scripts
+      - run: uv run mypy raad_platform app.py ../scripts
       - run: uv run pip-audit
       - run: uv run cdk synth --all
       - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

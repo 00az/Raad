@@ -1,0 +1,99 @@
+{
+  "stage": "nfr-requirements",
+  "unit": "u4-platform",
+  "upstream_ids": [
+    "NFR1",
+    "NFR2",
+    "NFR3",
+    "NFR4",
+    "NFR5",
+    "NFR6",
+    "NFR7",
+    "NFR8",
+    "NFR9",
+    "NFR10",
+    "NFR11",
+    "NFR12",
+    "NFR13",
+    "NFR14",
+    "NFR15"
+  ],
+  "coverage": [
+    {
+      "id": "NFR1",
+      "status": "OK",
+      "target": "NFR1.10 in security-requirements.md"
+    },
+    {
+      "id": "NFR2",
+      "status": "OK",
+      "target": "NFR2.10 in security-requirements.md; NFR2.11 in security-requirements.md"
+    },
+    {
+      "id": "NFR3",
+      "status": "N/A",
+      "target": "Platform never performs balance arithmetic; invariant and core coverage belong to U1/U2."
+    },
+    {
+      "id": "NFR4",
+      "status": "OK",
+      "target": "NFR4.10 in reliability-requirements.md"
+    },
+    {
+      "id": "NFR5",
+      "status": "OK",
+      "target": "NFR5.10 in reliability-requirements.md"
+    },
+    {
+      "id": "NFR6",
+      "status": "OK",
+      "target": "NFR6.10 in performance-requirements.md"
+    },
+    {
+      "id": "NFR7",
+      "status": "OK",
+      "target": "NFR7.10 in performance-requirements.md; NFR7.11 in scalability-requirements.md"
+    },
+    {
+      "id": "NFR8",
+      "status": "OK",
+      "target": "NFR8.10 in observability-requirements.md; NFR8.11 in observability-requirements.md"
+    },
+    {
+      "id": "NFR9",
+      "status": "OK",
+      "target": "NFR9.10 in performance-requirements.md; NFR9.11 in reliability-requirements.md"
+    },
+    {
+      "id": "NFR10",
+      "status": "OK",
+      "target": "NFR10.10 in security-requirements.md"
+    },
+    {
+      "id": "NFR11",
+      "status": "OK",
+      "target": "NFR11.10 in security-requirements.md"
+    },
+    {
+      "id": "NFR12",
+      "status": "OK",
+      "target": "NFR12.10 in security-requirements.md; NFR12.11 in security-requirements.md"
+    },
+    {
+      "id": "NFR13",
+      "status": "OK",
+      "target": "NFR13.10 in scalability-requirements.md"
+    },
+    {
+      "id": "NFR14",
+      "status": "OK",
+      "target": "NFR14.10 in security-requirements.md"
+    },
+    {
+      "id": "NFR15",
+      "status": "OK",
+      "target": "NFR15.10 in observability-requirements.md"
+    }
+  ],
+  "reverse": []
+}

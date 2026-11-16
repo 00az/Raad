@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "infrastructure/**"
+      - "scripts/**"
       - ".github/workflows/deploy-dev.yml"
 
 permissions:
@@ -34,8 +35,15 @@ jobs:
           node-version: 22
       - run: npm install --global aws-cdk
       - run: uv sync --locked --all-groups
+      - run: uv run ruff check raad_platform tests app.py ../scripts
+      - run: uv run ruff format --check raad_platform tests app.py ../scripts
+      - run: uv run mypy raad_platform app.py ../scripts
+      - run: uv run pytest --cov=raad_platform --cov=../scripts --cov-report=term-missing
+      - run: uv run pip-audit
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN_DEV }}
           aws-region: ${{ vars.AWS_REGION }}
+      - run: uv run cdk synth --all
+      - run: uv run cdk diff --all
       - run: uv run cdk deploy --all --require-approval never

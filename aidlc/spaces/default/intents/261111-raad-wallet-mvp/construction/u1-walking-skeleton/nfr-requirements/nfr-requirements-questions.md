@@ -13,7 +13,7 @@ Conversation language: English.
 - Basic monitoring is required within the existing build. The monitoring email address and concrete alarm settings remain inputs to NFR Design / Infrastructure Design as already recorded.
 - Python, Dart/Flutter and Python CDK are affirmed choices. Concrete data-store and sign-in-provider selection remains with Infrastructure Design. No new service is selected here.
 - Production data-store retention and point-in-time recovery are already mandated by the team. The earlier record specifies no dev recovery or data-loss target.
-- Functional Design was approved with its seven review findings accepted. This stage carries those risks without changing the approved Functional Design or the C1 contract.
+- The current approved Functional Design defines explicit PUT wallet setup/repair, exact C1 public shapes, independent test fixtures and one immutable Transactions row per transferId. U1 stores no key-to-outcome record and blocks resubmission of uncertain transfers; U2 adds saved outcomes and full replay protection. The earlier seven functional concerns have been corrected; these requirements use the current approved workflows.
 
 ## Q1. [Operations engineer] What recovery guarantee should the dev walking skeleton have after a loss of its data store?
 
@@ -25,7 +25,7 @@ X. Other (please specify)
 
 [Answer]: A. Dev data is disposable: rebuild and recreate test wallets, with no guaranteed recovery time. (Selected by the person in the question reply; **Mode:** chat.)
 
-The person's choice is preserved here. Its answer-log receipt is still pending because the previous project setup did not register this conversation's human replies. This text does not claim that the receipt succeeded.
+This revision preserves the person's existing Q1 answer and adds no new recovery guarantee.
 
 ## Sources
 
