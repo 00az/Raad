@@ -1,0 +1,458 @@
+{
+  "stage": "code-generation",
+  "unit": "u2-money-service",
+  "upstream_ids": [
+    "AC1.2.1",
+    "AC1.2.2",
+    "AC1.2.3",
+    "AC1.2.4",
+    "AC1.2.5",
+    "AC1.2.6",
+    "AC3.3.1",
+    "AC3.3.2",
+    "AC3.3.3",
+    "AC3.3.4",
+    "AC3.5.1",
+    "AC3.5.2",
+    "AC3.5.3",
+    "AC3.5.4",
+    "AC3.6.1",
+    "AC3.6.2",
+    "AC3.6.3",
+    "AC3.6.4",
+    "AC3.7.1",
+    "AC3.7.2",
+    "AC3.8.1",
+    "AC3.8.2",
+    "AC3.8.3",
+    "AC4.3.1",
+    "AC4.3.2",
+    "AC6.2.1",
+    "AC6.2.2",
+    "NFR6.1",
+    "NFR6.2",
+    "NFR6.3",
+    "NFR6.4",
+    "NFR1.1",
+    "NFR1.2",
+    "NFR1.3",
+    "NFR2.1",
+    "NFR2.2",
+    "NFR11.1",
+    "NFR11.2",
+    "NFR9.1",
+    "NFR12.1",
+    "NFR12.2",
+    "NFR11.3",
+    "NFR1.4",
+    "NFR7.1",
+    "NFR7.2",
+    "NFR7.3",
+    "NFR7.4",
+    "NFR13.1",
+    "NFR3.1",
+    "NFR3.2",
+    "NFR4.1",
+    "NFR4.2",
+    "NFR5.1",
+    "NFR5.2",
+    "NFR5.3",
+    "NFR5.4",
+    "NFR5.5",
+    "NFR4.3",
+    "NFR4.4",
+    "NFR9.2",
+    "NFR9.3",
+    "NFR9.4",
+    "NFR15.1",
+    "BR2.1",
+    "BR2.2",
+    "BR2.3",
+    "BR2.4",
+    "BR2.5",
+    "BR2.6",
+    "BR2.7",
+    "BR2.8",
+    "BR2.9",
+    "BR2.10",
+    "BR2.11",
+    "BR2.12"
+  ],
+  "coverage": [
+    {
+      "id": "AC1.2.1",
+      "status": "N/A",
+      "target": "U4 sign-in confirmation and U3 confirmation screen (functional design traceability)"
+    },
+    {
+      "id": "AC1.2.2",
+      "status": "N/A",
+      "target": "U4 sign-in confirmation and U3 confirmation screen (functional design traceability)"
+    },
+    {
+      "id": "AC1.2.3",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/tests/integration/test_u2_consumer.py"
+    },
+    {
+      "id": "AC1.2.4",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/wallet_setup.py"
+    },
+    {
+      "id": "AC1.2.5",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/tests/integration/test_u2_consumer.py"
+    },
+    {
+      "id": "AC1.2.6",
+      "status": "N/A",
+      "target": "U4 resend configuration and U3 confirmation screen (functional design traceability)"
+    },
+    {
+      "id": "AC3.3.1",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/transfers.py"
+    },
+    {
+      "id": "AC3.3.2",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/tests/unit/test_u2_money_rules.py"
+    },
+    {
+      "id": "AC3.3.3",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/tests/unit/test_u2_money_core.py"
+    },
+    {
+      "id": "AC3.3.4",
+      "status": "N/A",
+      "target": "U3 keeps typed form values after a refusal (functional design traceability)"
+    },
+    {
+      "id": "AC3.5.1",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/transfers.py"
+    },
+    {
+      "id": "AC3.5.2",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/transfers.py"
+    },
+    {
+      "id": "AC3.5.3",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/email_address.py"
+    },
+    {
+      "id": "AC3.5.4",
+      "status": "N/A",
+      "target": "U4 owns recipient-lookup rate limiting (functional design traceability)"
+    },
+    {
+      "id": "AC3.6.1",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/tests/unit/test_u2_transfer_service.py"
+    },
+    {
+      "id": "AC3.6.2",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/tests/integration/test_u2_transfers.py"
+    },
+    {
+      "id": "AC3.6.3",
+      "status": "N/A",
+      "target": "U3 double-tap behaviour; backend duplicate safety is covered by BR2.8"
+    },
+    {
+      "id": "AC3.6.4",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/transfers.py"
+    },
+    {
+      "id": "AC3.7.1",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/tests/integration/test_u2_transfers.py"
+    },
+    {
+      "id": "AC3.7.2",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/tests/unit/test_u2_money_core.py"
+    },
+    {
+      "id": "AC3.8.1",
+      "status": "N/A",
+      "target": "U3 lost-response message and retry prompt (functional design traceability)"
+    },
+    {
+      "id": "AC3.8.2",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/transfers.py"
+    },
+    {
+      "id": "AC3.8.3",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/tests/integration/test_u2_history.py"
+    },
+    {
+      "id": "AC4.3.1",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/history.py"
+    },
+    {
+      "id": "AC4.3.2",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/tests/integration/test_u2_history.py"
+    },
+    {
+      "id": "AC6.2.1",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/scripts/verify_dev.py"
+    },
+    {
+      "id": "AC6.2.2",
+      "status": "N/A",
+      "target": "U3 owns mobile builds and per-environment API configuration (functional design traceability)"
+    },
+    {
+      "id": "NFR6.1",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/infrastructure.py"
+    },
+    {
+      "id": "NFR6.2",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/scripts/verify_dev.py"
+    },
+    {
+      "id": "NFR6.3",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/history.py"
+    },
+    {
+      "id": "NFR6.4",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/storage.py"
+    },
+    {
+      "id": "NFR1.1",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/identity.py"
+    },
+    {
+      "id": "NFR1.2",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/api.py"
+    },
+    {
+      "id": "NFR1.3",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/identity.py"
+    },
+    {
+      "id": "NFR2.1",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/infrastructure.py"
+    },
+    {
+      "id": "NFR2.2",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/infrastructure.py"
+    },
+    {
+      "id": "NFR11.1",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/storage.py"
+    },
+    {
+      "id": "NFR11.2",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/openapi/raad-money-v1.yaml"
+    },
+    {
+      "id": "NFR9.1",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/api.py"
+    },
+    {
+      "id": "NFR12.1",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/identity.py"
+    },
+    {
+      "id": "NFR12.2",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/api.py"
+    },
+    {
+      "id": "NFR11.3",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/transfers.py"
+    },
+    {
+      "id": "NFR1.4",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/tests/unit/test_identity.py"
+    },
+    {
+      "id": "NFR7.1",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/infrastructure.py"
+    },
+    {
+      "id": "NFR7.2",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/api.py"
+    },
+    {
+      "id": "NFR7.3",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/tests/integration/test_u2_history.py"
+    },
+    {
+      "id": "NFR7.4",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/ledger.py"
+    },
+    {
+      "id": "NFR13.1",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/openapi/raad-money-v1.yaml"
+    },
+    {
+      "id": "NFR3.1",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/ledger.py"
+    },
+    {
+      "id": "NFR3.2",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/scripts/check_ledger_coverage.py"
+    },
+    {
+      "id": "NFR4.1",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/transfers.py"
+    },
+    {
+      "id": "NFR4.2",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/ledger.py"
+    },
+    {
+      "id": "NFR5.1",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/infrastructure.py"
+    },
+    {
+      "id": "NFR5.2",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/infrastructure.py"
+    },
+    {
+      "id": "NFR5.3",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/ledger.py"
+    },
+    {
+      "id": "NFR5.4",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/tests/integration/test_u2_transfers.py"
+    },
+    {
+      "id": "NFR5.5",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/consumer.py"
+    },
+    {
+      "id": "NFR4.3",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/transfers.py"
+    },
+    {
+      "id": "NFR4.4",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/wallet_setup.py"
+    },
+    {
+      "id": "NFR9.2",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/store_errors.py"
+    },
+    {
+      "id": "NFR9.3",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/transfers.py"
+    },
+    {
+      "id": "NFR9.4",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/api.py"
+    },
+    {
+      "id": "NFR15.1",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/history.py"
+    },
+    {
+      "id": "BR2.1",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/wallet_setup.py"
+    },
+    {
+      "id": "BR2.2",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/consumer.py"
+    },
+    {
+      "id": "BR2.3",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/storage.py"
+    },
+    {
+      "id": "BR2.4",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/transfers.py"
+    },
+    {
+      "id": "BR2.5",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/transfers.py"
+    },
+    {
+      "id": "BR2.6",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/ledger.py"
+    },
+    {
+      "id": "BR2.7",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/ledger.py"
+    },
+    {
+      "id": "BR2.8",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/transfers.py"
+    },
+    {
+      "id": "BR2.9",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/transfers.py"
+    },
+    {
+      "id": "BR2.10",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/cursor.py"
+    },
+    {
+      "id": "BR2.11",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/consumer.py"
+    },
+    {
+      "id": "BR2.12",
+      "status": "OK",
+      "target": "RaadMoneyService@checkout/src/raad_money/api.py"
+    }
+  ]
+}

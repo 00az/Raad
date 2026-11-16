@@ -39,7 +39,7 @@
 - **In Progress**: code-generation
 
 ## Runtime State
-- **Revision Count**: 7
+- **Revision Count**: 8
 - **Construction Checkpoints**: enabled
 - **Construction Iteration**: unit-major
 - **Construction Execution**: serial
@@ -102,11 +102,17 @@
 
 
 
-- **Active Unit**: u2-money-service
 
-- **Unit Stage**: code-generation
 
-- **Unit State**: in-progress
+
+
+
+
+- **Parked**: 2026-11-16T20:29:16Z
+
+- **Parked At Stage**: code-generation
+
+- **Parked By**: person
 
 ## Phase Progress
 <!-- Status values: Pending, Active, Verified, Skipped -->
@@ -168,7 +174,7 @@
 | unit | owner | code-generation | gate |
 | --- | --- | --- | --- |
 | u1-walking-skeleton | - | [x] | [x] |
-| u2-money-service | - | [-] | [-] |
+| u2-money-service | - | [x] | [x] |
 | u4-platform | - | [ ] | [ ] |
 | u5-landing-page | - | [ ] | [ ] |
 | u3-mobile-app | - | [ ] | [ ] |
@@ -178,7 +184,7 @@
 - **Current Stage**: code-generation
 - **Next Stage**: build-and-test
 - **Status**: Running
-- **Last Updated**: 2026-11-16T14:57:46Z
+- **Last Updated**: 2026-11-16T20:29:16Z
 
 ## Session Resume Point
 - **Last Completed Stage**: delivery-planning
