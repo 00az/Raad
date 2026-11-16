@@ -1,0 +1,14 @@
+title = "RAAD secret scanning"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "generic-api-key"
+
+[[rules.allowlists]]
+description = "NFR11.3 requirement prose: reviewed documentation, not an API key"
+condition = "AND"
+regexTarget = "line"
+paths = ['''^aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u2-money-service/nfr-requirements/security-requirements\.md$''']
+regexes = ['''(?m)^\| NFR11\.3 \| Original replay profile fields come only from an immutable WalletDirectory version referenced by the authenticated caller's saved outcome\. Current-profile edits never rewrite historical replay\. Retain referenced versions for the outcome lifetime\. \| Test profile changes, unauthorized version access, missing/corrupt versions and pre-commit failures\. Ledger and canonical Transactions contain no email/name, and unavailable replay data never triggers another movement\. \|$''']

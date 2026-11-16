@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   checks:
@@ -24,6 +25,8 @@ jobs:
       CDK_DEFAULT_REGION: us-east-1
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
@@ -39,3 +42,5 @@ jobs:
       - run: uv run pip-audit
       - run: uv run cdk synth --all
       - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
