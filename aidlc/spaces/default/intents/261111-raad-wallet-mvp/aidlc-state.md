@@ -168,13 +168,13 @@
 
 ## Unit Progress
 <!-- Derived, engine-owned projection; routing ignores hand edits. -->
-| unit | owner | code-generation | gate |
-| --- | --- | --- | --- |
-| u1-walking-skeleton | - | [x] | [x] |
-| u2-money-service | - | [x] | [x] |
-| u4-platform | - | [ ] | [ ] |
-| u5-landing-page | - | [ ] | [ ] |
-| u3-mobile-app | - | [ ] | [ ] |
+| unit | owner | code-generation | gate | merged |
+| --- | --- | --- | --- | --- |
+| u1-walking-skeleton | - | [x] | [x] | [x] |
+| u2-money-service | - | [x] | [x] | [x] |
+| u4-platform | - | [ ] | [ ] | [ ] |
+| u5-landing-page | ziyad-alamri | [x] | [x] | [x] |
+| u3-mobile-app | - | [ ] | [ ] | [ ] |
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
