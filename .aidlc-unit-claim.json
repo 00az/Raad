@@ -11,9 +11,9 @@
   "base_oid": "c979d0aee76be27fdb8aa75f6c685a9294f8ef25",
   "integration_ref": "refs/remotes/origin/main",
   "claim_ref": "refs/heads/claim/ce0a1b4e/u4-platform",
-  "predecessor_oid": "5cd9e4c626cc85ae905ab2c8ccb84bf2337e2dac",
+  "predecessor_oid": "f603f97523e487e27d6969b1ea15610adf391cee",
   "gate_rhythm": "per-stage",
   "audit_shard": "azizs-macbook-pro-local-27def4f8691d.md",
-  "candidate_tree_oid": "a85d43423e075732240fcf6041af3623a692db9e",
-  "candidate_head_oid": "8abf7286817ee07573b96a5ebb7b2a7f0eb0306b"
+  "candidate_tree_oid": "948f2b70ba23c67a768c6c0ec18a7bea7f7712b3",
+  "candidate_head_oid": "f4d4b3d8419bc644b921dff6eca64d059507ee36"
 }
