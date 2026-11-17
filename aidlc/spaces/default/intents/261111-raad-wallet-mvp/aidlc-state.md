@@ -39,7 +39,7 @@
 - **In Progress**: code-generation
 
 ## Runtime State
-- **Revision Count**: 8
+- **Revision Count**: 9
 - **Construction Checkpoints**: enabled
 - **Construction Iteration**: unit-major
 - **Construction Execution**: serial
@@ -114,6 +114,12 @@
 
 - **Parked By**: person
 
+
+
+
+
+
+
 ## Phase Progress
 <!-- Status values: Pending, Active, Verified, Skipped -->
 
@@ -175,8 +181,8 @@
 | --- | --- | --- | --- |
 | u1-walking-skeleton | - | [x] | [x] |
 | u2-money-service | - | [x] | [x] |
-| u4-platform | - | [ ] | [ ] |
-| u5-landing-page | - | [ ] | [ ] |
+| u4-platform | AzPsu | [ ] | [ ] |
+| u5-landing-page | ziyad-alamri | [x] | [x] |
 | u3-mobile-app | - | [ ] | [ ] |
 
 ## Current Status
@@ -184,7 +190,7 @@
 - **Current Stage**: code-generation
 - **Next Stage**: build-and-test
 - **Status**: Running
-- **Last Updated**: 2026-11-16T20:29:16Z
+- **Last Updated**: 2026-11-17T14:55:53Z
 
 ## Session Resume Point
 - **Last Completed Stage**: delivery-planning
