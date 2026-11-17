@@ -1,0 +1,240 @@
+# C5 — Public API edge and token-verifier contract v1 (contract ID: c5-money-edge).
+# Canonical file named in the contract design's "Contract Files, Releases and Pinning" table.
+# Owner: U4 / Raad. Consumer: U2 / RaadMoneyService, which pins this file.
+# Pre-release until U4's provider tests pass for the whole file; then tag
+# contract/c5-money-edge/v1.0.0. The configVersion marker of the verifier configuration stays
+# MAJOR.MINOR ('1.0'), the exact representation U2's verifier already loads.
+#
+# Reconciliations made when this file was first written (U4 Code Generation):
+# - correlation_id.accepted_pattern is the intersection of the design-record pattern
+#   ^[A-Za-z0-9._~-]{1,128}$ and the pattern U2's MoneyApi accepts,
+#   ^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$. A caller value outside the intersection is replaced
+#   by a new identifier at the edge, so the value forwarded to MoneyApi is always one MoneyApi
+#   keeps, and the edge never returns a correlation ID that MoneyApi would have changed.
+# - Accept is forwarded, as the design lists; the earlier U1 edge did not forward it.
+# - rate_limits records the edge's verified-caller quotas from U4's NFR design.
+# - transport records the signed envelope the edge already sends and U2 already parses.
+contract: raad-money-edge
+version: 1.0.0-rc.1
+owner: u4-platform
+consumer: u2-money-service
+public_route:
+  path_prefix: /money/v1
+  upstream_contract: C1
+  tls_minimum: '1.2'
+forwarding:
+  preserve: [httpMethod, pathAfterPrefix, query, body]
+  allowed_methods: [GET, PUT, POST]
+  request_headers:
+    forward: [Authorization, Idempotency-Key, Content-Type, Accept, X-Correlation-Id]
+    strip:
+      - X-User-Id
+      - X-Wallet-Id
+      - X-Authenticated-User
+      - X-Forwarded-User
+    authorization_token_type: access-token
+    never_forward_token_types: [id-token, refresh-token]
+  correlation_id:
+    header: X-Correlation-Id
+    accepted_pattern: '^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$'
+    design_record_pattern: '^[A-Za-z0-9._~-]{1,128}$'
+    behavior: >
+      Preserve a valid caller value; otherwise create one. Forward it to MoneyApi
+      and return the same value in every response, including edge errors.
+  response:
+    preserve_status_and_body: true
+    add_headers: [X-Correlation-Id]
+transport:
+  edge_to_money_api:
+    protocol: >
+      HTTPS POST to the environment's IAM-authorized MoneyApi function URL, signed with SigV4
+      by the platform edge role. The original bearer travels inside the envelope, unchanged.
+    target_parameter: /raad/<env>/money-api/function-url
+    edge_role_parameter: /raad/<env>/platform-edge-role-arn
+    envelope:
+      type: object
+      additionalProperties: false
+      required: [version, request]
+      properties:
+        version:
+          const: 1
+        request:
+          type: object
+          additionalProperties: false
+          required: [method, path, query, headers, body]
+          properties:
+            method:
+              type: string
+              enum: [GET, PUT, POST]
+            path:
+              type: string
+              pattern: '^/money/v1(/.*)?$'
+            query:
+              type: string
+            headers:
+              type: object
+              propertyNames:
+                enum: [authorization, idempotency-key, content-type, accept, x-correlation-id]
+              additionalProperties:
+                type: string
+            body:
+              type: [string, 'null']
+rate_limits:
+  caller: verified access-token sub; caller-supplied identity headers are never trusted
+  window: fixed 60-second window on the edge's server clock
+  store: platform-owned counters keyed by environment, an HMAC of sub and the counter name
+  counters:
+    recipient_lookup:
+      limit_per_window: 30
+      requests: ['POST /money/v1/recipients/resolve']
+    transfer:
+      limit_per_window: 10
+      requests: ['POST /money/v1/transfers']
+      also_consumes: [recipient_lookup]
+    other:
+      limit_per_window: 60
+      requests: ['every other /money/v1 request, including GET and PUT /wallet and GET /transfers']
+  consumption: all counters a request names are charged together or not at all
+  refusal: >
+    429 RATE_LIMITED with Retry-After equal to the whole seconds left in the window. A refused
+    request is never forwarded, so it reaches no MoneyApi code and consumes no Idempotency-Key.
+  store_unavailable: 503 SERVICE_UNAVAILABLE with Retry-After; the request is not forwarded
+token_verification:
+  layers: [public-edge, MoneyApi]
+  required_checks: [signature, issuer, audience-binding, expiry, not-before-if-present, token-type]
+  required_token_type: access-token
+  caller_id_claim: sub
+  accepted_algorithms: [RS256]
+  configuration:
+    name: raad-token-verifier-config
+    version: '1.0'
+    delivery: immutable non-secret deployment configuration, one per environment
+    delivery_parameter: /raad/<env>/verifier
+    secrets_allowed: false
+    schema:
+      $schema: https://json-schema.org/draft/2020-12/schema
+      type: object
+      additionalProperties: false
+      required:
+        - configVersion
+        - environment
+        - issuer
+        - audience
+        - audienceClaim
+        - tokenTypeMarker
+        - jwksUri
+        - acceptedAlgorithms
+        - profileAttributeSource
+      properties:
+        configVersion:
+          type: string
+          const: '1.0'
+        environment:
+          type: string
+          enum: [dev, stg, prd]
+        issuer:
+          type: string
+          format: uri
+          pattern: '^https://'
+        audience:
+          type: string
+          minLength: 1
+          description: >
+            The value the access token's audience-binding claim must carry in
+            this environment; equals C4 authAudience.
+        audienceClaim:
+          type: string
+          enum: [aud, client_id]
+          description: The access-token claim that must equal audience for this provider.
+        tokenTypeMarker:
+          type: object
+          additionalProperties: false
+          required: [location, name, expectedValue]
+          properties:
+            location:
+              type: string
+              enum: [claim, header]
+            name:
+              type: string
+              minLength: 1
+            expectedValue:
+              type: string
+              minLength: 1
+        jwksUri:
+          type: string
+          format: uri
+          pattern: '^https://'
+        acceptedAlgorithms:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            type: string
+            const: RS256
+        profileAttributeSource:
+          type: string
+          enum: [access-token-claims, user-profile-endpoint]
+          description: Where MoneyApi reads email and displayName at wallet setup (C3 check P2).
+        userProfileUri:
+          type: string
+          format: uri
+          pattern: '^https://'
+          description: Present exactly when profileAttributeSource is user-profile-endpoint.
+      if:
+        properties:
+          profileAttributeSource:
+            const: user-profile-endpoint
+      then:
+        required: [userProfileUri]
+      else:
+        not:
+          required: [userProfileUri]
+    validation:
+      - issuer, audience, jwksUri and userProfileUri must all belong to environment
+      - userProfileUri is present exactly when profileAttributeSource is user-profile-endpoint
+      - every value is public information about the sign-in service; none is a secret
+  key_discovery:
+    transport: HTTPS
+    source: jwksUri
+    cache_maximum_minutes: 360
+    unknown_kid_behavior: refresh-once-then-refuse
+    unknown_kid_refresh_minimum_interval_seconds: 60
+    rotation: >
+      A verifier refreshes its key set once when a token names a key it does not
+      hold, and at most once a minute, so a new key works without a restart.
+      Where U4 controls rotation, the new and the retiring key overlap for at
+      least the greater of the access-token lifetime and the verifier cache
+      maximum. Where the provider rotates by itself, a token signed by a
+      withdrawn key is refused with 401 and the app renews its session.
+    discovery_failure: >
+      Continue with an unexpired cached key set. With no usable cached key, return
+      503 TOKEN_VERIFIER_UNAVAILABLE; never turn verifier unavailability into 401.
+edge_errors:
+  schema: C1 Error
+  body_fields: [code, message, correlationId]
+  mappings:
+    missing_invalid_or_expired_access_token:
+      httpStatus: 401
+      code: AUTHENTICATION_REQUIRED
+    firewall_refusal:
+      httpStatus: 403
+      code: FORBIDDEN
+    rate_limit:
+      httpStatus: 429
+      code: RATE_LIMITED
+      requiredHeader: Retry-After
+    token_key_discovery_unavailable:
+      httpStatus: 503
+      code: TOKEN_VERIFIER_UNAVAILABLE
+    service_unavailable:
+      httpStatus: 503
+      code: SERVICE_UNAVAILABLE
+      requiredHeader: Retry-After
+  privacy: no token, email, wallet id, stack trace or internal route name in body or logs
+failure_behavior:
+  no_matching_route:
+    behavior: return 404 outside C1; never forward
+    httpStatus: 404
+    code: NOT_FOUND
+  upstream_unreachable: return C1 Error with 503 SERVICE_UNAVAILABLE and Retry-After
+  upstream_timeout: return C1 Error with 503 SERVICE_UNAVAILABLE and Retry-After

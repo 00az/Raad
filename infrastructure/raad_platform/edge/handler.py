@@ -1,4 +1,4 @@
-"""C5 edge adapter: validate correlation, verify token profile, and forward safely."""
+"""C5 edge adapter: verify origin and token, enforce caller limits, and forward safely."""
 
 from __future__ import annotations
 
@@ -23,13 +23,21 @@ from botocore.exceptions import BotoCoreError, ClientError
 from jwt import PyJWKClient
 from urllib3.util import Timeout
 
-CORRELATION_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
+from raad_platform.edge import rate_store
+
+# C5 accepted_pattern: the design pattern narrowed to the values MoneyApi also keeps, so the
+# correlation ID returned to the caller is always the one MoneyApi logged and echoed.
+CORRELATION_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 ALLOWED_METHODS = {"GET", "PUT", "POST"}
+MONEY_PREFIX = "/money/v1"
+FORWARDED_HEADERS = ("idempotency-key", "accept")
 _request_start = 0.0
 _request_path = "/money/v1"
 _request_method = ""
 _jwk_clients: dict[str, PyJWKClient] = {}
 _origin_cache: tuple[str, str, float] | None = None
+_rate_key_cache: tuple[str, list[tuple[str, bytes]], float] | None = None
+_dynamodb: Any = None
 SDK_CONFIG = Config(connect_timeout=0.25, read_timeout=0.5, retries={"total_max_attempts": 1})
 
 
@@ -111,12 +119,20 @@ def _origin_rejection(event: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
-def _publish_metrics(status: int, elapsed_ms: int, path: str, method: str) -> None:
+def _publish_metrics(
+    status: int, elapsed_ms: int, path: str, method: str, extra: str | None = None
+) -> None:
     values: dict[str, int | float] = {"EdgeRequests": 1, "RequestLatencyMs": elapsed_ms}
     units: dict[str, str] = {"EdgeRequests": "Count", "RequestLatencyMs": "Milliseconds"}
     if status >= 500:
         values["Edge5xx"] = 1
         units["Edge5xx"] = "Count"
+    if status == 429:
+        values["EdgeRateLimited"] = 1
+        units["EdgeRateLimited"] = "Count"
+    if extra:
+        values[extra] = 1
+        units[extra] = "Count"
     if path.endswith("/transfers") and method == "POST":
         values.update({"TransferResponses": 1, "AdapterTransferLatencyMs": elapsed_ms})
         units.update({"TransferResponses": "Count", "AdapterTransferLatencyMs": "Milliseconds"})
@@ -153,7 +169,15 @@ def _publish_metrics(status: int, elapsed_ms: int, path: str, method: str) -> No
     )
 
 
-def _response(status: int, code: str, message: str, correlation_id: str) -> dict[str, Any]:
+def _response(
+    status: int,
+    code: str,
+    message: str,
+    correlation_id: str,
+    *,
+    retry_after: int | None = None,
+    metric: str | None = None,
+) -> dict[str, Any]:
     try:
         version, protected = _protected_correlation(correlation_id)
         print(
@@ -173,14 +197,21 @@ def _response(status: int, code: str, message: str, correlation_id: str) -> dict
         max(0, int((time.monotonic() - _request_start) * 1000)),
         _request_path,
         _request_method,
+        metric,
     )
+    headers = {
+        "content-type": "application/json",
+        "x-correlation-id": correlation_id,
+        "cache-control": "no-store",
+    }
+    # C5: 429 and 503 SERVICE_UNAVAILABLE always tell the app when to try again.
+    if retry_after is None and code == "SERVICE_UNAVAILABLE":
+        retry_after = 1
+    if retry_after is not None:
+        headers["retry-after"] = str(retry_after)
     return {
         "statusCode": status,
-        "headers": {
-            "content-type": "application/json",
-            "x-correlation-id": correlation_id,
-            "cache-control": "no-store",
-        },
+        "headers": headers,
         "body": json.dumps({"code": code, "message": message, "correlationId": correlation_id}),
     }
 
@@ -200,7 +231,8 @@ def _profile() -> tuple[str, str]:
     return issuer, parameter["Parameter"]["Value"]
 
 
-def _verify(token: str, issuer: str) -> None:
+def _verify(token: str, issuer: str) -> str:
+    """Return the verified subject; it is the only caller identity the edge uses."""
     jwks_uri = f"{issuer}/.well-known/jwks.json"
     client = _jwk_clients.get(issuer)
     if client is None:
@@ -223,6 +255,10 @@ def _verify(token: str, issuer: str) -> None:
     )
     if claims.get("token_use") != "access" or claims.get("client_id") != os.environ["CLIENT_ID"]:
         raise jwt.InvalidTokenError("wrong token profile")
+    subject = claims.get("sub")
+    if not isinstance(subject, str) or not 1 <= len(subject) <= 256:
+        raise jwt.InvalidTokenError("invalid subject")
+    return subject
 
 
 def _protected_correlation(correlation_id: str) -> tuple[str, str]:
@@ -236,6 +272,71 @@ def _protected_correlation(correlation_id: str) -> tuple[str, str]:
     if not key:
         raise ValueError("correlation key unavailable")
     return version, hmac.new(key.encode(), correlation_id.encode(), hashlib.sha256).hexdigest()
+
+
+def _rate_keys() -> list[tuple[str, bytes]]:
+    """Current and, during a rotation, previous HMAC key versions; cached for 60 seconds."""
+    global _rate_key_cache
+    arn = os.environ["CORRELATION_SECRET_ARN"]
+    now = time.monotonic()
+    if _rate_key_cache and _rate_key_cache[0] == arn and now < _rate_key_cache[2]:
+        return _rate_key_cache[1]
+    secret = json.loads(
+        boto3.client("secretsmanager", config=SDK_CONFIG).get_secret_value(SecretId=arn)[
+            "SecretString"
+        ]
+    )
+    if not isinstance(secret, dict):
+        raise TypeError("rate key unavailable")
+    keys = []
+    for version_field, key_field in (("version", "key"), ("previousVersion", "previousKey")):
+        version, key = secret.get(version_field), secret.get(key_field)
+        if version is None and key is None and version_field == "previousVersion":
+            continue
+        if not isinstance(key, str) or len(key) < 32 or not str(version or ""):
+            raise ValueError("rate key unavailable")
+        keys.append((str(version), key.encode()))
+    _rate_key_cache = (arn, keys, now + 60)
+    return keys
+
+
+def _rate_limiter() -> rate_store.RateLimiter:
+    global _dynamodb
+    if _dynamodb is None:
+        _dynamodb = boto3.client("dynamodb", config=SDK_CONFIG)
+    return rate_store.RateLimiter(
+        _dynamodb, os.environ["RATE_TABLE_NAME"], os.environ["ENVIRONMENT"], _rate_keys()
+    )
+
+
+def _rate_limit(subject: str, method: str, path: str, correlation: str) -> dict[str, Any] | None:
+    """Charge the verified caller before any forwarding; refusal never reaches MoneyApi."""
+    try:
+        decision = _rate_limiter().consume(subject, rate_store.classify(method, path))
+    except (
+        rate_store.RateStoreUnavailable,
+        KeyError,
+        ValueError,
+        TypeError,
+        BotoCoreError,
+        ClientError,
+    ):
+        return _response(
+            503,
+            "SERVICE_UNAVAILABLE",
+            "The service is temporarily unavailable.",
+            correlation,
+            metric="EdgeRateStoreUnavailable",
+        )
+    if decision.admitted:
+        return None
+    return _response(
+        429,
+        "RATE_LIMITED",
+        "Too many requests. Try again later.",
+        correlation,
+        retry_after=decision.retry_after,
+    )
 
 
 def handle(event: dict[str, Any], _context: object) -> dict[str, Any]:
@@ -253,22 +354,24 @@ def handle(event: dict[str, Any], _context: object) -> dict[str, Any]:
         method = event.get("requestContext", {}).get("http", {}).get("method", "").upper()
         if method not in ALLOWED_METHODS:
             return _response(400, "VALIDATION_ERROR", "The request is invalid.", correlation)
+        path = event.get("rawPath", MONEY_PREFIX)
+        if path != MONEY_PREFIX and not path.startswith(MONEY_PREFIX + "/"):
+            # C5 no_matching_route: answered outside C1 and never forwarded.
+            return _response(404, "NOT_FOUND", "The requested path does not exist.", correlation)
         auth = next((v for k, v in headers.items() if k.lower() == "authorization"), "")
         if not auth.startswith("Bearer "):
             return _response(401, "AUTHENTICATION_REQUIRED", "Sign in to continue.", correlation)
         issuer, target = _profile()
-        _verify(auth[7:], issuer)
+        subject = _verify(auth[7:], issuer)
+        refused = _rate_limit(subject, method, path, correlation)
+        if refused is not None:
+            return refused
         parsed = urlsplit(target)
         if parsed.scheme != "https" or not parsed.netloc:
             return _response(
                 503, "SERVICE_UNAVAILABLE", "The service is temporarily unavailable.", correlation
             )
         version, protected = _protected_correlation(correlation)
-        path = event.get("rawPath", "/money/v1")
-        if not path.startswith("/money/v1"):
-            return _response(
-                500, "INTERNAL_ERROR", "The request could not be completed.", correlation
-            )
         query = event.get("rawQueryString", "")
         url = target.rstrip("/") + "/"
         body = event.get("body")
@@ -281,7 +384,7 @@ def handle(event: dict[str, Any], _context: object) -> dict[str, Any]:
                 (v for k, v in headers.items() if k.lower() == "content-type"), "application/json"
             ),
         }
-        for name in ("idempotency-key",):
+        for name in FORWARDED_HEADERS:
             value = next((v for k, v in headers.items() if k.lower() == name), None)
             if value is not None:
                 original_headers[name] = value

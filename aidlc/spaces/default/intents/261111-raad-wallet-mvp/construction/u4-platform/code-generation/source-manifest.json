@@ -1,0 +1,124 @@
+{
+  "stage": "code-generation",
+  "unit": "u4-platform",
+  "version": 1,
+  "writes": [
+    {
+      "path": ".github/workflows/ci.yml"
+    },
+    {
+      "path": ".gitignore"
+    },
+    {
+      "path": "contracts/README.md"
+    },
+    {
+      "path": "contracts/c3-sign-in-client-profile-v1.yaml"
+    },
+    {
+      "path": "contracts/c4-mobile-environment-config-v1.schema.yaml"
+    },
+    {
+      "path": "contracts/c5-money-edge-v1.yaml"
+    },
+    {
+      "path": "infrastructure/.env.example"
+    },
+    {
+      "path": "infrastructure/README.md"
+    },
+    {
+      "path": "infrastructure/app.py"
+    },
+    {
+      "path": "infrastructure/docker-compose.yml"
+    },
+    {
+      "path": "infrastructure/pyproject.toml"
+    },
+    {
+      "path": "infrastructure/raad_platform/configuration.py"
+    },
+    {
+      "path": "infrastructure/raad_platform/edge/handler.py"
+    },
+    {
+      "path": "infrastructure/raad_platform/edge/rate_store.py"
+    },
+    {
+      "path": "infrastructure/raad_platform/edge/stub.py"
+    },
+    {
+      "path": "infrastructure/raad_platform/identity/__init__.py"
+    },
+    {
+      "path": "infrastructure/raad_platform/identity/publisher.py"
+    },
+    {
+      "path": "infrastructure/raad_platform/stacks.py"
+    },
+    {
+      "path": "infrastructure/raad_platform/telemetry/handler.py"
+    },
+    {
+      "path": "infrastructure/tests/conftest.py"
+    },
+    {
+      "path": "infrastructure/tests/integration/test_platform_rate_limits.py"
+    },
+    {
+      "path": "infrastructure/tests/test_edge_adapter.py"
+    },
+    {
+      "path": "infrastructure/tests/test_identity_publisher.py"
+    },
+    {
+      "path": "infrastructure/tests/test_identity_stack.py"
+    },
+    {
+      "path": "infrastructure/tests/test_monitoring_stack.py"
+    },
+    {
+      "path": "infrastructure/tests/test_platform_capabilities.py"
+    },
+    {
+      "path": "infrastructure/tests/test_platform_config_writer.py"
+    },
+    {
+      "path": "infrastructure/tests/test_platform_contracts.py"
+    },
+    {
+      "path": "infrastructure/tests/test_platform_mapping.py"
+    },
+    {
+      "path": "infrastructure/tests/test_platform_rate_limits.py"
+    },
+    {
+      "path": "infrastructure/tests/test_platform_rate_store.py"
+    },
+    {
+      "path": "infrastructure/tests/test_platform_smoke.py"
+    },
+    {
+      "path": "infrastructure/tests/test_public_edge_stack.py"
+    },
+    {
+      "path": "infrastructure/tests/test_public_latency_processor.py"
+    },
+    {
+      "path": "infrastructure/tests/test_public_latency_stack.py"
+    },
+    {
+      "path": "infrastructure/uv.lock"
+    },
+    {
+      "path": "scripts/check_identity_capabilities.py"
+    },
+    {
+      "path": "scripts/platform_smoke.py"
+    },
+    {
+      "path": "scripts/write_platform_config.py"
+    }
+  ]
+}
