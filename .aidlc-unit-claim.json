@@ -1,17 +1,17 @@
 {
   "version": 1,
-  "status": "released",
-  "owner": "released",
+  "status": "claimed",
+  "owner": "ziyad-alamri",
   "space": "default",
   "intent_uuid": "01a1cb38-fec9-7804-a48f-369fce0a1b4e",
   "intent_id8": "ce0a1b4e",
   "unit": "u5-landing-page",
   "generation": 2,
-  "nonce": "bb1a560c-4890-4c89-9639-1f56e9967e8b",
+  "nonce": "f1e5a563-ec16-420d-9acb-989637b953ef",
   "base_oid": "5293bbb6afc0b9d64202ad6723f3cabf208a3392",
   "integration_ref": "refs/remotes/origin/main",
   "claim_ref": "refs/heads/claim/ce0a1b4e/u5-landing-page",
-  "predecessor_oid": "1e66812c287b9863947560caa0857a891dde4515",
+  "predecessor_oid": "53856b98c5badb19a10ee69321b6841908c18c6f",
   "gate_rhythm": "per-stage",
-  "audit_shard": "ziyads-macbook-air-local-ef62fbbe2c2a.md"
+  "audit_shard": "ziyads-macbook-air-local-f1e5a563ec16.md"
 }
