@@ -11,9 +11,9 @@
   "base_oid": "5293bbb6afc0b9d64202ad6723f3cabf208a3392",
   "integration_ref": "refs/remotes/origin/main",
   "claim_ref": "refs/heads/claim/ce0a1b4e/u5-landing-page",
-  "predecessor_oid": "5b1d419bfd9497ffdcaa641523c4177973811b80",
+  "predecessor_oid": "9ab5a70d5f26b145c03284c5d46a2f4ab13d6d68",
   "gate_rhythm": "per-stage",
   "audit_shard": "ziyads-macbook-air-local-f1e5a563ec16.md",
-  "candidate_tree_oid": "e463078214cdf8e8efe59cdf41e51ffc3cdc2286",
-  "candidate_head_oid": "097bb7d4843f3d5edb83c7892e82692e72d2e693"
+  "candidate_tree_oid": "593408b221e1590044b0edc4197cf9a82fd019e9",
+  "candidate_head_oid": "78fb8de9e8c7251a6dc5ef0fd4c1993f7e23490b"
 }
