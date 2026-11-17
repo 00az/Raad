@@ -1,0 +1,130 @@
+{
+  "stage": "code-generation",
+  "unit": "u5-landing-page",
+  "version": 1,
+  "writes": [
+    {
+      "path": "RaadWeb@checkout/.github/workflows/ci.yml"
+    },
+    {
+      "path": "RaadWeb@checkout/.github/workflows/deploy-dev.yml"
+    },
+    {
+      "path": "RaadWeb@checkout/.gitignore"
+    },
+    {
+      "path": "RaadWeb@checkout/.python-version"
+    },
+    {
+      "path": "RaadWeb@checkout/README.md"
+    },
+    {
+      "path": "RaadWeb@checkout/app.py"
+    },
+    {
+      "path": "RaadWeb@checkout/cdk.json"
+    },
+    {
+      "path": "RaadWeb@checkout/pyproject.toml"
+    },
+    {
+      "path": "RaadWeb@checkout/raadweb/__init__.py"
+    },
+    {
+      "path": "RaadWeb@checkout/raadweb/config.py"
+    },
+    {
+      "path": "RaadWeb@checkout/raadweb/content.py"
+    },
+    {
+      "path": "RaadWeb@checkout/raadweb/stack.py"
+    },
+    {
+      "path": "RaadWeb@checkout/raadweb/web_policy.py"
+    },
+    {
+      "path": "RaadWeb@checkout/scripts/__init__.py"
+    },
+    {
+      "path": "RaadWeb@checkout/scripts/build_site.py"
+    },
+    {
+      "path": "RaadWeb@checkout/scripts/page_parser.py"
+    },
+    {
+      "path": "RaadWeb@checkout/scripts/smoke_site.py"
+    },
+    {
+      "path": "RaadWeb@checkout/site/404.html"
+    },
+    {
+      "path": "RaadWeb@checkout/site/assets/fonts/OFL.txt"
+    },
+    {
+      "path": "RaadWeb@checkout/site/assets/fonts/ibm-plex-sans-arabic-arabic-400-normal.woff2"
+    },
+    {
+      "path": "RaadWeb@checkout/site/assets/fonts/ibm-plex-sans-arabic-arabic-600-normal.woff2"
+    },
+    {
+      "path": "RaadWeb@checkout/site/assets/fonts/ibm-plex-sans-arabic-latin-400-normal.woff2"
+    },
+    {
+      "path": "RaadWeb@checkout/site/assets/fonts/ibm-plex-sans-arabic-latin-600-normal.woff2"
+    },
+    {
+      "path": "RaadWeb@checkout/site/assets/icon-180.png"
+    },
+    {
+      "path": "RaadWeb@checkout/site/assets/raad-logo.webp"
+    },
+    {
+      "path": "RaadWeb@checkout/site/assets/styles.css"
+    },
+    {
+      "path": "RaadWeb@checkout/site/en/index.html"
+    },
+    {
+      "path": "RaadWeb@checkout/site/favicon.ico"
+    },
+    {
+      "path": "RaadWeb@checkout/site/index.html"
+    },
+    {
+      "path": "RaadWeb@checkout/tests/__init__.py"
+    },
+    {
+      "path": "RaadWeb@checkout/tests/browser/__init__.py"
+    },
+    {
+      "path": "RaadWeb@checkout/tests/browser/conftest.py"
+    },
+    {
+      "path": "RaadWeb@checkout/tests/browser/test_axe.py"
+    },
+    {
+      "path": "RaadWeb@checkout/tests/conftest.py"
+    },
+    {
+      "path": "RaadWeb@checkout/tests/site_server.py"
+    },
+    {
+      "path": "RaadWeb@checkout/tests/test_build_site.py"
+    },
+    {
+      "path": "RaadWeb@checkout/tests/test_pages.py"
+    },
+    {
+      "path": "RaadWeb@checkout/tests/test_smoke_site.py"
+    },
+    {
+      "path": "RaadWeb@checkout/tests/test_stack.py"
+    },
+    {
+      "path": "RaadWeb@checkout/tests/test_workflows.py"
+    },
+    {
+      "path": "RaadWeb@checkout/uv.lock"
+    }
+  ]
+}

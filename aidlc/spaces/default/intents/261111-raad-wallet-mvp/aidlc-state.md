@@ -108,11 +108,11 @@
 
 
 
-- **Parked**: 2026-11-16T20:29:16Z
 
-- **Parked At Stage**: code-generation
 
-- **Parked By**: person
+
+
+
 
 ## Phase Progress
 <!-- Status values: Pending, Active, Verified, Skipped -->
@@ -171,20 +171,20 @@
 
 ## Unit Progress
 <!-- Derived, engine-owned projection; routing ignores hand edits. -->
-| unit | owner | code-generation | gate |
-| --- | --- | --- | --- |
-| u1-walking-skeleton | - | [x] | [x] |
-| u2-money-service | - | [x] | [x] |
-| u4-platform | - | [ ] | [ ] |
-| u5-landing-page | - | [ ] | [ ] |
-| u3-mobile-app | - | [ ] | [ ] |
+| unit | owner | code-generation | gate | merged |
+| --- | --- | --- | --- | --- |
+| u1-walking-skeleton | - | [x] | [x] | [x] |
+| u2-money-service | - | [x] | [x] | [x] |
+| u4-platform | AzPsu | [x] | [x] | [ ] |
+| u5-landing-page | ziyad-alamri | [x] | [x] | [x] |
+| u3-mobile-app | - | [ ] | [ ] | [ ] |
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
 - **Current Stage**: code-generation
 - **Next Stage**: build-and-test
 - **Status**: Running
-- **Last Updated**: 2026-11-16T20:29:16Z
+- **Last Updated**: 2026-11-17T21:06:44Z
 
 ## Session Resume Point
 - **Last Completed Stage**: delivery-planning

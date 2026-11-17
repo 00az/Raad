@@ -1,13 +1,18 @@
-"""Identity, edge, and monitoring stacks for the RAAD walking skeleton."""
+"""Identity, edge, and monitoring stacks for the shared RAAD platform (U1 skeleton, U4)."""
 
 from __future__ import annotations
 
+import json
+import re
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass, field
 from typing import Any
 
 from aws_cdk import (
     BundlingOptions,
     CfnOutput,
     Duration,
+    RemovalPolicy,
     Stack,
 )
 from aws_cdk import (
@@ -33,6 +38,12 @@ from aws_cdk import (
 )
 from aws_cdk import (
     aws_cognito as cognito,
+)
+from aws_cdk import (
+    aws_dynamodb as dynamodb,
+)
+from aws_cdk import (
+    aws_events as events,
 )
 from aws_cdk import (
     aws_iam as iam,
@@ -76,7 +87,113 @@ from aws_cdk import (
 from cdk_nag import NagSuppressions
 from constructs import Construct
 
+from raad_platform import configuration
+from raad_platform.identity import publisher
 from raad_platform.telemetry.handler import FIELDS
+
+ENVIRONMENTS = ("dev", "stg", "prd")
+# Regional WAF on the user pool (NFR12.11, C3 P10). AWS documents that WAF sees the public and
+# token-authorized user pool operations, GetUser included, and that the user pools API names
+# each request's operation in this header. The exact header value format is not shown in the
+# documentation, so the match also accepts the service-prefixed form; the real classification
+# is a deployed gate (unknown classification blocks release).
+COGNITO_OPERATION_HEADER = "x-amzn-cognito-operation-name"
+ACCOUNT_OPERATIONS = (
+    "SignUp",
+    "ConfirmSignUp",
+    "ResendConfirmationCode",
+    "InitiateAuth",
+    "RespondToAuthChallenge",
+    "ForgotPassword",
+    "ConfirmForgotPassword",
+)
+# MoneyApi's GetUser calls share backend egress addresses, so they stay out of every IP bucket.
+PROFILE_OPERATION = "GetUser"
+ACCOUNT_OPERATION_LIMIT = 100
+GENERAL_OPERATION_LIMIT = 300
+OPERATION_WINDOW_SECONDS = 300
+
+
+def operation_pattern(operations: tuple[str, ...]) -> str:
+    """Anchored match for the bare or service-prefixed operation name."""
+    return r"^(AWSCognitoIdentityProviderService\.)?(" + "|".join(operations) + r")$"
+
+
+# C3 session policy: 60-minute access tokens; a fixed 30-day refresh lifetime (check P9).
+ACCESS_TOKEN_MINUTES = 60
+REFRESH_TOKEN_DAYS = 30
+
+
+def require_environment(environment: str) -> None:
+    """Every stack belongs to exactly one of the three named environments."""
+    if environment not in ENVIRONMENTS:
+        raise ValueError("environment must be dev, stg or prd")
+
+
+def log_retention(environment: str) -> logs.RetentionDays:
+    """Observability design: 14 days in dev, 30 days in stg and prd."""
+    return logs.RetentionDays.TWO_WEEKS if environment == "dev" else logs.RetentionDays.ONE_MONTH
+
+
+@dataclass(frozen=True)
+class DeploymentInputs:
+    """One environment's deployment inputs; none of them is a credential."""
+
+    environment: str
+    account: str
+    region: str
+    domain_name: str
+    hosted_zone_id: str
+    certificate_arn: str
+    # The alert address is configuration only; it is never printed or written to source.
+    alert_email: str = field(repr=False)
+
+
+def read_deployment_inputs(
+    environ: Mapping[str, str], context: Callable[[str], Any]
+) -> DeploymentInputs:
+    """Validate environment, account, region, host, certificate and alert inputs together.
+
+    Every check fails before any stack is built. Error text names the input, never its value,
+    so an alert address or other configuration never reaches CI or terminal logs.
+    """
+    environment = environ.get("RAAD_ENVIRONMENT", "")
+    require_environment(environment)
+    region = (
+        environ.get("CDK_DEFAULT_REGION")
+        or environ.get("AWS_REGION")
+        or environ.get("AWS_DEFAULT_REGION")
+        or ""
+    )
+    if region != "us-east-1":
+        raise ValueError(
+            "CDK_DEFAULT_REGION must be us-east-1: the CloudFront viewer certificate and "
+            "global WAF ACL require it (set AWS_REGION/AWS_DEFAULT_REGION and disable EC2 "
+            "metadata lookups in CI)"
+        )
+    account = environ.get("CDK_DEFAULT_ACCOUNT", "")
+    if not re.fullmatch(r"[0-9]{12}", account):
+        raise ValueError("CDK_DEFAULT_ACCOUNT must be a 12-digit account ID")
+    expected = environ.get("RAAD_EXPECTED_ACCOUNT", "")
+    if expected and expected != account:
+        raise ValueError("CDK_DEFAULT_ACCOUNT does not match RAAD_EXPECTED_ACCOUNT")
+
+    def value(context_key: str, variable: str) -> str:
+        found = context(context_key) or environ.get(variable, "")
+        return str(found).strip()
+
+    domain = value("domainName", "RAAD_DOMAIN_NAME")
+    zone = value("hostedZoneId", "RAAD_HOSTED_ZONE_ID")
+    certificate = value("certificateArn", "RAAD_CERTIFICATE_ARN")
+    alert_email = value("alertEmail", "RAAD_ALERT_EMAIL")
+    validate_public_domain(environment, domain, zone, certificate)
+    if certificate.split(":")[4:5] != [account]:
+        raise ValueError("RAAD_CERTIFICATE_ARN must belong to CDK_DEFAULT_ACCOUNT")
+    if zone and not re.fullmatch(r"Z[A-Z0-9]{4,32}", zone):
+        raise ValueError("RAAD_HOSTED_ZONE_ID must be an existing Route 53 hosted zone ID")
+    if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", alert_email):
+        raise ValueError("Supply RAAD_ALERT_EMAIL from protected deployment configuration")
+    return DeploymentInputs(environment, account, region, domain, zone, certificate, alert_email)
 
 
 def validate_public_domain(environment: str, domain: str, zone: str, certificate: str) -> None:
@@ -96,6 +213,74 @@ def _execution_role(scope: Construct, identifier: str, log_group: logs.ILogGroup
     role = iam.Role(scope, identifier, assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"))
     log_group.grant_write(role)
     return role
+
+
+# Native CloudWatch alarms return to OK after one healthy evaluation. The observability design
+# asked for three healthy windows; the person accepted native recovery (U4 handoff), recorded here
+# and in U4's evidence. Breach criteria are unchanged.
+RECOVERY_NOTE = (
+    "Recovery: native CloudWatch returns to OK after one healthy evaluation (accepted "
+    "deviation from the three-window design). Missing or low-volume data is insufficient "
+    "evidence, never healthy."
+)
+
+
+def platform_metric(
+    environment: str, name: str, statistic: str = "Sum", minutes: int = 1
+) -> cloudwatch.Metric:
+    """A Raad/Platform metric; Environment is its only dimension (no personal data)."""
+    return cloudwatch.Metric(
+        namespace="Raad/Platform",
+        metric_name=name,
+        dimensions_map={"Environment": environment},
+        statistic=statistic,
+        period=Duration.minutes(minutes),
+    )
+
+
+def platform_alarm(
+    scope: Construct,
+    identifier: str,
+    *,
+    metric: cloudwatch.IMetric,
+    threshold: float,
+    periods: int,
+    topic: sns.ITopic,
+    description: str,
+    comparison: cloudwatch.ComparisonOperator = (
+        cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD
+    ),
+    missing: cloudwatch.TreatMissingData = cloudwatch.TreatMissingData.MISSING,
+) -> cloudwatch.Alarm:
+    """Alarm on `periods` consecutive breaching windows; notifies the environment topic."""
+    alarm = cloudwatch.Alarm(
+        scope,
+        identifier,
+        metric=metric,
+        threshold=threshold,
+        evaluation_periods=periods,
+        datapoints_to_alarm=periods,
+        comparison_operator=comparison,
+        treat_missing_data=missing,
+        alarm_description=f"{description} {RECOVERY_NOTE}",
+    )
+    alarm.add_alarm_action(cw_actions.SnsAction(topic))
+    return alarm
+
+
+def throttle_alarm(
+    scope: Construct, identifier: str, metric: cloudwatch.IMetric, topic: sns.ITopic
+) -> cloudwatch.Alarm:
+    """Monitoring design: any throttle in each of two consecutive one-minute windows."""
+    return platform_alarm(
+        scope,
+        identifier,
+        metric=metric,
+        threshold=1,
+        periods=2,
+        topic=topic,
+        description="Throttling >=1/min in two consecutive windows.",
+    )
 
 
 def _runtime_pin_exception(function: lambda_.Function) -> None:
@@ -119,7 +304,7 @@ def _rotation_exception(secret: secretsmanager.Secret, reason: str) -> None:
 
 
 class IdentityStack(Stack):
-    """Environment-specific Cognito pool and correlation HMAC secret."""
+    """Environment-specific Cognito pool (native SDK flow) and correlation HMAC secret."""
 
     def __init__(
         self,
@@ -127,56 +312,61 @@ class IdentityStack(Stack):
         construct_id: str,
         *,
         environment: str,
-        cognito_domain_prefix: str,
         **kwargs: Any,
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
+        require_environment(environment)
+        # C3: one account per normalized email, only email and display name stored, both
+        # immutable after sign-up, and A4's password rule exactly (no silent strengthening).
         self.user_pool = cognito.UserPool(
             self,
             "UserPool",
             user_pool_name=f"raad-{environment}",
             self_sign_up_enabled=True,
             sign_in_aliases=cognito.SignInAliases(email=True),
+            sign_in_case_sensitive=False,
             auto_verify=cognito.AutoVerifiedAttrs(email=True),
             standard_attributes=cognito.StandardAttributes(
-                email=cognito.StandardAttribute(required=True, mutable=True),
-                fullname=cognito.StandardAttribute(required=True, mutable=True),
+                email=cognito.StandardAttribute(required=True, mutable=False),
+                fullname=cognito.StandardAttribute(required=True, mutable=False),
             ),
             password_policy=cognito.PasswordPolicy(
-                min_length=12,
+                min_length=8,
                 require_digits=True,
                 require_lowercase=True,
                 require_uppercase=True,
-                require_symbols=True,
+                require_symbols=False,
             ),
-            removal_policy=(
-                __import__("aws_cdk").RemovalPolicy.DESTROY
-                if environment == "dev"
-                else __import__("aws_cdk").RemovalPolicy.RETAIN
-            ),
+            account_recovery=cognito.AccountRecovery.EMAIL_ONLY,
+            removal_policy=RemovalPolicy.DESTROY if environment == "dev" else RemovalPolicy.RETAIN,
         )
+        # Public native-SDK client: SRP sign-in and refresh only for the app. The admin
+        # password flow needs IAM credentials (AdminInitiateAuth) and exists only for the
+        # controlled test-fixture setup that RaadMoneyService's dev scripts use; it is not
+        # reachable with the public client ID alone. No hosted UI or OAuth: CDK enables OAuth
+        # flows by default, so they are disabled explicitly.
         self.client = self.user_pool.add_client(
             "MobileClient",
             auth_flows=cognito.AuthFlow(user_srp=True, admin_user_password=True),
             generate_secret=False,
-            o_auth=cognito.OAuthSettings(
-                flows=cognito.OAuthFlows(authorization_code_grant=True),
-                scopes=[
-                    cognito.OAuthScope.OPENID,
-                    cognito.OAuthScope.EMAIL,
-                    cognito.OAuthScope.PROFILE,
-                ],
-                callback_urls=[f"raad-{environment}://auth/callback"],
+            disable_o_auth=True,
+            supported_identity_providers=[cognito.UserPoolClientIdentityProvider.COGNITO],
+            prevent_user_existence_errors=True,
+            enable_token_revocation=True,
+            access_token_validity=Duration.minutes(ACCESS_TOKEN_MINUTES),
+            id_token_validity=Duration.minutes(ACCESS_TOKEN_MINUTES),
+            # Fixed lifetime counted from sign-in, not an idle limit: U3 keeps last use and
+            # signs out after 30 idle days (C3 check P9).
+            refresh_token_validity=Duration.days(REFRESH_TOKEN_DAYS),
+            read_attributes=cognito.ClientAttributes().with_standard_attributes(
+                email=True, email_verified=True, fullname=True
+            ),
+            write_attributes=cognito.ClientAttributes().with_standard_attributes(
+                email=True, fullname=True
             ),
         )
-        if not cognito_domain_prefix:
-            raise ValueError(
-                "RAAD_COGNITO_DOMAIN_PREFIX must be supplied for Cognito userInfo verification"
-            )
-        self.user_pool.add_domain(
-            "HostedUiDomain",
-            cognito_domain=cognito.CognitoDomainOptions(domain_prefix=cognito_domain_prefix),
-        )
+        self._event_producer(environment)
+        self._account_firewall(environment)
         self.correlation_secret = secretsmanager.Secret(
             self,
             "CorrelationHmac",
@@ -188,20 +378,205 @@ class IdentityStack(Stack):
                 generate_string_key="key",
             ),
         )
-        # Paid Plus is outside simulated dev; production identity requires review.
-        if environment == "dev":
-            NagSuppressions.add_resource_suppressions(
-                self.user_pool,
-                [
-                    {
-                        "id": "AwsSolutions-COG8",
-                        "reason": "Simulated dev-only wallet has no real payments and paid Plus is not authorized. Strong password policy, verified email, independent SDK-token checks and WAF perimeter are implemented and regression-tested. Production identity security has a separate gate.",
-                    }
-                ],
-            )
+        # Resource-specific identity exceptions; no nag rule is disabled for the app.
+        NagSuppressions.add_resource_suppressions(
+            self.user_pool,
+            [
+                {
+                    # Paid Plus (threat protection) is not authorized for any environment.
+                    "id": "AwsSolutions-COG8",
+                    "reason": f"Paid Cognito Plus is not approved for {environment}; funds are simulated. Compensating controls are tested: A4 password policy, verified email, prevent-user-existence errors, token revocation, independent RS256/issuer/client/token_use checks at edge and MoneyApi, and the regional WAF on this pool. Retained release risk: no adaptive authentication or compromised-credential detection until Plus is approved.",
+                },
+                {
+                    # A4 is the person-approved rule; nag's symbol requirement would change it.
+                    "id": "AwsSolutions-COG1",
+                    "reason": "Assumption A4 (approved requirements) fixes the password rule at 8+ characters with lower, upper and digit and no symbol; Abcdef12 must be accepted. Requiring symbols would silently strengthen A4 and break AC1.1.1, so the change goes to the person, not into code. Regional WAF limits and native lockout bound guessing.",
+                },
+            ],
+        )
         _rotation_exception(
             self.correlation_secret,
             "Both independent runtimes share a versioned HMAC profile; rotation preserves current/previous keys through 14-day log retention. No AWS-managed rotation target exists for this protocol. Coordinated rollout/investigation is a deferred release check; no automatic rotation is claimed.",
+        )
+        # Non-secret deployment outputs read by scripts/write_platform_config.py (C4/C5).
+        CfnOutput(self, "EnvironmentOutput", value=environment)
+        CfnOutput(self, "UserPoolIdOutput", value=self.user_pool.user_pool_id)
+        CfnOutput(self, "UserPoolClientIdOutput", value=self.client.user_pool_client_id)
+        CfnOutput(self, "EventBusArnOutput", value=self.event_bus.event_bus_arn)
+
+    def _event_producer(self, environment: str) -> None:
+        """C2: per-environment bus and a bounded sign-up-confirmation publisher.
+
+        U2 owns the rule, queues and idempotent consumer on this bus. Encryption at rest uses
+        EventBridge's service-owned key; no customer key is added for uniformity alone.
+        """
+        self.event_bus = events.EventBus(
+            self, "IdentityEventBus", event_bus_name=f"raad-{environment}-identity-events"
+        )
+        publisher_logs = logs.LogGroup(
+            self,
+            "IdentityPublisherLogs",
+            log_group_name=f"/raad/{environment}/identity-publisher",
+            retention=log_retention(environment),
+            removal_policy=RemovalPolicy.DESTROY,
+        )
+        self.publisher_role = _execution_role(self, "IdentityPublisherRole", publisher_logs)
+        # Identity side of exclusivity: this role may send only the contract's source/type.
+        self.publisher_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["events:PutEvents"],
+                resources=[self.event_bus.event_bus_arn],
+                conditions={
+                    "StringEquals": {
+                        "events:source": [publisher.EVENT_SOURCE],
+                        "events:detail-type": [publisher.EVENT_DETAIL_TYPE],
+                    }
+                },
+            )
+        )
+        self.publisher = lambda_.Function(
+            self,
+            "IdentityEventPublisher",
+            function_name=f"raad-{environment}-identity-publisher",
+            runtime=lambda_.Runtime.PYTHON_3_12,
+            architecture=lambda_.Architecture.X86_64,
+            handler="publisher.handle",
+            code=lambda_.Code.from_asset(
+                "raad_platform/identity", exclude=["__pycache__", "*.pyc", "__init__.py"]
+            ),
+            memory_size=128,
+            timeout=Duration.seconds(3),
+            reserved_concurrent_executions=2,
+            log_group=publisher_logs,
+            role=self.publisher_role,
+            environment={
+                "ENVIRONMENT": environment,
+                "EVENT_BUS_ARN": self.event_bus.event_bus_arn,
+            },
+        )
+        _runtime_pin_exception(self.publisher)
+        # Cognito invokes this only for its own pool (CDK scopes the permission's SourceArn).
+        self.user_pool.add_trigger(cognito.UserPoolOperation.POST_CONFIRMATION, self.publisher)
+        self._restrict_bus_publishers()
+        ssm.StringParameter(
+            self,
+            "EventBusArnParameter",
+            parameter_name=f"/raad/{environment}/event-bus/arn",
+            string_value=self.event_bus.event_bus_arn,
+        )
+
+    def _restrict_bus_publishers(self) -> None:
+        """Make the publisher role the only sender, and only of the C2 source/detail type.
+
+        In one account an identity policy alone can grant events:PutEvents, so an allow-only
+        bus statement would not make the publisher exclusive. Explicit denies bind every
+        principal in the account, including administrators. Policy writes on one bus are
+        serialized to avoid concurrent-modification failures during deployment.
+        """
+        bus_arn = self.event_bus.event_bus_arn
+        statements = {
+            "DenyOtherPublishers": {
+                "ArnNotEquals": {"aws:PrincipalArn": self.publisher_role.role_arn}
+            },
+            "DenyOtherSources": {"StringNotEquals": {"events:source": publisher.EVENT_SOURCE}},
+            "DenyOtherDetailTypes": {
+                "StringNotEquals": {"events:detail-type": publisher.EVENT_DETAIL_TYPE}
+            },
+        }
+        previous: events.CfnEventBusPolicy | None = None
+        for statement_id, condition in statements.items():
+            policy = events.CfnEventBusPolicy(
+                self,
+                f"IdentityEventBus{statement_id}",
+                event_bus_name=self.event_bus.event_bus_name,
+                statement_id=statement_id,
+                statement={
+                    "Sid": statement_id,
+                    "Effect": "Deny",
+                    "Principal": "*",
+                    "Action": "events:PutEvents",
+                    "Resource": bus_arn,
+                    "Condition": condition,
+                },
+            )
+            if previous is not None:
+                policy.node.add_dependency(previous)
+            previous = policy
+
+    def _account_firewall(self, environment: str) -> None:
+        """Approximate per-IP limits on the direct-SDK account path (C3 P10, NFR12.11).
+
+        These are coarse abuse limits, not exact per-account counters; the provider's own
+        throttling and lockout complement them. Sampling and request logging stay off, so no
+        username, email or body reaches WAF records, and metrics carry no personal dimension.
+        """
+
+        def operation(pattern: str) -> wafv2.CfnWebACL.StatementProperty:
+            return wafv2.CfnWebACL.StatementProperty(
+                regex_match_statement=wafv2.CfnWebACL.RegexMatchStatementProperty(
+                    regex_string=pattern,
+                    field_to_match=wafv2.CfnWebACL.FieldToMatchProperty(
+                        single_header={"Name": COGNITO_OPERATION_HEADER}
+                    ),
+                    text_transformations=[
+                        wafv2.CfnWebACL.TextTransformationProperty(priority=0, type="NONE")
+                    ],
+                )
+            )
+
+        def per_ip(
+            name: str, priority: int, limit: int, scope: wafv2.CfnWebACL.StatementProperty
+        ) -> wafv2.CfnWebACL.RuleProperty:
+            return wafv2.CfnWebACL.RuleProperty(
+                name=name,
+                priority=priority,
+                action=wafv2.CfnWebACL.RuleActionProperty(block={}),
+                statement=wafv2.CfnWebACL.StatementProperty(
+                    rate_based_statement=wafv2.CfnWebACL.RateBasedStatementProperty(
+                        limit=limit,
+                        aggregate_key_type="IP",
+                        evaluation_window_sec=OPERATION_WINDOW_SECONDS,
+                        scope_down_statement=scope,
+                    )
+                ),
+                visibility_config=wafv2.CfnWebACL.VisibilityConfigProperty(
+                    cloud_watch_metrics_enabled=True,
+                    metric_name=f"raad-{environment}-identity-{name}",
+                    sampled_requests_enabled=False,
+                ),
+            )
+
+        not_profile = wafv2.CfnWebACL.StatementProperty(
+            not_statement=wafv2.CfnWebACL.NotStatementProperty(
+                statement=operation(operation_pattern((PROFILE_OPERATION,)))
+            )
+        )
+        self.identity_firewall = wafv2.CfnWebACL(
+            self,
+            "IdentityFirewall",
+            name=f"raad-{environment}-identity",
+            scope="REGIONAL",
+            default_action=wafv2.CfnWebACL.DefaultActionProperty(allow={}),
+            visibility_config=wafv2.CfnWebACL.VisibilityConfigProperty(
+                cloud_watch_metrics_enabled=True,
+                metric_name=f"raad-{environment}-identity-waf",
+                sampled_requests_enabled=False,
+            ),
+            rules=[
+                per_ip(
+                    "AccountOperationsPerIp",
+                    1,
+                    ACCOUNT_OPERATION_LIMIT,
+                    operation(operation_pattern(ACCOUNT_OPERATIONS)),
+                ),
+                per_ip("GeneralOperationsPerIp", 2, GENERAL_OPERATION_LIMIT, not_profile),
+            ],
+        )
+        wafv2.CfnWebACLAssociation(
+            self,
+            "IdentityFirewallAssociation",
+            resource_arn=self.user_pool.user_pool_arn,
+            web_acl_arn=self.identity_firewall.attr_arn,
         )
 
 
@@ -218,6 +593,7 @@ class MonitoringStack(Stack):
         **kwargs: Any,
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
+        require_environment(environment)
         self.key = kms.Alias(
             self,
             "LogKey",
@@ -234,8 +610,31 @@ class MonitoringStack(Stack):
                 conditions={"Bool": {"aws:SecureTransport": "false"}},
             )
         )
+        # A topic policy replaces SNS's default owner policy, so alarm delivery from this and
+        # U2's stacks needs CloudWatch named explicitly, limited to this account's alarms.
+        self.topic.add_to_resource_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                principals=[iam.ServicePrincipal("cloudwatch.amazonaws.com")],
+                actions=["sns:Publish"],
+                resources=[self.topic.topic_arn],
+                conditions={
+                    "StringEquals": {"aws:SourceAccount": self.account},
+                    "ArnLike": {
+                        "aws:SourceArn": f"arn:{self.partition}:cloudwatch:{self.region}:{self.account}:alarm:*"
+                    },
+                },
+            )
+        )
+        # Address comes only from deployment configuration; it is never written to source.
         if alert_email:
             self.topic.add_subscription(subscriptions.EmailSubscription(alert_email))
+        ssm.StringParameter(
+            self,
+            "AlarmTopicArnParameter",
+            parameter_name=f"/raad/{environment}/alarm-topic/arn",
+            string_value=self.topic.topic_arn,
+        )
         self.dashboard = cloudwatch.Dashboard(
             self, "Dashboard", dashboard_name=f"raad-{environment}"
         )
@@ -253,17 +652,26 @@ class MonitoringStack(Stack):
             statistic="sum",
             period=Duration.minutes(1),
         )
-        error_alarm = cloudwatch.Alarm(
+        # Technical 5xx >=1% with >=20 eligible requests, in two consecutive 5-minute windows.
+        # Below 20 requests the expression yields no datapoint, so low volume is never healthy.
+        self.error_rate = cloudwatch.MathExpression(
+            expression="IF(requests >= 20, 100 * FILL(errors, 0) / requests)",
+            using_metrics={
+                "requests": platform_metric(environment, "EdgeRequests", minutes=5),
+                "errors": platform_metric(environment, "Edge5xx", minutes=5),
+            },
+            period=Duration.minutes(5),
+            label="Technical 5xx rate % (>=20 requests)",
+        )
+        platform_alarm(
             self,
             "ServerErrors",
-            metric=self.edge_5xx,
-            threshold=3,
-            evaluation_periods=2,
-            datapoints_to_alarm=2,
-            comparison_operator=cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-            treat_missing_data=cloudwatch.TreatMissingData.MISSING,
+            metric=self.error_rate,
+            threshold=1,
+            periods=2,
+            topic=self.topic,
+            description="Technical 5xx >=1% with >=20 eligible requests in two 5-minute windows.",
         )
-        error_alarm.add_alarm_action(cw_actions.SnsAction(self.topic))
         self.transfer_latency = cloudwatch.Metric(
             namespace="Raad/Platform",
             metric_name="AdapterTransferLatencyMs",
@@ -271,23 +679,15 @@ class MonitoringStack(Stack):
             statistic="p95",
             period=Duration.minutes(5),
         )
-        technical_failures = cloudwatch.Metric(
-            namespace="Raad/Platform",
-            metric_name="TechnicalTransferFailures",
-            dimensions_map={"Environment": environment},
-            statistic="sum",
-            period=Duration.minutes(1),
-        )
-        failure_alarm = cloudwatch.Alarm(
+        platform_alarm(
             self,
             "TechnicalTransferFailure",
-            metric=technical_failures,
-            threshold=1,
-            evaluation_periods=1,
-            comparison_operator=cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-            treat_missing_data=cloudwatch.TreatMissingData.MISSING,
+            metric=platform_metric(environment, "TechnicalTransferFailures", minutes=5),
+            threshold=3,
+            periods=2,
+            topic=self.topic,
+            description="Technical transfer failures >=3 in each of two 5-minute windows.",
         )
-        failure_alarm.add_alarm_action(cw_actions.SnsAction(self.topic))
         self.dashboard.add_widgets(
             cloudwatch.TextWidget(
                 markdown="No traffic and windows below the configured sample minimum are **insufficient data**, not evidence of health.",
@@ -306,14 +706,14 @@ class MonitoringStack(Stack):
             self,
             "EdgeLogs",
             log_group_name=f"/raad/{environment}/platform-edge",
-            retention=logs.RetentionDays.TWO_WEEKS,
+            retention=log_retention(environment),
             encryption_key=self.key,
         )
         self.public_samples = logs.LogGroup(
             self,
             "PublicSamples",
             log_group_name=f"/raad/{environment}/public-latency",
-            retention=logs.RetentionDays.TWO_WEEKS,
+            retention=log_retention(environment),
         )
         self.telemetry_stream = kinesis.Stream(
             self,
@@ -323,9 +723,7 @@ class MonitoringStack(Stack):
             retention_period=Duration.hours(24),
             encryption=kinesis.StreamEncryption.MANAGED,
         )
-        processor_logs = logs.LogGroup(
-            self, "TelemetryLogs", retention=logs.RetentionDays.TWO_WEEKS
-        )
+        processor_logs = logs.LogGroup(self, "TelemetryLogs", retention=log_retention(environment))
         processor_role = _execution_role(self, "TelemetryExecutionRole", processor_logs)
         self.processor = lambda_.Function(
             self,
@@ -437,9 +835,15 @@ class MonitoringStack(Stack):
             evaluation_periods=1,
             comparison_operator=cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
             treat_missing_data=cloudwatch.TreatMissingData.MISSING,
+            alarm_description=(
+                "Public transfer p95 >2000 ms in two complete 5-minute windows with >=20 "
+                f"samples each. {RECOVERY_NOTE}"
+            ),
         )
         public_alarm.add_alarm_action(cw_actions.SnsAction(self.topic))
         public_alarm.add_ok_action(cw_actions.SnsAction(self.topic))
+        self._observation_health(environment, group, schedule_role)
+        self._platform_alarms(environment)
         self.dashboard.add_widgets(
             cloudwatch.TextWidget(
                 width=24,
@@ -465,6 +869,117 @@ class MonitoringStack(Stack):
             ),
         )
 
+    def _observation_health(
+        self, environment: str, group: scheduler.CfnScheduleGroup, role: iam.Role
+    ) -> None:
+        """Collector heartbeat every minute, and alarms separate from the latency SLO."""
+        scheduler.CfnSchedule(
+            self,
+            "TelemetryHeartbeatSchedule",
+            group_name=group.ref,
+            schedule_expression="rate(1 minute)",
+            flexible_time_window=scheduler.CfnSchedule.FlexibleTimeWindowProperty(mode="OFF"),
+            target=scheduler.CfnSchedule.TargetProperty(
+                arn=self.processor.function_arn,
+                role_arn=role.role_arn,
+                input='{"mode":"heartbeat"}',
+                retry_policy=scheduler.CfnSchedule.RetryPolicyProperty(
+                    maximum_event_age_in_seconds=60, maximum_retry_attempts=0
+                ),
+            ),
+        )
+        # Absent for three consecutive minutes: missing data counts as breaching here only.
+        platform_alarm(
+            self,
+            "CollectorHeartbeatMissing",
+            metric=platform_metric(environment, "PublicCollectorHeartbeat"),
+            threshold=1,
+            periods=3,
+            comparison=cloudwatch.ComparisonOperator.LESS_THAN_THRESHOLD,
+            missing=cloudwatch.TreatMissingData.BREACHING,
+            topic=self.topic,
+            description="Public-latency collector heartbeat absent for three minutes.",
+        )
+        # A failed or contradictory collection is an observation-health fault, distinct from
+        # low volume, which stays insufficient evidence without alarming.
+        platform_alarm(
+            self,
+            "PublicCollectionFailure",
+            metric=platform_metric(environment, "PublicCollectionFailures", "Maximum", 5),
+            threshold=1,
+            periods=2,
+            topic=self.topic,
+            description="Public-latency collection failed in two consecutive 5-minute windows.",
+        )
+        throttle_alarm(
+            self,
+            "TelemetryProcessorThrottles",
+            self.processor.metric_throttles(period=Duration.minutes(1), statistic="Sum"),
+            self.topic,
+        )
+
+    def _platform_alarms(self, environment: str) -> None:
+        """Identity publisher and rate-store signals, by environment only."""
+        publisher_name = f"raad-{environment}-identity-publisher"
+        platform_alarm(
+            self,
+            "IdentityEventPublishFailure",
+            metric=platform_metric(environment, "IdentityEventPublishFailures", minutes=5),
+            threshold=1,
+            periods=1,
+            topic=self.topic,
+            description=(
+                "A C2 UserConfirmed event was not accepted by the bus; confirmation still "
+                "succeeded and PUT /wallet repairs wallet setup."
+            ),
+        )
+        throttle_alarm(
+            self,
+            "IdentityPublisherThrottles",
+            cloudwatch.Metric(
+                namespace="AWS/Lambda",
+                metric_name="Throttles",
+                dimensions_map={"FunctionName": publisher_name},
+                statistic="Sum",
+                period=Duration.minutes(1),
+            ),
+            self.topic,
+        )
+        platform_alarm(
+            self,
+            "RateStoreUnavailable",
+            metric=platform_metric(environment, "EdgeRateStoreUnavailable"),
+            threshold=1,
+            periods=2,
+            topic=self.topic,
+            description="Rate-window store failures >=1/min in two consecutive windows (503s).",
+        )
+        self.dashboard.add_widgets(
+            cloudwatch.GraphWidget(
+                title="Rate decisions (429 refusals, store unavailable)",
+                left=[
+                    platform_metric(environment, "EdgeRateLimited"),
+                    platform_metric(environment, "EdgeRateStoreUnavailable"),
+                ],
+            ),
+            cloudwatch.GraphWidget(
+                title="C2 publisher (published, skipped, failed)",
+                left=[
+                    platform_metric(environment, "IdentityEventsPublished"),
+                    platform_metric(environment, "IdentityEventsSkipped"),
+                    platform_metric(environment, "IdentityEventPublishFailures"),
+                ],
+            ),
+            cloudwatch.GraphWidget(
+                title="Observation health (heartbeat, collection failures, insufficient)",
+                left=[
+                    platform_metric(environment, "PublicCollectorHeartbeat"),
+                    platform_metric(environment, "PublicCollectionFailures", "Maximum", 5),
+                    platform_metric(environment, "PublicCollectionInsufficient", "Maximum", 5),
+                ],
+            ),
+        )
+
 
 class PublicEdgeStack(Stack):
     """Public HTTPS edge, WAF, and SigV4 forwarding adapter."""
@@ -481,20 +996,27 @@ class PublicEdgeStack(Stack):
         hosted_zone_id: str,
         certificate_arn: str,
         service_parameter: str,
-        cognito_domain_prefix: str,
         **kwargs: Any,
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
+        require_environment(environment)
         validate_public_domain(environment, domain_name, hosted_zone_id, certificate_arn)
         code = lambda_.Code.from_asset(
             "raad_platform/edge",
             bundling=BundlingOptions(
                 image=lambda_.Runtime.PYTHON_3_12.bundling_image,
                 platform="linux/amd64",
+                # Keep the raad_platform.edge package layout so the handler and its rate-store
+                # module import identically in Lambda and in the offline tests.
                 command=[
                     "bash",
                     "-c",
-                    "pip install -r requirements.txt -t /asset-output && cp -au . /asset-output",
+                    (
+                        "pip install -r requirements.txt -t /asset-output"
+                        " && mkdir -p /asset-output/raad_platform/edge"
+                        " && cp -au . /asset-output/raad_platform/edge"
+                        " && touch /asset-output/raad_platform/__init__.py"
+                    ),
                 ],
             ),
         )
@@ -511,12 +1033,29 @@ class PublicEdgeStack(Stack):
             "CloudFront origin header and edge expected key require coordinated distribution/secret rollout; AWS has no managed rotation target for this protocol. Constant-time checks, bounded 60-second cache and fail-closed mismatch are tested; live rotation verification is deferred.",
         )
         edge_role = _execution_role(self, "EdgeExecutionRole", monitoring.log_group)
+        # Platform-owned verified-caller counters (C5 rate_limits). Items hold an HMAC-protected
+        # subject, a count and a cleanup expiry only; no money data or request keys.
+        self.rate_table = dynamodb.Table(
+            self,
+            "PlatformRateWindows",
+            table_name=f"raad-{environment}-platform-rate-windows",
+            partition_key=dynamodb.Attribute(name="pk", type=dynamodb.AttributeType.STRING),
+            billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
+            time_to_live_attribute="expiresAt",
+            # Service-owned encryption at rest; no customer key for counters alone.
+            encryption=dynamodb.TableEncryption.DEFAULT,
+            # Team practice keeps PITR on data stores; this table is tiny, so the cost is nil.
+            point_in_time_recovery_specification=dynamodb.PointInTimeRecoverySpecification(
+                point_in_time_recovery_enabled=True
+            ),
+            removal_policy=RemovalPolicy.DESTROY if environment == "dev" else RemovalPolicy.RETAIN,
+        )
         self.edge = lambda_.Function(
             self,
             "MoneyEdge",
             runtime=lambda_.Runtime.PYTHON_3_12,
             architecture=lambda_.Architecture.X86_64,
-            handler="handler.entry",
+            handler="raad_platform.edge.handler.entry",
             code=code,
             timeout=Duration.seconds(9),
             reserved_concurrent_executions=20 if environment == "dev" else None,
@@ -528,6 +1067,7 @@ class PublicEdgeStack(Stack):
                 "CORRELATION_SECRET_ARN": identity.correlation_secret.secret_arn,
                 "ORIGIN_SECRET_ARN": origin_secret.secret_arn,
                 "LOG_LEVEL": "INFO",
+                "RATE_TABLE_NAME": self.rate_table.table_name,
             },
             log_group=monitoring.log_group,
             role=edge_role,
@@ -536,6 +1076,22 @@ class PublicEdgeStack(Stack):
         live_edge = self.edge.add_alias("live")
         identity.correlation_secret.grant_read(self.edge)
         origin_secret.grant_read(self.edge)
+        # Conditional counter updates only (TransactWriteItems is authorized per UpdateItem).
+        self.rate_table.grant(self.edge, "dynamodb:UpdateItem")
+        throttle_alarm(
+            self,
+            "EdgeThrottles",
+            self.edge.metric_throttles(period=Duration.minutes(1), statistic="Sum"),
+            monitoring.topic,
+        )
+        throttle_alarm(
+            self,
+            "RateWindowThrottles",
+            self.rate_table.metric(
+                "WriteThrottleEvents", period=Duration.minutes(1), statistic="Sum"
+            ),
+            monitoring.topic,
+        )
         self.edge.add_to_role_policy(
             iam.PolicyStatement(
                 actions=["ssm:GetParameter"],
@@ -593,7 +1149,7 @@ class PublicEdgeStack(Stack):
             self,
             "ApiAccessLogs",
             log_group_name=f"/raad/{environment}/http-api",
-            retention=logs.RetentionDays.TWO_WEEKS,
+            retention=log_retention(environment),
         )
         stage = api.default_stage.node.default_child if api.default_stage else None
         assert isinstance(stage, apigwv2.CfnStage)
@@ -614,6 +1170,8 @@ class PublicEdgeStack(Stack):
                     ],
                 )
         self.api = api
+        if environment == "dev":
+            self._dev_stub_mapping(environment, api, code, origin_secret)
         acl = wafv2.CfnWebACL(
             self,
             "BasicFirewall",
@@ -776,28 +1334,79 @@ class PublicEdgeStack(Stack):
             parameter_name=f"/raad/{environment}/correlation-hmac/arn",
             string_value=identity.correlation_secret.secret_arn,
         )
-        # SDK SRP/admin authentication tokens authorize GetUser, not OAuth userInfo.
-        profile_url = f"https://cognito-idp.{Stack.of(self).region}.amazonaws.com/"
-        issuer = f"https://cognito-idp.{Stack.of(self).region}.amazonaws.com/{identity.user_pool.user_pool_id}"
-        verifier = {
-            "configVersion": "1.0",
-            "environment": environment,
-            "issuer": issuer,
-            "audience": identity.client.user_pool_client_id,
-            "audienceClaim": "client_id",
-            "tokenTypeMarker": {
-                "location": "claim",
-                "name": "token_use",
-                "expectedValue": "access",
-            },
-            "jwksUri": issuer + "/.well-known/jwks.json",
-            "acceptedAlgorithms": ["RS256"],
-            "profileAttributeSource": "user-profile-endpoint",
-            "userProfileUri": profile_url,
-        }
+        # C5 verifier for SDK (SRP/admin) access tokens, built by the same function the C4/C5
+        # writer uses to check deployment outputs.
+        verifier = configuration.verifier_config(
+            environment,
+            Stack.of(self).region,
+            identity.user_pool.user_pool_id,
+            identity.client.user_pool_client_id,
+        )
+        verifier_json = json.dumps(verifier)
         ssm.StringParameter(
             self,
             "EnvironmentVerifier",
             parameter_name=f"/raad/{environment}/verifier",
-            string_value=__import__("json").dumps(verifier),
+            string_value=verifier_json,
         )
+        # Non-secret deployment outputs read by scripts/write_platform_config.py and the smoke
+        # tool. The origin credential and secret values are never outputs.
+        CfnOutput(self, "EnvironmentOutput", value=environment)
+        CfnOutput(self, "VerifierConfigOutput", value=verifier_json)
+        CfnOutput(self, "HttpApiEndpointOutput", value=api.api_endpoint)
+
+    def _dev_stub_mapping(
+        self,
+        environment: str,
+        api: apigwv2.HttpApi,
+        code: lambda_.Code,
+        origin_secret: secretsmanager.Secret,
+    ) -> None:
+        """NFR13.10: a nonfinancial stub mapped by its own path, in dev only.
+
+        Its own function, role and log group; it can read only the origin secret, so it cannot
+        reach MoneyApi, money tables or the correlation key. No catch-all or cross-environment
+        target: stg and prd have no such route at all.
+        """
+        stub_logs = logs.LogGroup(
+            self,
+            "DevStubLogs",
+            log_group_name=f"/raad/{environment}/platform-stub",
+            retention=log_retention(environment),
+            removal_policy=RemovalPolicy.DESTROY,
+        )
+        stub = lambda_.Function(
+            self,
+            "DevStub",
+            runtime=lambda_.Runtime.PYTHON_3_12,
+            architecture=lambda_.Architecture.X86_64,
+            handler="raad_platform.edge.stub.entry",
+            code=code,
+            memory_size=128,
+            timeout=Duration.seconds(3),
+            reserved_concurrent_executions=2,
+            log_group=stub_logs,
+            role=_execution_role(self, "DevStubExecutionRole", stub_logs),
+            environment={
+                "ENVIRONMENT": environment,
+                "ORIGIN_SECRET_ARN": origin_secret.secret_arn,
+            },
+        )
+        _runtime_pin_exception(stub)
+        origin_secret.grant_read(stub)
+        for route in api.add_routes(
+            path="/stub/v1/{proxy+}",
+            methods=[apigwv2.HttpMethod.GET],
+            integration=integrations.HttpLambdaIntegration("DevStubIntegration", stub),
+        ):
+            # Public, unauthenticated by design: it returns a fixed status document only.
+            NagSuppressions.add_resource_suppressions(
+                route,
+                [
+                    {
+                        "id": "AwsSolutions-APIG4",
+                        "reason": "Dev-only nonfinancial stub proving path-mapped extension (NFR13.10). It returns a fixed status document, checks the CloudFront origin credential in constant time, reads no token or user data and has no permission beyond reading the origin secret. Absent from stg and prd.",
+                    }
+                ],
+                apply_to_children=True,
+            )

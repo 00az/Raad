@@ -16,11 +16,16 @@ dev = [
     "pip-audit>=2.7,<3",
     "boto3-stubs>=1.44.3",
     "types-requests>=2.33.0.20261030",
+    "jsonschema>=4.23,<5",
+    "pyyaml>=6.0.2,<7",
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--cov=raad_platform --cov-report=term-missing --cov-fail-under=80"
+# The local-DynamoDB boundary runs only by explicit path, with its endpoint set; see
+# tests/integration/. It fails rather than skips when that local store is missing.
+norecursedirs = [".*", "*.egg", "build", "dist", "node_modules", "venv", "integration"]
 pythonpath = ["."]
 
 [tool.coverage.run]

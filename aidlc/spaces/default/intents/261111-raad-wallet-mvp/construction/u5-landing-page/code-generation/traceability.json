@@ -1,0 +1,128 @@
+{
+  "stage": "code-generation",
+  "unit": "u5-landing-page",
+  "upstream_ids": [
+    "AC6.2.1",
+    "AC6.2.2",
+    "AC6.3.1",
+    "AC6.3.2",
+    "NFR7.10",
+    "NFR9.10",
+    "NFR2.10",
+    "NFR1.10",
+    "NFR11.10",
+    "NFR10.10",
+    "NFR14.10",
+    "NFR9.11",
+    "NFR7.11",
+    "NFR5.10",
+    "NFR9.12",
+    "BR5.1",
+    "BR5.2",
+    "BR5.3",
+    "BR5.4",
+    "BR5.5"
+  ],
+  "coverage": [
+    {
+      "id": "AC6.2.1",
+      "status": "OK",
+      "target": "RaadWeb@checkout/scripts/smoke_site.py"
+    },
+    {
+      "id": "AC6.2.2",
+      "status": "N/A",
+      "target": "U3 owns per-environment mobile test builds (functional design traceability)"
+    },
+    {
+      "id": "AC6.3.1",
+      "status": "OK",
+      "target": "RaadWeb@checkout/site/index.html"
+    },
+    {
+      "id": "AC6.3.2",
+      "status": "OK",
+      "target": "RaadWeb@checkout/tests/test_pages.py"
+    },
+    {
+      "id": "NFR7.10",
+      "status": "OK",
+      "target": "RaadWeb@checkout/scripts/smoke_site.py"
+    },
+    {
+      "id": "NFR9.10",
+      "status": "OK",
+      "target": "RaadWeb@checkout/tests/browser/test_axe.py"
+    },
+    {
+      "id": "NFR2.10",
+      "status": "OK",
+      "target": "RaadWeb@checkout/raadweb/stack.py"
+    },
+    {
+      "id": "NFR1.10",
+      "status": "OK",
+      "target": "RaadWeb@checkout/tests/test_pages.py"
+    },
+    {
+      "id": "NFR11.10",
+      "status": "OK",
+      "target": "RaadWeb@checkout/raadweb/web_policy.py"
+    },
+    {
+      "id": "NFR10.10",
+      "status": "OK",
+      "target": "RaadWeb@checkout/raadweb/stack.py"
+    },
+    {
+      "id": "NFR14.10",
+      "status": "OK",
+      "target": "RaadWeb@checkout/tests/browser/test_axe.py"
+    },
+    {
+      "id": "NFR9.11",
+      "status": "OK",
+      "target": "RaadWeb@checkout/site/en/index.html"
+    },
+    {
+      "id": "NFR7.11",
+      "status": "OK",
+      "target": "RaadWeb@checkout/raadweb/stack.py"
+    },
+    {
+      "id": "NFR5.10",
+      "status": "OK",
+      "target": "RaadWeb@checkout/raadweb/stack.py"
+    },
+    {
+      "id": "NFR9.12",
+      "status": "OK",
+      "target": "RaadWeb@checkout/tests/test_pages.py"
+    },
+    {
+      "id": "BR5.1",
+      "status": "OK",
+      "target": "RaadWeb@checkout/site/index.html"
+    },
+    {
+      "id": "BR5.2",
+      "status": "OK",
+      "target": "RaadWeb@checkout/site/en/index.html"
+    },
+    {
+      "id": "BR5.3",
+      "status": "OK",
+      "target": "RaadWeb@checkout/tests/test_pages.py"
+    },
+    {
+      "id": "BR5.4",
+      "status": "OK",
+      "target": "RaadWeb@checkout/site/assets/styles.css"
+    },
+    {
+      "id": "BR5.5",
+      "status": "OK",
+      "target": "RaadWeb@checkout/scripts/smoke_site.py"
+    }
+  ]
+}

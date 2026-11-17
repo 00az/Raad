@@ -1,0 +1,17 @@
+# Local-only DynamoDB for the platform rate-window boundary tests (U4).
+# Bound to loopback on 8002 so it never collides with RaadMoneyService's store on 8000.
+# Start:  docker compose -f docker-compose.yml up -d --wait rate-dynamodb
+# Stop:   docker compose -f docker-compose.yml stop rate-dynamodb
+services:
+  rate-dynamodb:
+    image: amazon/dynamodb-local:2.5.2
+    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-inMemory"]
+    ports:
+      - "127.0.0.1:8002:8000"
+    healthcheck:
+      # DynamoDB Local v2 has no /shell/ page; any HTTP answer (it returns 400 to a bare GET)
+      # proves the listener is up, while a refused connection still fails the check.
+      test: ["CMD-SHELL", "curl -s -o /dev/null http://localhost:8000/ || exit 1"]
+      interval: 5s
+      timeout: 2s
+      retries: 20

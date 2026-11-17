@@ -1,4 +1,8 @@
-"""CDK entry point for the shared RAAD platform."""
+"""CDK entry point for the shared RAAD platform: one set of stacks per environment.
+
+Inputs come from the environment or CDK context and are validated together before any stack is
+built (see read_deployment_inputs). Synthesis authorizes no lookup, asset upload or deployment.
+"""
 
 import os
 
@@ -9,48 +13,26 @@ from raad_platform.stacks import (
     IdentityStack,
     MonitoringStack,
     PublicEdgeStack,
-    validate_public_domain,
+    read_deployment_inputs,
 )
 
 app = cdk.App()
-environment = os.environ.get("RAAD_ENVIRONMENT", "dev")
-hosted_zone_id = app.node.try_get_context("hostedZoneId") or os.environ.get(
-    "RAAD_HOSTED_ZONE_ID", ""
-)
-domain_name = app.node.try_get_context("domainName") or os.environ.get("RAAD_DOMAIN_NAME", "")
-certificate_arn = app.node.try_get_context("certificateArn") or os.environ.get(
-    "RAAD_CERTIFICATE_ARN", ""
-)
-alert_email = app.node.try_get_context("alertEmail") or os.environ.get("RAAD_ALERT_EMAIL", "")
-cognito_domain_prefix = app.node.try_get_context("cognitoDomainPrefix") or os.environ.get(
-    "RAAD_COGNITO_DOMAIN_PREFIX", ""
-)
-service_parameter = f"/raad/{environment}/money-api/function-url"
-required = {
-    "RAAD_ALERT_EMAIL": alert_email,
-    "RAAD_COGNITO_DOMAIN_PREFIX": cognito_domain_prefix,
-}
-missing = [name for name, value in required.items() if not value]
-if missing:
-    raise ValueError(f"Supply environment deployment inputs: {', '.join(missing)}")
-validate_public_domain(environment, domain_name, hosted_zone_id, certificate_arn)
-aws_region = os.environ.get("CDK_DEFAULT_REGION", "us-east-1")
-if aws_region != "us-east-1":
-    raise ValueError("the CloudFront viewer certificate and global WAF ACL require us-east-1")
-stack_env = cdk.Environment(account=os.environ.get("CDK_DEFAULT_ACCOUNT"), region=aws_region)
+inputs = read_deployment_inputs(os.environ, app.node.try_get_context)
+environment = inputs.environment
+stack_env = cdk.Environment(account=inputs.account, region=inputs.region)
 
-identity = IdentityStack(
-    app,
-    f"RaadIdentity-{environment}",
-    environment=environment,
-    cognito_domain_prefix=cognito_domain_prefix,
-    env=stack_env,
-)
+# Monitoring has no dependency on the others; the edge reads identity and monitoring outputs.
 monitoring = MonitoringStack(
     app,
     f"RaadMonitoring-{environment}",
     environment=environment,
-    alert_email=alert_email,
+    alert_email=inputs.alert_email,
+    env=stack_env,
+)
+identity = IdentityStack(
+    app,
+    f"RaadIdentity-{environment}",
+    environment=environment,
     env=stack_env,
 )
 PublicEdgeStack(
@@ -59,11 +41,10 @@ PublicEdgeStack(
     environment=environment,
     identity=identity,
     monitoring=monitoring,
-    domain_name=domain_name,
-    hosted_zone_id=hosted_zone_id,
-    certificate_arn=certificate_arn,
-    service_parameter=service_parameter,
-    cognito_domain_prefix=cognito_domain_prefix,
+    domain_name=inputs.domain_name,
+    hosted_zone_id=inputs.hosted_zone_id,
+    certificate_arn=inputs.certificate_arn,
+    service_parameter=f"/raad/{environment}/money-api/function-url",
     env=stack_env,
 )
 cdk.Aspects.of(app).add(AwsSolutionsChecks(verbose=True))

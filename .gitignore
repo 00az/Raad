@@ -22,6 +22,15 @@ __pycache__/
 cdk.out/
 .cdk.staging/
 
+# Generated test, coverage and tool output
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+
 # BEGIN AI-DLC:gitignore
 # AI-DLC: local working files
 aidlc/active-space
