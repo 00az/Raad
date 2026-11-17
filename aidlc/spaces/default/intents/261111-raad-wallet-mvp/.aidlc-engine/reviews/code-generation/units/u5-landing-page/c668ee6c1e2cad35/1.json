@@ -1,0 +1,156 @@
+{
+  "version": 1,
+  "stage": "code-generation",
+  "unit": "u5-landing-page",
+  "workflow": null,
+  "attempt": "c668ee6c1e2cad35",
+  "iteration": 1,
+  "reviewer": "aidlc-architecture-reviewer-agent",
+  "verdict": "READY",
+  "request_id": "review:0b65b289018b91d55b1efb3fc092bcb2",
+  "request_challenge": null,
+  "artifact_fingerprint": "sha256:752c6f954058c004bbc5070737b6a8d404962ea703fcd2e4d7b4d2880dddd3ea",
+  "source_fingerprint": "04e68c8a1d4edc2bfa4df12b68d1d90860e7ba3cfc63a147ec79397258f0ed0a",
+  "unit_source_fingerprint": "sha256:9342a2763aaf61cd93f00f26f8a950be2d7b57ae905411ad0bc872fe986241e9",
+  "findings": [
+    {
+      "id": "R-01",
+      "severity": "Minor",
+      "location": "RaadWeb@checkout/raadweb/stack.py > `_distribution` (no custom error responses); RaadWeb@checkout/site/ (no favicon or robots file)",
+      "finding": "The origin is private behind origin access control, so any path that is not a file (an unknown URL, or `/favicon.ico`, which browsers request on every visit) returns S3's raw 403 AccessDenied XML. The edge function also redirects `/foo` to `/foo/` and then asks S3 for `/foo/index.html`, which fails the same way. A grep for `error_responses`, `favicon` and `robots` in `raadweb`, `site` and `tests` finds nothing, and the smoke test does not check an unknown path. Visitors who mistype the address see an XML error, not a page.",
+      "required_action": "Add a CloudFront custom error response that maps 403 and 404 to a small branded 404 page (Arabic and English, no script). Add a favicon (the logo mark would do). Add one smoke check that an unknown path returns a 404 page and not S3 XML. This can follow the MVP demo.",
+      "status": "Resolved"
+    },
+    {
+      "id": "R-02",
+      "severity": "Minor",
+      "location": "RaadWeb@checkout/.github/workflows/deploy-dev.yml > the \"Install\" and credentials steps; ci.yml > `npm install --global aws-cdk`",
+      "finding": "The dev deploy job holds an OIDC role, yet it installs an unpinned CDK CLI (`npm install --global aws-cdk`) and uses third-party actions by moving tag (`aws-actions/configure-aws-credentials@v4`, `astral-sh/setup-uv@v5`, `gitleaks/gitleaks-action@v2`). The Python side is locked by `uv.lock`, so the CLI and the actions are the only unpinned inputs. An unpinned CLI can also drift from the pinned `aws-cdk-lib` 2.277.0 cloud-assembly schema.",
+      "required_action": "Pin the CDK CLI to a version matching the lock (`aws-cdk@2.x.y`). Pin the credentials action and gitleaks to full commit SHAs, at least before the `stg` and `prd` promotion work copies this workflow.",
+      "status": "Resolved"
+    },
+    {
+      "id": "R-03",
+      "severity": "Minor",
+      "location": "RaadWeb@checkout/raadweb/stack.py > `_bucket`, `_publish` (`versioned=True`, `prune=False`, `RemovalPolicy.DESTROY` in `dev`)",
+      "finding": "Versioned objects are never pruned and the bucket has no lifecycle rule. Every deploy adds hashed assets and a new HTML version, so the bucket grows without bound. In `dev` the stack will fail to delete until the bucket and all its object versions are emptied by hand. Both are small for a page of about 160 KB, and the README documents the dev emptying, but nothing enforces an upper bound.",
+      "required_action": "Add a lifecycle rule that expires noncurrent versions after a set number of days (for example 90). Alternatively, record in the README that this is accepted for the MVP.",
+      "status": "Resolved"
+    },
+    {
+      "id": "R-04",
+      "severity": "Minor",
+      "location": "RaadWeb@checkout/raadweb/stack.py > `INDEX_REWRITE_CODE`; tests/test_stack.py (index rewrite cases)",
+      "finding": "The CloudFront Function that makes `/` and `/en/` work on an OAC origin was executed only in local Node.js (4 cases), not in the CloudFront JS 2.0 runtime, as code-summary.md states. The pages depend on it, so a runtime difference would break `/en/` on first deploy. The smoke test against `dev` would catch it, which makes this a deploy-time check and not a design flaw.",
+      "required_action": "Treat the first `dev` smoke test of `/en/` as the acceptance evidence for this function. Optionally add a CloudFront `test-function` call to the deploy workflow before the smoke test.",
+      "status": "Unresolved"
+    },
+    {
+      "id": "R-05",
+      "severity": "Minor",
+      "location": "RaadWeb@checkout/site/index.html and site/en/index.html > `<head>`",
+      "finding": "The two pages link to each other only through anchors in the body. There is no `<link rel=\"alternate\" hreflang>` pair or canonical link in the head, and no social preview metadata. This is a discoverability gap, not a defect. Search engines are the main readers of these hints, and the page is a private demo.",
+      "required_action": "Optional: add `rel=\"alternate\" hreflang` and `rel=\"canonical\"` links to both heads when the page becomes public beyond the test group.",
+      "status": "Resolved"
+    },
+    {
+      "id": "R-06",
+      "severity": "Minor",
+      "location": "aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u5-landing-page/code-generation/code-summary.md > Checks Still Open and Deviations",
+      "finding": "Several product claims have no executed evidence yet, and the summary lists them honestly: the smoke test against a real host, a keyboard and screen-reader pass, a native Arabic wording review, the customer's copy approval (A9), and the ACM certificate request. The logo changed from the planned sphere icon to the horizontal lockup, with `alt=\"رعد RAAD\"` and no visible text name. The deviation is recorded and tested. Approving this stage does not clear any of these.",
+      "required_action": "Keep them as gating items for the deployment and release stages. The first `dev` deploy must pass the smoke test for both languages, and the native Arabic review and the copy approval must be recorded before `prd`.",
+      "status": "Unresolved"
+    },
+    {
+      "id": "R-07",
+      "severity": "Minor",
+      "location": "RaadWeb@checkout/site/index.html and site/en/index.html > `<head>` `canonical` and `alternate` links",
+      "finding": "The `canonical` and `alternate` links use root-relative addresses (`/`, `/en/`). Search engines expect absolute URLs for these hints and may ignore them, so the language pairing does nothing for discovery until the production hostname is written in. The summary records this, and the page is a private demo, so nothing breaks now.",
+      "required_action": "Before the page is public beyond the test group, write the `prd` hostname into these links at deploy time, or drop them until then.",
+      "status": "New"
+    }
+  ],
+  "derived_findings": [
+    {
+      "id": "R-01",
+      "severity": "Minor",
+      "location": "RaadWeb@checkout/raadweb/stack.py > `_distribution` (no custom error responses); RaadWeb@checkout/site/ (no favicon or robots file)",
+      "finding": "The origin is private behind origin access control, so any path that is not a file (an unknown URL, or `/favicon.ico`, which browsers request on every visit) returns S3's raw 403 AccessDenied XML. The edge function also redirects `/foo` to `/foo/` and then asks S3 for `/foo/index.html`, which fails the same way. A grep for `error_responses`, `favicon` and `robots` in `raadweb`, `site` and `tests` finds nothing, and the smoke test does not check an unknown path. Visitors who mistype the address see an XML error, not a page.",
+      "required_action": "Add a CloudFront custom error response that maps 403 and 404 to a small branded 404 page (Arabic and English, no script). Add a favicon (the logo mark would do). Add one smoke check that an unknown path returns a 404 page and not S3 XML. This can follow the MVP demo.",
+      "status": "Resolved",
+      "reviewer_note": "`stack.py` `_distribution` now maps S3 403 and 404 to `/404.html` with a real 404 status and a short error cache time. `site/404.html` is bilingual, has no script, carries `noindex`, and uses root-absolute asset and link paths, so it renders correctly at any depth. `site/favicon.ico` and `assets/icon-180.png` exist and both pages and the 404 page link them. The edge function redirects only folders found in the build (`/en`); any other path goes to S3 and comes back as the not-found page. `smoke_site.py` has an unknown-path check that requires status 404 and the not-found page.",
+      "resolved_by_reviewer": true,
+      "resolved_in_review": true,
+      "introduced_in_review": false
+    },
+    {
+      "id": "R-02",
+      "severity": "Minor",
+      "location": "RaadWeb@checkout/.github/workflows/deploy-dev.yml > the \"Install\" and credentials steps; ci.yml > `npm install --global aws-cdk`",
+      "finding": "The dev deploy job holds an OIDC role, yet it installs an unpinned CDK CLI (`npm install --global aws-cdk`) and uses third-party actions by moving tag (`aws-actions/configure-aws-credentials@v4`, `astral-sh/setup-uv@v5`, `gitleaks/gitleaks-action@v2`). The Python side is locked by `uv.lock`, so the CLI and the actions are the only unpinned inputs. An unpinned CLI can also drift from the pinned `aws-cdk-lib` 2.277.0 cloud-assembly schema.",
+      "required_action": "Pin the CDK CLI to a version matching the lock (`aws-cdk@2.x.y`). Pin the credentials action and gitleaks to full commit SHAs, at least before the `stg` and `prd` promotion work copies this workflow.",
+      "status": "Resolved",
+      "reviewer_note": "Both workflows install `aws-cdk@2.1148.1`, and every `uses:` line in `deploy-dev.yml` and `ci.yml` is a 40-character commit SHA with a release comment. `tests/test_workflows.py` enforces both rules and passes.",
+      "resolved_by_reviewer": true,
+      "resolved_in_review": true,
+      "introduced_in_review": false
+    },
+    {
+      "id": "R-03",
+      "severity": "Minor",
+      "location": "RaadWeb@checkout/raadweb/stack.py > `_bucket`, `_publish` (`versioned=True`, `prune=False`, `RemovalPolicy.DESTROY` in `dev`)",
+      "finding": "Versioned objects are never pruned and the bucket has no lifecycle rule. Every deploy adds hashed assets and a new HTML version, so the bucket grows without bound. In `dev` the stack will fail to delete until the bucket and all its object versions are emptied by hand. Both are small for a page of about 160 KB, and the README documents the dev emptying, but nothing enforces an upper bound.",
+      "required_action": "Add a lifecycle rule that expires noncurrent versions after a set number of days (for example 90). Alternatively, record in the README that this is accepted for the MVP.",
+      "status": "Resolved",
+      "reviewer_note": "The bucket has an `ExpireOldVersions` lifecycle rule: noncurrent versions expire after 30 days (3 kept) and incomplete uploads abort after 7 days. `dev` sets `auto_delete_objects`. `stg` and `prd` are retained and the stack is termination-protected. Current objects are never expired, which matches the `prune=False` design.",
+      "resolved_by_reviewer": true,
+      "resolved_in_review": true,
+      "introduced_in_review": false
+    },
+    {
+      "id": "R-04",
+      "severity": "Minor",
+      "location": "RaadWeb@checkout/raadweb/stack.py > `INDEX_REWRITE_CODE`; tests/test_stack.py (index rewrite cases)",
+      "finding": "The CloudFront Function that makes `/` and `/en/` work on an OAC origin was executed only in local Node.js (4 cases), not in the CloudFront JS 2.0 runtime, as code-summary.md states. The pages depend on it, so a runtime difference would break `/en/` on first deploy. The smoke test against `dev` would catch it, which makes this a deploy-time check and not a design flaw.",
+      "required_action": "Treat the first `dev` smoke test of `/en/` as the acceptance evidence for this function. Optionally add a CloudFront `test-function` call to the deploy workflow before the smoke test.",
+      "status": "Unresolved",
+      "reviewer_note": "The edge function still has no run in the CloudFront JS 2.0 runtime. It is now generated from the build's page folders and Node-tested on the synthesized code. The first `dev` smoke test of `/en/` and of the unknown path is its acceptance evidence.",
+      "resolved_in_review": false,
+      "introduced_in_review": false
+    },
+    {
+      "id": "R-05",
+      "severity": "Minor",
+      "location": "RaadWeb@checkout/site/index.html and site/en/index.html > `<head>`",
+      "finding": "The two pages link to each other only through anchors in the body. There is no `<link rel=\"alternate\" hreflang>` pair or canonical link in the head, and no social preview metadata. This is a discoverability gap, not a defect. Search engines are the main readers of these hints, and the page is a private demo.",
+      "required_action": "Optional: add `rel=\"alternate\" hreflang` and `rel=\"canonical\"` links to both heads when the page becomes public beyond the test group.",
+      "status": "Resolved",
+      "reviewer_note": "Both pages now have `canonical`, `alternate hreflang` (ar, en, x-default) and icon links in the head. The addresses are root-relative, which the summary records as a limitation. See the new finding below.",
+      "resolved_by_reviewer": true,
+      "resolved_in_review": true,
+      "introduced_in_review": false
+    },
+    {
+      "id": "R-06",
+      "severity": "Minor",
+      "location": "aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u5-landing-page/code-generation/code-summary.md > Checks Still Open and Deviations",
+      "finding": "Several product claims have no executed evidence yet, and the summary lists them honestly: the smoke test against a real host, a keyboard and screen-reader pass, a native Arabic wording review, the customer's copy approval (A9), and the ACM certificate request. The logo changed from the planned sphere icon to the horizontal lockup, with `alt=\"رعد RAAD\"` and no visible text name. The deviation is recorded and tested. Approving this stage does not clear any of these.",
+      "required_action": "Keep them as gating items for the deployment and release stages. The first `dev` deploy must pass the smoke test for both languages, and the native Arabic review and the copy approval must be recorded before `prd`.",
+      "status": "Unresolved",
+      "reviewer_note": "Unchanged and honestly listed: smoke test on a real host, keyboard and screen-reader pass, native Arabic review, copy approval (A9) and the ACM certificate request. Approving this stage does not clear them. They stay gating items for deployment and release.",
+      "resolved_in_review": false,
+      "introduced_in_review": false
+    },
+    {
+      "id": "R-07",
+      "severity": "Minor",
+      "location": "RaadWeb@checkout/site/index.html and site/en/index.html > `<head>` `canonical` and `alternate` links",
+      "finding": "The `canonical` and `alternate` links use root-relative addresses (`/`, `/en/`). Search engines expect absolute URLs for these hints and may ignore them, so the language pairing does nothing for discovery until the production hostname is written in. The summary records this, and the page is a private demo, so nothing breaks now.",
+      "required_action": "Before the page is public beyond the test group, write the `prd` hostname into these links at deploy time, or drop them until then.",
+      "status": "New",
+      "introduced_in_review": true
+    }
+  ],
+  "body": "## Review\n\n**Verdict:** READY\n**Reviewer:** aidlc-architecture-reviewer-agent\n**Date:** 2026-11-17T02:26:28Z\n**Iteration:** 1\n**Verdict Dictated:** no\n\n### Findings\n\n**Prior findings**\n\n| ID | Now | Severity | Note |\n|---|---|---|---|\n| R-01 | Fixed | Minor | `stack.py` `_distribution` now maps S3 403 and 404 to `/404.html` with a real 404 status and a short error cache time. `site/404.html` is bilingual, has no script, carries `noindex`, and uses root-absolute asset and link paths, so it renders correctly at any depth. `site/favicon.ico` and `assets/icon-180.png` exist and both pages and the 404 page link them. The edge function redirects only folders found in the build (`/en`); any other path goes to S3 and comes back as the not-found page. `smoke_site.py` has an unknown-path check that requires status 404 and the not-found page. |\n| R-02 | Fixed | Minor | Both workflows install `aws-cdk@2.1148.1`, and every `uses:` line in `deploy-dev.yml` and `ci.yml` is a 40-character commit SHA with a release comment. `tests/test_workflows.py` enforces both rules and passes. |\n| R-03 | Fixed | Minor | The bucket has an `ExpireOldVersions` lifecycle rule: noncurrent versions expire after 30 days (3 kept) and incomplete uploads abort after 7 days. `dev` sets `auto_delete_objects`. `stg` and `prd` are retained and the stack is termination-protected. Current objects are never expired, which matches the `prune=False` design. |\n| R-04 | Still applies | Minor | The edge function still has no run in the CloudFront JS 2.0 runtime. It is now generated from the build's page folders and Node-tested on the synthesized code. The first `dev` smoke test of `/en/` and of the unknown path is its acceptance evidence. |\n| R-05 | Fixed | Minor | Both pages now have `canonical`, `alternate hreflang` (ar, en, x-default) and icon links in the head. The addresses are root-relative, which the summary records as a limitation. See the new finding below. |\n| R-06 | Still applies | Minor | Unchanged and honestly listed: smoke test on a real host, keyboard and screen-reader pass, native Arabic review, copy approval (A9) and the ACM certificate request. Approving this stage does not clear them. They stay gating items for deployment and release. |\n\n**New findings**\n\n| Severity | Location | Finding | Required action |\n|---|---|---|---|\n| Minor | RaadWeb@checkout/site/index.html and site/en/index.html > `<head>` `canonical` and `alternate` links | The `canonical` and `alternate` links use root-relative addresses (`/`, `/en/`). Search engines expect absolute URLs for these hints and may ignore them, so the language pairing does nothing for discovery until the production hostname is written in. The summary records this, and the page is a private demo, so nothing breaks now. | Before the page is public beyond the test group, write the `prd` hostname into these links at deploy time, or drop them until then. |\n\n### Validation Tool Results\n\n| Tool | Result | Interpretation |\n|---|---|---|\n| `uv run ruff check .` | PASS (All checks passed) | No lint errors. |\n| `uv run mypy raadweb scripts app.py` | PASS (no issues in 10 source files) | Types are clean. |\n| `RAADWEB_REQUIRE_BROWSER=1 uv run pytest tests -p no:cacheprovider --cov=raadweb --cov=scripts --cov-fail-under=80` | PASS: 133 passed, coverage 95.74% (floor 80%) | The browser tests ran, and the stack, workflow pinning and smoke tests are included. |\n\n### Summary\n\nThe revision fixes R-01, R-02, R-03 and R-05 with evidence in the code and in passing tests. Only deploy-time and human checks remain (R-04, R-06), plus a minor note that the root-relative canonical links are ineffective for search engines until the hostname is written in. A developer could take this to the first `dev` deploy as it stands.\n",
+  "recorded_at": "2026-11-17T02:30:01Z"
+}
