@@ -108,11 +108,8 @@
 
 
 
-- **Parked**: 2026-11-16T20:29:16Z
 
-- **Parked At Stage**: code-generation
 
-- **Parked By**: person
 
 ## Phase Progress
 <!-- Status values: Pending, Active, Verified, Skipped -->
@@ -174,8 +171,8 @@
 | unit | owner | code-generation | gate |
 | --- | --- | --- | --- |
 | u1-walking-skeleton | - | [x] | [x] |
-| u2-money-service | - | [x] | [x] |
-| u4-platform | - | [ ] | [ ] |
+| u2-money-service | - | [-] | [-] |
+| u4-platform | AzPsu | [ ] | [ ] |
 | u5-landing-page | - | [ ] | [ ] |
 | u3-mobile-app | - | [ ] | [ ] |
 
@@ -184,7 +181,7 @@
 - **Current Stage**: code-generation
 - **Next Stage**: build-and-test
 - **Status**: Running
-- **Last Updated**: 2026-11-16T20:29:16Z
+- **Last Updated**: 2026-11-16T22:10:57Z
 
 ## Session Resume Point
 - **Last Completed Stage**: delivery-planning
