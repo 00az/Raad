@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "status": "claimed",
+  "owner": "ziyad-alamri",
+  "space": "default",
+  "intent_uuid": "01a1cb38-fec9-7804-a48f-369fce0a1b4e",
+  "intent_id8": "ce0a1b4e",
+  "unit": "u5-landing-page",
+  "generation": 1,
+  "nonce": "92b9da0a-a776-494c-aad9-67fb2bb7888a",
+  "base_oid": "5293bbb6afc0b9d64202ad6723f3cabf208a3392",
+  "integration_ref": "refs/remotes/origin/main",
+  "claim_ref": "refs/heads/claim/ce0a1b4e/u5-landing-page",
+  "predecessor_oid": null,
+  "gate_rhythm": "per-stage",
+  "audit_shard": "ziyads-macbook-air-local-ef62fbbe2c2a.md"
+}
