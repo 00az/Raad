@@ -11,7 +11,7 @@ from raad_platform.telemetry.handler import FIELDS
 
 def stacks() -> tuple[Template, Template]:
     app = cdk.App()
-    identity = IdentityStack(app, "Identity", environment="dev", cognito_domain_prefix="raad-test")
+    identity = IdentityStack(app, "Identity", environment="dev")
     monitor = MonitoringStack(app, "Monitoring", environment="dev", alert_email="")
     edge = PublicEdgeStack(
         app,
@@ -23,7 +23,6 @@ def stacks() -> tuple[Template, Template]:
         hosted_zone_id="Z12345",
         certificate_arn="arn:aws:acm:us-east-1:111111111111:certificate/test",
         service_parameter="/raad/dev/money-api/function-url",
-        cognito_domain_prefix="raad-test",
     )
     return Template.from_stack(monitor), Template.from_stack(edge)
 

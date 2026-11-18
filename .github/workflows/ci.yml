@@ -17,12 +17,18 @@ jobs:
         working-directory: infrastructure
     env:
       # Synthetic secure external-DNS fixture; no hostname/certificate ownership claim.
+      # No AWS credentials exist in this job: synthesis needs none and performs no lookups.
+      RAAD_ENVIRONMENT: dev
       CDK_DEFAULT_ACCOUNT: "111111111111"
+      CDK_DEFAULT_REGION: us-east-1
+      # Pin the region and stop SDK metadata probing on hosted runners, which otherwise can
+      # resolve a different default region and fail the us-east-1 check intermittently.
+      AWS_REGION: us-east-1
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_EC2_METADATA_DISABLED: "true"
       RAAD_DOMAIN_NAME: api.dev.raad.example.test
       RAAD_CERTIFICATE_ARN: arn:aws:acm:us-east-1:111111111111:certificate/00000000-0000-0000-0000-000000000000
       RAAD_ALERT_EMAIL: build@example.test
-      RAAD_COGNITO_DOMAIN_PREFIX: raad-build-example-test
-      CDK_DEFAULT_REGION: us-east-1
     steps:
       - uses: actions/checkout@v4
         with:
@@ -35,12 +41,24 @@ jobs:
           node-version: 22
       - run: npm install --global aws-cdk
       - run: uv sync --locked --all-groups
+      # Unit, contract (C2-C5), provider, config-writer and stack tests with the 80% floor.
       - run: uv run pytest --cov=raad_platform --cov=../scripts --cov-report=term-missing
+      # The rate-window boundary against a real local DynamoDB container; it fails, never
+      # skips, when the store is missing.
+      - run: docker compose -f docker-compose.yml up -d --wait rate-dynamodb
+      - run: uv run pytest tests/integration/test_platform_rate_limits.py --no-cov -q
+        env:
+          RAAD_RATE_DYNAMODB_ENDPOINT: http://127.0.0.1:8002
       - run: uv run ruff check raad_platform tests app.py ../scripts
       - run: uv run ruff format --check raad_platform tests app.py ../scripts
       - run: uv run mypy raad_platform app.py ../scripts
       - run: uv run pip-audit
-      - run: uv run cdk synth --all
+      # Real Docker bundling and cdk-nag for every environment, each in its own assembly.
+      - run: |
+          for environment in dev stg prd; do
+            RAAD_ENVIRONMENT="$environment" RAAD_DOMAIN_NAME="$environment.api.raad.example.test" \
+              uv run cdk synth --all --output "cdk.out/ci-$environment"
+          done
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

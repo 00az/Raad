@@ -172,7 +172,7 @@
 | --- | --- | --- | --- | --- |
 | u1-walking-skeleton | - | [x] | [x] | [x] |
 | u2-money-service | - | [x] | [x] | [x] |
-| u4-platform | - | [ ] | [ ] | [ ] |
+| u4-platform | AzPsu | [x] | [x] | [x] |
 | u5-landing-page | ziyad-alamri | [x] | [x] | [x] |
 | u3-mobile-app | - | [ ] | [ ] | [ ] |
 

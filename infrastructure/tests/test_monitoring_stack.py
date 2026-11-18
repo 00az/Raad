@@ -1,7 +1,7 @@
 """Monitoring assertions for retention, privacy dimensions and alarms."""
 
 import aws_cdk as cdk
-from aws_cdk.assertions import Template
+from aws_cdk.assertions import Match, Template
 
 from raad_platform.stacks import MonitoringStack
 
@@ -31,12 +31,30 @@ def test_dashboard_exists() -> None:
     template().resource_count_is("AWS::CloudWatch::Dashboard", 1)
 
 
-def test_metrics_have_only_environment_dimension() -> None:
+def _dimensions(node):
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key == "Dimensions":
+                yield from value
+            else:
+                yield from _dimensions(value)
+    elif isinstance(node, list):
+        for item in node:
+            yield from _dimensions(item)
+
+
+def test_metrics_have_only_bounded_non_personal_dimensions() -> None:
     rendered = template().to_json()
-    for resource in rendered["Resources"].values():
-        if resource["Type"] == "AWS::CloudWatch::Alarm":
-            dimensions = resource["Properties"].get("Dimensions", [])
-            assert all(dimension["Name"] == "Environment" for dimension in dimensions)
+    alarms = [r for r in rendered["Resources"].values() if r["Type"] == "AWS::CloudWatch::Alarm"]
+    dimensions = [d for alarm in alarms for d in _dimensions(alarm)]
+    assert dimensions and {d["Name"] for d in dimensions} <= {"Environment", "FunctionName"}
+    for dimension in dimensions:
+        if dimension["Name"] == "Environment":
+            assert dimension["Value"] == "dev"
+        else:  # A platform function, by reference or by its fixed name.
+            assert (
+                dimension["Value"] == "raad-dev-identity-publisher" or "Ref" in dimension["Value"]
+            )
 
 
 def test_email_subscription_is_not_created_without_input() -> None:
@@ -88,3 +106,104 @@ def test_api_limited_wildcard_exception_keeps_query_and_metric_controls():
         if entry["id"] == "AwsSolutions-IAM5"
     ]
     assert exceptions and all(entry["applies_to"] == ["Resource::*"] for entry in exceptions)
+
+
+def test_alarm_topic_arn_is_published_at_the_ssm_path_u2_reads() -> None:
+    built = template()
+    [topic] = built.find_resources("AWS::SNS::Topic")
+    built.has_resource_properties("AWS::SNS::Topic", {"TopicName": "raad-dev-alerts"})
+    built.has_resource_properties(
+        "AWS::SSM::Parameter",
+        {"Name": "/raad/dev/alarm-topic/arn", "Type": "String", "Value": {"Ref": topic}},
+    )
+
+
+def test_cloudwatch_may_publish_alarms_only_from_this_account() -> None:
+    policies = template().find_resources("AWS::SNS::TopicPolicy")
+    statements = next(iter(policies.values()))["Properties"]["PolicyDocument"]["Statement"]
+    [allow] = [s for s in statements if s["Effect"] == "Allow"]
+    assert allow["Principal"] == {"Service": "cloudwatch.amazonaws.com"}
+    assert allow["Action"] == "sns:Publish"
+    assert set(allow["Condition"]) == {"StringEquals", "ArnLike"}
+    assert allow["Condition"]["StringEquals"] == {"aws:SourceAccount": {"Ref": "AWS::AccountId"}}
+
+
+def alarms(environment: str = "dev") -> dict:
+    built = Template.from_stack(
+        MonitoringStack(cdk.App(), "Monitoring", environment=environment, alert_email="")
+    )
+    return {
+        logical: resource["Properties"]
+        for logical, resource in built.find_resources("AWS::CloudWatch::Alarm").items()
+    }
+
+
+def named(prefix: str) -> dict:
+    [found] = [props for logical, props in alarms().items() if logical.startswith(prefix)]
+    return found
+
+
+def test_server_error_rate_needs_one_percent_of_twenty_requests_in_two_windows() -> None:
+    alarm = named("ServerErrors")
+    expression = next(m for m in alarm["Metrics"] if "Expression" in m)
+    assert expression["Expression"] == "IF(requests >= 20, 100 * FILL(errors, 0) / requests)"
+    periods = {m["MetricStat"]["Period"] for m in alarm["Metrics"] if "MetricStat" in m}
+    assert periods == {300}
+    assert (alarm["Threshold"], alarm["EvaluationPeriods"], alarm["DatapointsToAlarm"]) == (1, 2, 2)
+    assert alarm["ComparisonOperator"] == "GreaterThanOrEqualToThreshold"
+
+
+def test_technical_transfer_failures_need_three_per_window_for_two_windows() -> None:
+    alarm = named("TechnicalTransferFailure")
+    assert (alarm["Period"], alarm["Statistic"], alarm["Threshold"]) == (300, "Sum", 3)
+    assert (alarm["EvaluationPeriods"], alarm["DatapointsToAlarm"]) == (2, 2)
+
+
+def test_collector_heartbeat_absent_three_minutes_alarms_and_runs_every_minute() -> None:
+    alarm = named("CollectorHeartbeatMissing")
+    assert alarm["MetricName"] == "PublicCollectorHeartbeat"
+    assert (alarm["Period"], alarm["EvaluationPeriods"], alarm["DatapointsToAlarm"]) == (60, 3, 3)
+    assert alarm["ComparisonOperator"] == "LessThanThreshold"
+    assert alarm["TreatMissingData"] == "breaching"
+    template().has_resource_properties(
+        "AWS::Scheduler::Schedule",
+        {
+            "ScheduleExpression": "rate(1 minute)",
+            "Target": Match.object_like({"Input": '{"mode":"heartbeat"}'}),
+        },
+    )
+
+
+def test_observation_failures_are_alarmed_separately_from_the_latency_slo() -> None:
+    alarm = named("PublicCollectionFailure")
+    assert (alarm["MetricName"], alarm["Statistic"], alarm["Period"]) == (
+        "PublicCollectionFailures",
+        "Maximum",
+        300,
+    )
+    assert (alarm["EvaluationPeriods"], alarm["TreatMissingData"]) == (2, "missing")
+
+
+def test_throttles_publisher_and_rate_store_failures_alarm_on_two_one_minute_windows() -> None:
+    publisher = named("IdentityPublisherThrottles")
+    assert publisher["Dimensions"] == [
+        {"Name": "FunctionName", "Value": "raad-dev-identity-publisher"}
+    ]
+    for prefix in (
+        "IdentityPublisherThrottles",
+        "TelemetryProcessorThrottles",
+        "RateStoreUnavailable",
+    ):
+        alarm = named(prefix)
+        assert (alarm["Period"], alarm["Threshold"], alarm["EvaluationPeriods"]) == (60, 1, 2)
+    failure = named("IdentityEventPublishFailure")
+    assert (failure["MetricName"], failure["Threshold"]) == ("IdentityEventPublishFailures", 1)
+
+
+def test_every_alarm_notifies_and_records_the_accepted_native_recovery_deviation() -> None:
+    for props in alarms("prd").values():
+        assert props["AlarmActions"], props
+        assert "one healthy evaluation" in props["AlarmDescription"]
+        assert "accepted deviation" in props["AlarmDescription"]
+        if props.get("MetricName") != "PublicCollectorHeartbeat":
+            assert props["TreatMissingData"] == "missing"
