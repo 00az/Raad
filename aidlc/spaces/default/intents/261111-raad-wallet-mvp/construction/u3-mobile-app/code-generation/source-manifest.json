@@ -367,6 +367,9 @@
       "path": "RaadMobile-u3@checkout/test/l10n_catalog_test.dart"
     },
     {
+      "path": "RaadMobile-u3@checkout/test/log_privacy_test.dart"
+    },
+    {
       "path": "RaadMobile-u3@checkout/test/money_test.dart"
     },
     {
@@ -413,6 +416,9 @@
     },
     {
       "path": "RaadMobile-u3@checkout/tool/check_l10n.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/tool/check_no_logging.dart"
     }
   ]
 }

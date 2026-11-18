@@ -11,13 +11,13 @@ Approve the code plan for u3-mobile-app?
 - Touches: RaadMobile `lib/` (auth, money, screens, l10n, widgets), `test/`, `integration_test/`, `contracts/` (C1 re-pin), `android/` and `ios/` flavour files, `tool/`, CI and README.
 - Tests: about 110–150 new unit, widget and contract tests on top of the existing 111, plus fake-backed integration journeys on an iOS simulator and an Android emulator; the 80% line floor stays.
 - Conversation language: English.
-- Already changed before you approved: .aidlc-unit-claim.json.
+- Already changed before you approved (426 files): RaadMobile-u3@checkout/.flutter-plugins-dependencies, RaadMobile-u3@checkout/.metadata, RaadMobile-u3@checkout/analysis_options.yaml, RaadMobile-u3@checkout/android/app/build.gradle.kts, RaadMobile-u3@checkout/android/app/src/debug/AndroidManifest.xml, RaadMobile-u3@checkout/android/app/src/main/AndroidManifest.xml, RaadMobile-u3@checkout/android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java, RaadMobile-u3@checkout/android/app/src/main/kotlin/sa/raad/raad_mobile/MainActivity.kt, RaadMobile-u3@checkout/android/app/src/main/res/drawable-v21/launch_background.xml, RaadMobile-u3@checkout/android/app/src/main/res/drawable/launch_background.xml (and 416 more).
 
 Full plan: aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u3-mobile-app/code-generation/code-generation-plan.md
 Test instructions: aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u3-mobile-app/code-generation/unit-test-instructions.md
 
-[Approval Fingerprint]: sha256:v3:cfee6c5c4229a1fc3037c782c0d1399add6ad89add17c427dd1341dbee65f6d1
-[Planned Source]: 442e91f358d2d4defa1b542705833bcec2dbbef650545fce59fce63766dc48c4
+[Approval Fingerprint]: sha256:v3:ece097f4be0d5edd939c9850bb12aa0fcc06b5a7f5550788c3f6024fbcc0d985
+[Planned Source]: 03a3a21f93f1f3081f2bf56b9135ee17e21260309c03d3acea68a4d1d093a30c
 
 - A. Approve Plan
 - B. Request Changes

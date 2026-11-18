@@ -445,7 +445,7 @@
     {
       "id": "NFR10.10",
       "status": "OK",
-      "target": "RaadMobile-u3@checkout/lib/api/money_service.dart"
+      "target": "RaadMobile-u3@checkout/test/log_privacy_test.dart"
     },
     {
       "id": "NFR11.10",
