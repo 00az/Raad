@@ -180,7 +180,7 @@
 | u2-money-service | - | [x] | [x] | [x] |
 | u4-platform | AzPsu | [x] | [x] | [x] |
 | u5-landing-page | ziyad-alamri | [x] | [x] | [x] |
-| u3-mobile-app | ziyad-alamri | [R] | [R] | [ ] |
+| u3-mobile-app | ziyad-alamri | [x] | [x] | [ ] |
 
 ## Current Status
 - **Lifecycle Phase**: CONSTRUCTION
