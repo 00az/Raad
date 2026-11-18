@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "stage": "code-generation",
+  "unit": "u3-mobile-app",
+  "workflow": null,
+  "attempt": "178321ebd9a6ebeb",
+  "iteration": 1,
+  "reviewer": "aidlc-architecture-reviewer-agent",
+  "verdict": "READY",
+  "request_id": "review:dfee5e3b1da0c46ae122d93e9e19cd18",
+  "request_challenge": null,
+  "artifact_fingerprint": "sha256:86a9cf5236545a79784e93afbc1be778ab8ba49cb7f72466906fbc06e3daf077",
+  "source_fingerprint": "03a3a21f93f1f3081f2bf56b9135ee17e21260309c03d3acea68a4d1d093a30c",
+  "unit_source_fingerprint": "sha256:d95d57f0d6afa2a220d7e6e6178ab52483645d1808e4c60db528ac904f44a2d7",
+  "findings": [
+    {
+      "id": "R-01",
+      "severity": "Major",
+      "location": "aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u3-mobile-app/code-generation/code-summary.md > Key Decisions and Deviations item 11",
+      "finding": "The unit test instructions asked for a test that captures logs and asserts no token, code, email, amount or request key appears. None was written. The \"never write tokens or personal details into logs\" rule (NFR10.10) rests only on a one-time search showing no print, debugPrint or log calls in lib. I repeated that search and it is clean today, but nothing stops a later change from adding a log call.",
+      "required_action": "Add a small guard test or a CI grep step that fails if lib gains print, debugPrint or developer.log calls. Otherwise record at the gate that NFR10.10 is accepted as unverified by a test.",
+      "status": "New"
+    },
+    {
+      "id": "R-02",
+      "severity": "Minor",
+      "location": "aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u3-mobile-app/code-generation/code-summary.md > Tests Written but Not Executed Here",
+      "finding": "The live journeys against a deployed dev (real Cognito and U2), the U4 provider checks P1 to P13 and the first run of the updated CI workflow (including Gitleaks and the Android dev build) have not run. All integration results come from the fake backend. The Construction Verification Command `scripts/verify-dev.sh` was not run because no dev environment exists and no AWS call is authorized.",
+      "required_action": "Keep these as open checks before release. Do not treat the 5/5 fake-backed journeys as proof of the real sign-in, API and data path.",
+      "status": "New"
+    },
+    {
+      "id": "R-03",
+      "severity": "Minor",
+      "location": "RaadMobile-u3/lib/widgets/virtual_card.dart:353 (the \"VISA\" wordmark) and the \"Add to Apple Wallet\" chip",
+      "finding": "A third-party card brand mark and an Apple Wallet chip sit on a simulated wallet that has no card. This hints at a real payment system and is a trademark question. The summary flags it and leaves it to the person.",
+      "required_action": "The person decides at the gate whether to keep, change or remove both marks.",
+      "status": "New"
+    },
+    {
+      "id": "R-04",
+      "severity": "Minor",
+      "location": "aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u3-mobile-app/code-generation/code-summary.md > Key Decisions item 1 (A8 digits)",
+      "finding": "AC5.1.4 is built to a proposed Western-digits-in-both-languages choice that the person has not confirmed.",
+      "required_action": "Get the person's A8 decision. If it changes, plan a follow-up change to the formatting helpers.",
+      "status": "New"
+    },
+    {
+      "id": "R-05",
+      "severity": "Minor",
+      "location": "aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u3-mobile-app/code-generation/traceability.json > targets named `RaadMobile-u3@checkout/<path>`",
+      "finding": "The traceability sensor cannot resolve the sibling-checkout label and reports each of the 86 targets as a missing file. The developer checked every target by hand.",
+      "required_action": "Treat the sensor output as a known false positive. Do not rework the traceability file for it.",
+      "status": "New"
+    },
+    {
+      "id": "R-06",
+      "severity": "Minor",
+      "location": "RaadMobile-u3/lib/app/connectivity.dart (28.0% line coverage)",
+      "finding": "The platform-plugin wrapper is mostly uncovered, with no coverage-ignore added. Overall coverage is well above the floor, and the offline logic is tested through the manual signal.",
+      "required_action": "None required. Optionally add one test of the plugin-to-signal mapping.",
+      "status": "New"
+    }
+  ],
+  "derived_findings": [
+    {
+      "id": "R-01",
+      "severity": "Major",
+      "location": "aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u3-mobile-app/code-generation/code-summary.md > Key Decisions and Deviations item 11",
+      "finding": "The unit test instructions asked for a test that captures logs and asserts no token, code, email, amount or request key appears. None was written. The \"never write tokens or personal details into logs\" rule (NFR10.10) rests only on a one-time search showing no print, debugPrint or log calls in lib. I repeated that search and it is clean today, but nothing stops a later change from adding a log call.",
+      "required_action": "Add a small guard test or a CI grep step that fails if lib gains print, debugPrint or developer.log calls. Otherwise record at the gate that NFR10.10 is accepted as unverified by a test.",
+      "status": "New",
+      "introduced_in_review": true
+    },
+    {
+      "id": "R-02",
+      "severity": "Minor",
+      "location": "aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u3-mobile-app/code-generation/code-summary.md > Tests Written but Not Executed Here",
+      "finding": "The live journeys against a deployed dev (real Cognito and U2), the U4 provider checks P1 to P13 and the first run of the updated CI workflow (including Gitleaks and the Android dev build) have not run. All integration results come from the fake backend. The Construction Verification Command `scripts/verify-dev.sh` was not run because no dev environment exists and no AWS call is authorized.",
+      "required_action": "Keep these as open checks before release. Do not treat the 5/5 fake-backed journeys as proof of the real sign-in, API and data path.",
+      "status": "New",
+      "introduced_in_review": true
+    },
+    {
+      "id": "R-03",
+      "severity": "Minor",
+      "location": "RaadMobile-u3/lib/widgets/virtual_card.dart:353 (the \"VISA\" wordmark) and the \"Add to Apple Wallet\" chip",
+      "finding": "A third-party card brand mark and an Apple Wallet chip sit on a simulated wallet that has no card. This hints at a real payment system and is a trademark question. The summary flags it and leaves it to the person.",
+      "required_action": "The person decides at the gate whether to keep, change or remove both marks.",
+      "status": "New",
+      "introduced_in_review": true
+    },
+    {
+      "id": "R-04",
+      "severity": "Minor",
+      "location": "aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u3-mobile-app/code-generation/code-summary.md > Key Decisions item 1 (A8 digits)",
+      "finding": "AC5.1.4 is built to a proposed Western-digits-in-both-languages choice that the person has not confirmed.",
+      "required_action": "Get the person's A8 decision. If it changes, plan a follow-up change to the formatting helpers.",
+      "status": "New",
+      "introduced_in_review": true
+    },
+    {
+      "id": "R-05",
+      "severity": "Minor",
+      "location": "aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u3-mobile-app/code-generation/traceability.json > targets named `RaadMobile-u3@checkout/<path>`",
+      "finding": "The traceability sensor cannot resolve the sibling-checkout label and reports each of the 86 targets as a missing file. The developer checked every target by hand.",
+      "required_action": "Treat the sensor output as a known false positive. Do not rework the traceability file for it.",
+      "status": "New",
+      "introduced_in_review": true
+    },
+    {
+      "id": "R-06",
+      "severity": "Minor",
+      "location": "RaadMobile-u3/lib/app/connectivity.dart (28.0% line coverage)",
+      "finding": "The platform-plugin wrapper is mostly uncovered, with no coverage-ignore added. Overall coverage is well above the floor, and the offline logic is tested through the manual signal.",
+      "required_action": "None required. Optionally add one test of the plugin-to-signal mapping.",
+      "status": "New",
+      "introduced_in_review": true
+    }
+  ],
+  "body": "## Review\n\n**Verdict:** READY\n**Reviewer:** aidlc-architecture-reviewer-agent\n**Date:** 2026-11-18T16:14:38Z\n**Iteration:** 1\n**Verdict Dictated:** no\n\n### Findings\n\n**Prior findings**\n\n| ID | Now | Severity | Note |\n|---|---|---|---|\n\n**New findings**\n\n| Severity | Location | Finding | Required action |\n|---|---|---|---|\n| Major | aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u3-mobile-app/code-generation/code-summary.md > Key Decisions and Deviations item 11 | The unit test instructions asked for a test that captures logs and asserts no token, code, email, amount or request key appears. None was written. The \"never write tokens or personal details into logs\" rule (NFR10.10) rests only on a one-time search showing no print, debugPrint or log calls in lib. I repeated that search and it is clean today, but nothing stops a later change from adding a log call. | Add a small guard test or a CI grep step that fails if lib gains print, debugPrint or developer.log calls. Otherwise record at the gate that NFR10.10 is accepted as unverified by a test. |\n| Minor | aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u3-mobile-app/code-generation/code-summary.md > Tests Written but Not Executed Here | The live journeys against a deployed dev (real Cognito and U2), the U4 provider checks P1 to P13 and the first run of the updated CI workflow (including Gitleaks and the Android dev build) have not run. All integration results come from the fake backend. The Construction Verification Command `scripts/verify-dev.sh` was not run because no dev environment exists and no AWS call is authorized. | Keep these as open checks before release. Do not treat the 5/5 fake-backed journeys as proof of the real sign-in, API and data path. |\n| Minor | RaadMobile-u3/lib/widgets/virtual_card.dart:353 (the \"VISA\" wordmark) and the \"Add to Apple Wallet\" chip | A third-party card brand mark and an Apple Wallet chip sit on a simulated wallet that has no card. This hints at a real payment system and is a trademark question. The summary flags it and leaves it to the person. | The person decides at the gate whether to keep, change or remove both marks. |\n| Minor | aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u3-mobile-app/code-generation/code-summary.md > Key Decisions item 1 (A8 digits) | AC5.1.4 is built to a proposed Western-digits-in-both-languages choice that the person has not confirmed. | Get the person's A8 decision. If it changes, plan a follow-up change to the formatting helpers. |\n| Minor | aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u3-mobile-app/code-generation/traceability.json > targets named `RaadMobile-u3@checkout/<path>` | The traceability sensor cannot resolve the sibling-checkout label and reports each of the 86 targets as a missing file. The developer checked every target by hand. | Treat the sensor output as a known false positive. Do not rework the traceability file for it. |\n| Minor | RaadMobile-u3/lib/app/connectivity.dart (28.0% line coverage) | The platform-plugin wrapper is mostly uncovered, with no coverage-ignore added. Overall coverage is well above the floor, and the offline logic is tested through the manual signal. | None required. Optionally add one test of the plugin-to-signal mapping. |\n\n### Validation Tool Results\n\n| Tool | Result | Interpretation |\n|---|---|---|\n| flutter analyze | No issues found | Clean. |\n| flutter test --coverage | 321 passed, 0 failed (\"All tests passed!\") | Matches the claimed 321. |\n| dart run tool/check_coverage.dart coverage/lcov.info 80 | Line coverage 92.95% (3387 of 3644 lines); floor 80% | Floor met. Lowest files are connectivity.dart at 28.0%, app_localizations_ar.dart at 69.1%, main.dart at 69.6% and virtual_card.dart at 79.3%. |\n| dart run tool/check_l10n.dart | Arabic and English catalogs match: 166 messages | Pass. |\n| dart run swagger_parser --check | Generated files are up to date | The client matches the pinned C1 contract. |\n| Money and logging search over lib | No double or `/ 100` on money. The only match is the integer `~/ 100` in halalas.dart. The other double hits are UI widths. No print, debugPrint or log calls. | Complies with the integer-halalas rule. The \"Max\" chip uses `maxSendableText` over whole halalas (5000 to 50000 quick amounts). |\n| Secrets search over lib and config | Only the detection regex and markers in environment_config.dart. config holds only c4-dev.example.json. | No committed secrets found. |\n| scripts/verify-dev.sh | Not run | It targets a deployed dev environment that does not exist, and no AWS call is authorized. |\n| Simulator and emulator journeys | Not run by me | I judged the recorded results (5/5 on iOS and 5/5 on Android, fake-backed) and the integration test code. |\n\n### Summary\n\nThe unit builds cleanly, passes all 321 tests, holds 92.95% coverage against the 80% floor, and follows the money, no-real-payments and no-secrets rules. The one Major finding is that the log-privacy guarantee has no test behind it. The other items are unverified live paths and decisions that belong to the person.\n",
+  "recorded_at": "2026-11-18T16:17:53Z"
+}
