@@ -248,3 +248,14 @@
 **Message Ids**: 7b9c8a18,12de8212
 
 ---
+
+## Unit Merged
+**Timestamp**: 2026-11-18T02:34:28Z
+**Event**: UNIT_MERGED
+**Unit**: u4-platform
+**Owner**: AzPsu
+**Pinned OID**: d62e2bbadf2b10f019779c51e6e61c518c4b975e
+**Merge commit OID**: 91f491f613fe1621e9f824c35932656faf8ac765
+**Attempt Generation**: 1
+
+---
