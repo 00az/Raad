@@ -390,7 +390,7 @@ class IdentityStack(Stack):
                 {
                     # A4 is the person-approved rule; nag's symbol requirement would change it.
                     "id": "AwsSolutions-COG1",
-                    "reason": "Assumption A4 (approved requirements) fixes the password rule at 8+ characters with lower, upper and digit and no symbol; Abcdef12 must be accepted. Requiring symbols would silently strengthen A4 and break AC1.1.1, so the change goes to the person, not into code. Regional WAF limits and native lockout bound guessing.",
+                    "reason": "Assumption A4 (approved requirements) fixes the password rule at 8+ characters with lower, upper and digit and no symbol; Abcdef12 must be accepted. Requiring symbols would silently strengthen A4 and break AC1.1.1, so the change goes to the person, not into code. Compensating controls: the approved A4 rule and Cognito's native sign-in lockout. The regional WAF on this pool is not relied on here: it is unverified until the dev P10 burst check (check_identity_capabilities.py --burst) observes a refusal.",
                 },
             ],
         )

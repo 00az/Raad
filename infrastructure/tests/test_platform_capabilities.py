@@ -9,9 +9,12 @@ from typing import Any
 from unittest.mock import Mock
 
 import pytest
+from botocore import UNSIGNED
+from botocore.exceptions import ClientError, EndpointConnectionError
+from botocore.stub import ANY, Stubber
 from conftest import REPOSITORY, load_contract
 
-from raad_platform import configuration
+from raad_platform import configuration, stacks
 
 SPEC = importlib.util.spec_from_file_location(
     "check_identity_capabilities", REPOSITORY / "scripts/check_identity_capabilities.py"
@@ -215,3 +218,257 @@ def test_command_line_probes_only_with_execute_and_prints_no_identifiers(
     wrong, _ = provider(account="222222222222")
     assert capabilities.main([*arguments, "--execute"], clients=wrong) == 1
     assert "Refused" in capsys.readouterr().err
+
+
+# --- P10 burst (review R-01): injected client and clock, so no AWS call and no real waiting. ---
+
+BODY_MARKER = "SYNTHETIC-PROVIDER-BODY-7f3a"
+
+
+class Pace:
+    """Injected monotonic clock: sleeping and each provider answer move it forward."""
+
+    def __init__(self, latency: float = 0.05) -> None:
+        self.now = 500.0
+        self.latency = latency
+        self.slept: list[float] = []
+
+    def clock(self) -> float:
+        return self.now
+
+    def sleep(self, seconds: float) -> None:
+        self.slept.append(seconds)
+        self.now += seconds
+
+
+class Pool:
+    """Public InitiateAuth that answers from a script, then admits every further request."""
+
+    def __init__(self, pace: Pace, script: list[Any] | None = None) -> None:
+        self.pace = pace
+        self.script = list(script or [])
+        self.calls: list[dict[str, Any]] = []
+        self.sent_at: list[float] = []
+
+    def initiate_auth(self, **request: Any) -> dict[str, Any]:
+        self.calls.append(request)
+        self.sent_at.append(self.pace.now)
+        self.pace.now += self.pace.latency
+        answer = self.script.pop(0) if self.script else None
+        if isinstance(answer, Exception):
+            raise answer
+        return {"ChallengeName": "PASSWORD_VERIFIER", "ChallengeParameters": {"SALT": "ab"}}
+
+
+def provider_error(code: str, status: int = 400) -> ClientError:
+    return ClientError(
+        {
+            "Error": {"Code": code, "Message": f"{code} {BODY_MARKER}"},
+            "ResponseMetadata": {"HTTPStatusCode": status},
+        },
+        "InitiateAuth",
+    )
+
+
+def burst(script: list[Any] | None = None, latency: float = 0.05) -> tuple[Any, Pool, Pace]:
+    pace = Pace(latency)
+    pool = Pool(pace, script)
+    runtime = capabilities.BurstRuntime(pool, clock=pace.clock, sleep=pace.sleep)
+    return runtime, pool, pace
+
+
+def run_cli(
+    tmp_path: Any,
+    monkeypatch: Any,
+    *,
+    environment: str = "dev",
+    account: str = ACCOUNT,
+    script: list[Any] | None = None,
+    recorded: dict[str, dict[str, Any]] | None = None,
+) -> tuple[int, Pool, dict[str, Any]]:
+    source = tmp_path / "outputs.json"
+    source.write_text(json.dumps(outputs()))
+    evidence_file = tmp_path / "evidence.json"
+    evidence_file.write_text(json.dumps({**evidence(recorded or {}), "environment": environment}))
+    monkeypatch.setattr(capabilities, "requests", Mock(get=jwks().get, RequestException=Exception))
+    factory, made = provider(account=account)
+    runtime, pool, _ = burst(script)
+    arguments = ["--environment", environment, "--expected-account", ACCOUNT]
+    arguments += ["--outputs", str(source), "--evidence", str(evidence_file)]
+    code = capabilities.main([*arguments, "--execute", "--burst"], clients=factory, burst=runtime)
+    return code, pool, made
+
+
+def refusal_after(admitted: int) -> list[Any]:
+    return [None] * admitted + [provider_error("ForbiddenException", 403)]
+
+
+def test_burst_settings_mirror_the_regional_firewall_rules() -> None:
+    assert (
+        capabilities.ACCOUNT_OPERATION_LIMIT,
+        capabilities.GENERAL_OPERATION_LIMIT,
+        capabilities.OPERATION_WINDOW_SECONDS,
+    ) == (
+        stacks.ACCOUNT_OPERATION_LIMIT,
+        stacks.GENERAL_OPERATION_LIMIT,
+        stacks.OPERATION_WINDOW_SECONDS,
+    )
+    # Above the account limit, below the general one: only the account rule can refuse it.
+    assert stacks.ACCOUNT_OPERATION_LIMIT < capabilities.BURST_BUDGET
+    assert capabilities.BURST_BUDGET < stacks.GENERAL_OPERATION_LIMIT
+    attempts = capabilities.BURST_BUDGET + capabilities.UNCOUNTED_LIMIT
+    assert attempts * capabilities.BURST_INTERVAL_SECONDS < stacks.OPERATION_WINDOW_SECONDS
+
+
+def test_srp_a_is_a_well_formed_public_value_in_the_cognito_group() -> None:
+    prime = capabilities.SRP_N
+    assert prime.bit_length() == 3072 and pow(2, prime - 1, prime) == 1
+    values = {capabilities.srp_a() for _ in range(3)}
+    assert len(values) == 3
+    for value in values:
+        assert value == value.lower() and 1 < int(value, 16) < prime
+
+
+def test_a_waf_refusal_completes_p10_with_the_operators_second_caller(
+    tmp_path, monkeypatch, capsys
+) -> None:
+    recorded = {"P10": {"secondCallerUnaffected": True}}
+    code, pool, _ = run_cli(tmp_path, monkeypatch, script=refusal_after(120), recorded=recorded)
+    printed = capsys.readouterr().out
+    assert code == 1  # Other checks are still pending; P10 itself is complete.
+    assert "P10 burst: WAF refusal observed (120 admitted, 0 uncounted)" in printed
+    assert "P10: passed" in printed
+    assert len(pool.calls) == 121  # Stops at the first refusal.
+    request = pool.calls[0]
+    assert (request["ClientId"], request["AuthFlow"]) == (CLIENT, "USER_SRP_AUTH")
+    assert set(request["AuthParameters"]) == {"USERNAME", "SRP_A"}
+    assert request["AuthParameters"]["USERNAME"].endswith("@example.invalid")
+
+
+def test_spending_the_budget_without_a_refusal_fails_p10() -> None:
+    runtime, pool, pace = burst()
+    outcome = capabilities.run_burst(CLIENT, runtime)
+    assert (outcome.admitted, outcome.refused, outcome.conclusive) == (
+        capabilities.BURST_BUDGET,
+        False,
+        True,
+    )
+    assert len(pool.calls) == capabilities.BURST_BUDGET
+    # Paced, and every request inside one evaluation window, so all of them still count.
+    assert pace.slept and max(pace.slept) <= capabilities.BURST_INTERVAL_SECONDS
+    assert pool.sent_at[-1] - pool.sent_at[0] < capabilities.OPERATION_WINDOW_SECONDS
+    merged = capabilities.merge({"P10": {"secondCallerUnaffected": True}}, outcome.evidence())
+    result = by_check(capabilities.evaluate(merged))["P10"]
+    assert result.outcome == "failed"
+    assert set(result.failed) == {"operationClassificationObserved", "burstRefusedForOneCaller"}
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        provider_error("TooManyRequestsException"),
+        provider_error("InternalErrorException", 500),
+        provider_error("InvalidParameterException"),
+        provider_error("AccessDeniedException", 403),  # A 403 is not a WAF refusal by itself.
+        EndpointConnectionError(endpoint_url="https://cognito-idp.us-east-1.amazonaws.com/"),
+    ],
+)
+def test_non_waf_errors_are_neither_a_refusal_nor_an_admission(error: Exception) -> None:
+    runtime, pool, _ = burst([error] * capabilities.UNCOUNTED_LIMIT)
+    outcome = capabilities.run_burst(CLIENT, runtime)
+    assert (outcome.admitted, outcome.uncounted) == (0, capabilities.UNCOUNTED_LIMIT)
+    assert (outcome.refused, outcome.conclusive, outcome.evidence()) == (False, False, {})
+    assert len(pool.calls) == capabilities.UNCOUNTED_LIMIT
+    assert "inconclusive" in outcome.describe()
+    # Interleaved with admissions, they still do not count toward the budget.
+    runtime, pool, _ = burst([None, error, None, error])
+    outcome = capabilities.run_burst(CLIENT, runtime)
+    assert (outcome.admitted, outcome.uncounted) == (capabilities.BURST_BUDGET, 2)
+    assert len(pool.calls) == capabilities.BURST_BUDGET + 2
+
+
+def test_the_waf_refusal_is_matched_by_error_code_not_http_status() -> None:
+    # AWS gives ForbiddenException as HTTP 400 in the API reference and 403 in the guide.
+    runtime, _, _ = burst([provider_error("ForbiddenException", 400)])
+    outcome = capabilities.run_burst(CLIENT, runtime)
+    assert (outcome.admitted, outcome.refused) == (0, True)
+    assert outcome.evidence() == {
+        "P10": {"operationClassificationObserved": True, "burstRefusedForOneCaller": True}
+    }
+    for code in ("NotAuthorizedException", "UserNotFoundException"):
+        runtime, _, _ = burst([provider_error(code), *refusal_after(0)])
+        assert capabilities.run_burst(CLIENT, runtime).admitted == 1
+
+
+def test_a_burst_that_slips_out_of_one_window_is_inconclusive() -> None:
+    runtime, pool, _ = burst(latency=2.5)  # Slower than the pacing interval.
+    outcome = capabilities.run_burst(CLIENT, runtime)
+    assert (outcome.refused, outcome.conclusive, outcome.evidence()) == (False, False, {})
+    assert outcome.admitted < capabilities.BURST_BUDGET
+    assert pool.sent_at[-1] - pool.sent_at[0] < capabilities.OPERATION_WINDOW_SECONDS
+
+
+def test_the_burst_is_refused_for_prd_before_any_request(tmp_path, monkeypatch, capsys) -> None:
+    code, pool, made = run_cli(tmp_path, monkeypatch, environment="prd")
+    assert code == 1
+    assert "Refused: the P10 burst never runs against prd" in capsys.readouterr().err
+    assert pool.calls == []
+    made["sts"].get_caller_identity.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "scope", [{"account": "222222222222"}, {"environment": "stg"}], ids=["account", "outputs"]
+)
+def test_a_scope_mismatch_is_refused_before_any_burst_request(
+    tmp_path, monkeypatch, capsys, scope
+) -> None:
+    code, pool, made = run_cli(tmp_path, monkeypatch, **scope)
+    assert code == 1
+    assert "Refused" in capsys.readouterr().err
+    assert pool.calls == []
+    made["cognito-idp"].describe_user_pool.assert_not_called()
+
+
+def test_the_burst_needs_execute_and_makes_no_request(tmp_path) -> None:
+    runtime, pool, _ = burst()
+    arguments = ["--environment", "dev", "--expected-account", ACCOUNT]
+    with pytest.raises(SystemExit):
+        capabilities.main([*arguments, "--outputs", str(tmp_path), "--burst"], burst=runtime)
+    assert pool.calls == []
+
+
+def test_burst_output_holds_no_address_identifier_or_provider_text(
+    tmp_path, monkeypatch, capsys
+) -> None:
+    code, pool, _ = run_cli(tmp_path, monkeypatch, script=refusal_after(3))
+    captured = capsys.readouterr()
+    printed = captured.out + captured.err
+    assert code == 1 and "P10 burst: WAF refusal observed (3 admitted, 0 uncounted)" in printed
+    parameters = pool.calls[0]["AuthParameters"]
+    for secret_value in (parameters["USERNAME"], parameters["SRP_A"], POOL, CLIENT, BODY_MARKER):
+        assert secret_value not in printed
+    assert "@" not in printed
+
+
+def test_the_public_client_sends_a_model_valid_unsigned_single_attempt_request() -> None:
+    client = capabilities.public_cognito_client()
+    assert client.meta.region_name == "us-east-1"
+    assert client.meta.config.signature_version is UNSIGNED
+    assert client.meta.config.retries["total_max_attempts"] == 1
+    expected = {
+        "ClientId": CLIENT,
+        "AuthFlow": "USER_SRP_AUTH",
+        "AuthParameters": {"USERNAME": ANY, "SRP_A": ANY},
+    }
+    challenge = {
+        "ChallengeName": "PASSWORD_VERIFIER",
+        "ChallengeParameters": {"SALT": "ab", "SRP_B": "cd", "SECRET_BLOCK": "ef"},
+    }
+    pace = Pace()
+    with Stubber(client) as stubber:
+        stubber.add_response("initiate_auth", challenge, expected)
+        stubber.add_client_error("initiate_auth", "ForbiddenException", http_status_code=403)
+        runtime = capabilities.BurstRuntime(client, clock=pace.clock, sleep=pace.sleep)
+        outcome = capabilities.run_burst(CLIENT, runtime)
+        stubber.assert_no_pending_responses()
+    assert (outcome.admitted, outcome.refused) == (1, True)

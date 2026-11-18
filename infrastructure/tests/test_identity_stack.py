@@ -143,6 +143,17 @@ def test_no_paid_plus_and_only_reasoned_identity_exceptions(environment: str) ->
     assert environment in plus["reason"] and "release risk" in plus["reason"]
 
 
+@pytest.mark.parametrize("environment", ["dev", "stg", "prd"])
+def test_password_exception_does_not_lean_on_the_unverified_firewall(environment: str) -> None:
+    # Review R-01: the WAF's operation header is unobserved until the dev P10 burst passes.
+    entries = pool(environment)["Metadata"]["cdk_nag"]["rules_to_suppress"]
+    reason = next(entry for entry in entries if entry["id"] == "AwsSolutions-COG1")["reason"]
+    controls = reason.split("Compensating controls:", 1)[1].split(".", 1)[0]
+    assert "A4" in controls and "native sign-in lockout" in controls
+    assert "WAF" not in controls
+    assert "unverified until the dev P10 burst check" in reason
+
+
 @pytest.mark.parametrize(
     "environment,policy", [("dev", "Delete"), ("stg", "Retain"), ("prd", "Retain")]
 )
