@@ -6,22 +6,29 @@ item fails it, and anything missing leaves it pending, which fails the run. Evid
 - an operator-recorded evidence file (--evidence): booleans only, so no code, token, address or
   profile can be pasted into it;
 - with --execute, read-only settings probes (user pool, app client, WAF association, JWKS), after
-  the outputs and the caller's AWS account match the expected environment and account.
+  the outputs and the caller's AWS account match the expected environment and account;
+- with --execute --burst (dev or stg, never prd), the P10 burst: after those same checks, paced
+  unauthenticated InitiateAuth (USER_SRP_AUTH) requests from this one caller for a random,
+  unregistered address, stopping at the first regional WAF refusal.
 
 Live scenarios such as P7 (a resent code replaces the earlier one) are never inferred from
-settings: they stay pending until recorded. Output is check IDs, outcomes and evidence field
-names only.
+settings: they stay pending until recorded. P10's secondCallerUnaffected is always recorded by
+the operator. Output is check IDs, outcomes, evidence field names and burst counts only.
 
 Run from infrastructure/:
     uv run python ../scripts/check_identity_capabilities.py --environment dev \
-        --expected-account <id> --outputs outputs.json --evidence evidence.json [--execute]
+        --expected-account <id> --outputs outputs.json --evidence evidence.json \
+        [--execute [--burst]]
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import secrets
 import sys
+import time
+import uuid
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -31,6 +38,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "infrastructure"))
 
 import boto3
 import requests
+from botocore import UNSIGNED
 from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
 
@@ -64,6 +72,59 @@ REQUIRED_EVIDENCE: dict[str, tuple[str, ...]] = {
     "P13": ("jwksAnswersOverHttps", "tokenHeaderNamesRs256"),
 }
 
+# P10 burst. These mirror the regional WAF rules in raad_platform/stacks.py (tests keep them
+# equal) so this host script does not load CDK.
+ACCOUNT_OPERATION_LIMIT = 100
+GENERAL_OPERATION_LIMIT = 300
+OPERATION_WINDOW_SECONDS = 300
+# Below the general limit, so in a window with no other traffic from this address only the
+# account-operation rule can refuse the burst.
+BURST_BUDGET = 2 * ACCOUNT_OPERATION_LIMIT
+# Every attempt goes out within one evaluation window (240 of 300 seconds), so each admitted
+# request still counts when the budget is spent. AWS documents WAF rate limiting as approximate
+# and able to lag the limit, usually by under 30 seconds; the 100 requests over the limit cover it.
+BURST_INTERVAL_SECONDS = OPERATION_WINDOW_SECONDS * 0.8 / BURST_BUDGET
+# Answers that are neither an admission nor a WAF refusal; this many ends the burst inconclusive.
+UNCOUNTED_LIMIT = 5
+BURST_ENVIRONMENTS = ("dev", "stg")
+# Amazon Cognito Developer Guide, "Associate an AWS WAF web ACL with a user pool": the AWS SDKs
+# return ForbiddenException for a Block. The InitiateAuth API reference lists the same error for a
+# web ACL refusal. The two pages give different HTTP statuses (403, 400), so only the code counts.
+WAF_REFUSAL_CODE = "ForbiddenException"
+# The user pool itself answered, so the request passed the web ACL: a (simulated) SRP challenge,
+# the generic NotAuthorizedException, or UserNotFoundException where existence is not suppressed.
+ADMITTED_CODES = frozenset({"NotAuthorizedException", "UserNotFoundException"})
+ADMITTED, REFUSED, UNCOUNTED = "admitted", "refused", "uncounted"
+# SRP group of the Cognito SDKs (AuthenticationHelper initN, g = 2): the RFC 3526 3072-bit prime.
+SRP_N = int(
+    "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD1"
+    "29024E088A67CC74020BBEA63B139B22514A08798E3404DD"
+    "EF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245"
+    "E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7ED"
+    "EE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3D"
+    "C2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F"
+    "83655D23DCA3AD961C62F356208552BB9ED529077096966D"
+    "670C354E4ABC9804F1746C08CA18217C32905E462E36CE3B"
+    "E39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9"
+    "DE2BCBF6955817183995497CEA956AE515D2261898FA0510"
+    "15728E5A8AAAC42DAD33170D04507A33A85521ABDF1CBA64"
+    "ECFB850458DBEF0A8AEA71575D060C7DB3970F85A6E1E4C7"
+    "ABF5AE8CDB0933D71E8C94E04A25619DCEE3D2261AD2EE6B"
+    "F12FFA06D98A0864D87602733EC86A64521F2B18177B200C"
+    "BBE117577A615D6C770988C0BAD946E208E24FA074E5AB31"
+    "43DB5BFCE0FD108E4B82D120A93AD2CAFFFFFFFFFFFFFFFF",
+    16,
+)
+SRP_G = 2
+# Unsigned, as the app's public client calls; one attempt per request so the counts are exact.
+BURST_SDK_CONFIG = Config(
+    region_name="us-east-1",
+    signature_version=UNSIGNED,
+    connect_timeout=2,
+    read_timeout=5,
+    retries={"total_max_attempts": 1},
+)
+
 
 class ScopeError(RuntimeError):
     """Outputs, evidence or caller identity do not match the expected environment/account."""
@@ -75,6 +136,42 @@ class CheckResult:
     outcome: str
     missing: tuple[str, ...] = ()
     failed: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class BurstRuntime:
+    """The burst's provider client and pacing clock, injected so tests run offline and at once."""
+
+    client: Any
+    clock: Callable[[], float] = time.monotonic
+    sleep: Callable[[float], None] = time.sleep
+
+
+@dataclass(frozen=True)
+class BurstOutcome:
+    admitted: int
+    uncounted: int
+    refused: bool
+    conclusive: bool
+
+    def evidence(self) -> dict[str, dict[str, bool]]:
+        """True on a WAF refusal, false when the budget passed without one, nothing otherwise."""
+        if not self.conclusive:
+            return {}
+        return {
+            "P10": {
+                "operationClassificationObserved": self.refused,
+                "burstRefusedForOneCaller": self.refused,
+            }
+        }
+
+    def describe(self) -> str:
+        counts = f"{self.admitted} admitted, {self.uncounted} uncounted"
+        if self.refused:
+            return f"P10 burst: WAF refusal observed ({counts})"
+        if self.conclusive:
+            return f"P10 burst: no WAF refusal within {BURST_BUDGET} admitted requests ({counts})"
+        return f"P10 burst: inconclusive, no burst evidence recorded ({counts})"
 
 
 def load_evidence(document: Any, *, environment: str, account: str) -> dict[str, dict[str, bool]]:
@@ -172,6 +269,57 @@ def probe_settings(
     }
 
 
+def srp_a() -> str:
+    """A well-formed SRP_A, g^a mod N for a throwaway a, in the SDKs' unpadded hex.
+
+    N is prime, so A is never 0 mod N. The burst never answers the challenge.
+    """
+    return format(pow(SRP_G, secrets.randbits(1024) | 1, SRP_N), "x")
+
+
+def _attempt(client: Any, client_id: str, parameters: Mapping[str, str]) -> str:
+    """Classify one InitiateAuth; nothing from the request or its answer is kept or printed."""
+    try:
+        client.initiate_auth(
+            ClientId=client_id, AuthFlow="USER_SRP_AUTH", AuthParameters=dict(parameters)
+        )
+    except ClientError as error:
+        code = error.response.get("Error", {}).get("Code")
+        if code == WAF_REFUSAL_CODE:
+            return REFUSED
+        return ADMITTED if code in ADMITTED_CODES else UNCOUNTED
+    except BotoCoreError:
+        return UNCOUNTED
+    return ADMITTED
+
+
+def run_burst(client_id: str, runtime: BurstRuntime) -> BurstOutcome:
+    """P10 from one caller: paced sign-in starts until a WAF refusal or the budget is spent.
+
+    The address is random and unregistered, so no account, code or email results, and it never
+    leaves this function. Only admitted answers count toward the budget. Throttling, network and
+    other provider errors are uncounted: never a refusal and never an admission. Too many of them,
+    or pacing that slips past one evaluation window, ends the burst as inconclusive.
+    """
+    parameters = {"USERNAME": f"p10-probe-{uuid.uuid4().hex}@example.invalid", "SRP_A": srp_a()}
+    start = runtime.clock()
+    admitted = uncounted = 0
+    while admitted < BURST_BUDGET and uncounted < UNCOUNTED_LIMIT:
+        delay = start + (admitted + uncounted) * BURST_INTERVAL_SECONDS - runtime.clock()
+        if delay > 0:
+            runtime.sleep(delay)
+        if runtime.clock() - start >= OPERATION_WINDOW_SECONDS:
+            return BurstOutcome(admitted, uncounted, refused=False, conclusive=False)
+        answer = _attempt(runtime.client, client_id, parameters)
+        if answer == REFUSED:
+            return BurstOutcome(admitted, uncounted, refused=True, conclusive=True)
+        if answer == ADMITTED:
+            admitted += 1
+        else:
+            uncounted += 1
+    return BurstOutcome(admitted, uncounted, refused=False, conclusive=admitted >= BURST_BUDGET)
+
+
 def merge(*sources: Mapping[str, Mapping[str, bool]]) -> dict[str, dict[str, bool]]:
     """A false item from any source wins, so a probe can never mask recorded failure."""
     merged: dict[str, dict[str, bool]] = {}
@@ -188,14 +336,31 @@ def aws_client(name: str) -> Any:
     return factory(name, config=SDK_CONFIG)
 
 
-def main(argv: list[str] | None = None, clients: Callable[[str], Any] | None = None) -> int:
+def public_cognito_client() -> Any:
+    factory: Callable[..., Any] = boto3.client
+    return factory("cognito-idp", config=BURST_SDK_CONFIG)
+
+
+def main(
+    argv: list[str] | None = None,
+    clients: Callable[[str], Any] | None = None,
+    burst: BurstRuntime | None = None,
+) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--environment", required=True, choices=ENVIRONMENTS)
     parser.add_argument("--expected-account", required=True)
     parser.add_argument("--outputs", required=True, type=Path)
     parser.add_argument("--evidence", type=Path)
     parser.add_argument("--execute", action="store_true", help="run read-only settings probes")
+    parser.add_argument(
+        "--burst", action="store_true", help="with --execute, run the P10 burst (dev or stg)"
+    )
     args = parser.parse_args(argv)
+    if args.burst and not args.execute:
+        parser.error("--burst needs --execute")
+    if args.burst and args.environment not in BURST_ENVIRONMENTS:
+        print(f"Refused: the P10 burst never runs against {args.environment}", file=sys.stderr)
+        return 1
     try:
         recorded: dict[str, dict[str, bool]] = {}
         if args.evidence:
@@ -206,13 +371,23 @@ def main(argv: list[str] | None = None, clients: Callable[[str], Any] | None = N
             )
         probed: dict[str, dict[str, bool]] = {}
         if args.execute:
+            outputs = json.loads(args.outputs.read_text(encoding="utf-8"))
             probed = probe_settings(
-                json.loads(args.outputs.read_text(encoding="utf-8")),
+                outputs,
                 environment=args.environment,
                 account=args.expected_account,
                 clients=clients or aws_client,
                 http=requests,
             )
+            if args.burst:
+                # Runs only after probe_settings accepted the outputs, environment and account.
+                identity = outputs[f"RaadIdentity-{args.environment}"]
+                outcome = run_burst(
+                    identity["UserPoolClientIdOutput"],
+                    burst or BurstRuntime(public_cognito_client()),
+                )
+                print(outcome.describe())
+                probed = merge(probed, outcome.evidence())
     except ScopeError as error:
         print(f"Refused: {error}", file=sys.stderr)
         return 1

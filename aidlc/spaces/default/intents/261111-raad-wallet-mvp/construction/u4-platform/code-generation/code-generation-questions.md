@@ -11,13 +11,12 @@ Approve the code plan for u4-platform?
 - Touches: infrastructure/, contracts/, platform scripts, Raad CI, environment examples and generated-file ignore rules.
 - Tests: approximately 60–90 new unit/contract cases, local DynamoDB concurrency checks and existing platform regressions; live checks stay pending.
 - Conversation language: English.
-- Already changed before you approved (81 files): .aidlc-unit-claim.json, RaadWeb@checkout/.python-version, RaadWeb@checkout/cdk.out/RaadWeb-dev.assets.json, RaadWeb@checkout/cdk.out/RaadWeb-dev.metadata.json, RaadWeb@checkout/cdk.out/RaadWeb-dev.template.json, RaadWeb@checkout/cdk.out/RaadWeb-prd.assets.json, RaadWeb@checkout/cdk.out/RaadWeb-prd.metadata.json, RaadWeb@checkout/cdk.out/RaadWeb-prd.template.json, RaadWeb@checkout/cdk.out/RaadWeb-stg.assets.json, RaadWeb@checkout/cdk.out/RaadWeb-stg.metadata.json (and 71 more).
 
 Full plan: aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u4-platform/code-generation/code-generation-plan.md
 Test instructions: aidlc/spaces/default/intents/261111-raad-wallet-mvp/construction/u4-platform/code-generation/unit-test-instructions.md
 
-[Approval Fingerprint]: sha256:v3:334924a05bac3c46eb17e5820bfeccc8354acc18c2e9ca732c51d9f8953c8e8f
-[Planned Source]: 64375c0e3847a49ef6f28d48cd9195a10fb864dc6d39860e39731a571abbd419
+[Approval Fingerprint]: sha256:v3:61174efcb6c0985382346d0a0e6f63640d0e8c37fcda1f4aa39b6596dc0f9bdf
+[Planned Source]: 4eb8cf50cb8a24dfb49c118a5d991be891f7046fc6d09040526e5f65ed56c8c1
 
 - A. Approve Plan
 - B. Request Changes

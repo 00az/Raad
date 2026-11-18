@@ -76,14 +76,47 @@ match the expected account and environment. They print check names and outcomes 
 they cannot prove (for example C3 P7 code replacement) stay pending and fail the run until evidence
 is recorded.
 
+### Dev gate: C3 P10 (regional WAF on the user pool)
+
+The regional WAF rules match the `x-amzn-cognito-operation-name` header, whose real value has not
+been observed. Every local test is a synth-time assertion, so until a real burst is refused the WAF
+is an unverified control, and the AwsSolutions-COG1 exception does not rely on it.
+
+**Dev is not done until P10 passes, and a failed or pending P10 blocks release to `stg`.**
+
+1. Wait at least five minutes with no other Cognito traffic from the address you run from, because
+   earlier requests still count in the WAF's window.
+2. Run the burst against dev only. The tool refuses `prd`, and it refuses any account, environment
+   or outputs mismatch before sending a request:
+
+   ```sh
+   uv run python ../scripts/check_identity_capabilities.py --environment dev \
+     --expected-account <account-id> --outputs <outputs.json> --evidence <evidence.json> \
+     --execute --burst
+   ```
+
+   From this one address it sends unauthenticated `InitiateAuth` (`USER_SRP_AUTH`) requests for a
+   random, unregistered address, about one every 1.2 seconds and all within one 5-minute window.
+   It stops at the first WAF refusal, which the SDK reports as `ForbiddenException`. The budget is
+   200 admitted requests: twice the 100-per-address account limit and under the 300 general limit,
+   so only the account-operation rule can refuse it. No account, code or email results. The tool
+   records `operationClassificationObserved` and `burstRefusedForOneCaller` as true on a refusal,
+   or false when the budget is spent without one. Throttling, network and other provider errors
+   count as neither. Five of them, or pacing that slips out of the window, makes the run
+   inconclusive and leaves both fields pending. The output holds counts and outcomes only.
+3. While the first address is still refused, sign in from a second address (for example a phone on
+   mobile data). Record `secondCallerUnaffected` in the evidence file as `true` only if that sign-in
+   works. The tool never decides this field.
+
 ## Security exceptions
 
 cdk-nag's AwsSolutions checks run on every synth. Each exception is resource-specific with its
 reason beside it in `raad_platform/stacks.py`: the tested Python 3.12 runtime pin, coordinated
 protocol-secret rotation, paid Plus not approved (all environments, with the retained risk
-stated), the A4 password rule, API-limited IAM wildcards, edge authentication in the adapter,
-privacy-safe CloudFront logging and the dev-only stub route. No rule is disabled and TLS is never
-excepted.
+stated), the A4 password rule (compensated by the approved A4 rule and Cognito's native sign-in
+lockout, not by the regional WAF until the dev P10 gate passes), API-limited IAM wildcards, edge
+authentication in the adapter, privacy-safe CloudFront logging and the dev-only stub route. No rule
+is disabled and TLS is never excepted.
 
 ## Deployment
 
