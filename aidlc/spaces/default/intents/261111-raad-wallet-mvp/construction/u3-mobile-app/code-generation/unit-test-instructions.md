@@ -44,6 +44,8 @@ Each command names exact files. A file becomes runnable when its step lands. Kee
 | Language | `flutter test test/l10n_catalog_test.dart test/rtl_layout_test.dart` | Every key in `en` and `ar`, none empty; RTL layout; LTR isolation of email, amounts and references; switch mid-draft and mid-uncertain keeps values and key |
 | Accessibility | `flutter test test/accessibility_test.dart` | `meetsGuideline` tap-target, labelled-target and text-contrast checks; 200% text at 320dp with no clipped action on sign-in, wallet, send, review and history; status announcements; decorative card and unavailable tiles announced as unavailable |
 | Environments and start | `flutter test test/environment_config_test.dart test/flavour_config_test.dart test/app_start_test.dart` | dev/stg/prd configs valid; missing, extra, secret-looking and cross-environment values refused; the app refuses to start before private data on a bad config |
+| Log privacy (Step 16, R-01) | `flutter test test/log_privacy_test.dart` | Sign-in, wallet, send with a lost answer and Try again, history and sign-out run against the fakes while `print`, `debugPrint` and `dart:developer` `log` output is captured; the test fails if any synthetic password, code, token, email, name, amount, request key or cursor appears |
+| Decorative card (Step 16, R-03) | `flutter test test/wallet_screen_test.dart test/accessibility_test.dart` | No "VISA" or Apple Wallet text or chip on the card; "Demo card" label in both languages; the card is announced as not available |
 
 ## Integration Journeys (fake-backed)
 
@@ -89,6 +91,10 @@ dart run swagger_parser --check
 
 ```sh
 dart run tool/check_env_config.dart config/c4-dev.example.json dev
+```
+
+```sh
+dart run tool/check_no_logging.dart
 ```
 
 ```sh
