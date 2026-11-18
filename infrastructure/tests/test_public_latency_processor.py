@@ -169,7 +169,9 @@ def test_ingestion_drops_raw_invalid_payload_and_handles_multiple_records(monkey
     assert "password" not in json.dumps(messages)
 
 
-def test_scheduled_collection_failure_emits_insufficient_only(monkeypatch) -> None:
+def test_scheduled_collection_failure_is_insufficient_and_an_observation_fault(
+    monkeypatch,
+) -> None:
     client = Mock()
     monkeypatch.setattr(handler.boto3, "client", lambda *args, **kwargs: client)
     monkeypatch.setattr(
@@ -183,6 +185,23 @@ def test_scheduled_collection_failure_emits_insufficient_only(monkeypatch) -> No
         ]
         == "insufficient"
     )
+    # Never a healthy pair value; insufficient for the SLO plus a separate health signal.
     assert [m["MetricName"] for m in client.put_metric_data.call_args.kwargs["MetricData"]] == [
-        "PublicCollectionInsufficient"
+        "PublicCollectionInsufficient",
+        "PublicCollectionFailures",
     ]
+
+
+def test_heartbeat_mode_publishes_only_the_environment_heartbeat(monkeypatch) -> None:
+    client = Mock()
+    monkeypatch.setattr(handler.boto3, "client", lambda *args, **kwargs: client)
+    collect = Mock(side_effect=AssertionError("heartbeat must not read samples"))
+    monkeypatch.setattr(handler, "collect_query", collect)
+    monkeypatch.setenv("ENVIRONMENT", "stg")
+    assert handler.handle({"mode": "heartbeat"}, None) == {"heartbeat": True}
+    [metric] = client.put_metric_data.call_args.kwargs["MetricData"]
+    assert metric == {
+        "MetricName": "PublicCollectorHeartbeat",
+        "Value": 1,
+        "Dimensions": [{"Name": "Environment", "Value": "stg"}],
+    }

@@ -239,6 +239,19 @@ def _publish(snapshot: dict[str, Any], client: Any, environment: str) -> None:
 def handle(event: dict[str, Any], _context: Any) -> dict[str, Any]:
     """Ingest or aggregate; no money service or table is reachable by this role."""
     environment = os.environ["ENVIRONMENT"]
+    if event.get("mode") == "heartbeat":
+        # Observation health: proves the collector runs and can publish, once a minute.
+        boto3.client("cloudwatch", config=CONFIG).put_metric_data(
+            Namespace="Raad/Platform",
+            MetricData=[
+                {
+                    "MetricName": "PublicCollectorHeartbeat",
+                    "Value": 1,
+                    "Dimensions": [{"Name": "Environment", "Value": environment}],
+                }
+            ],
+        )
+        return {"heartbeat": True}
     if event.get("mode") == "aggregate":
         logs = boto3.client("logs", config=CONFIG)
         metrics = boto3.client("cloudwatch", config=CONFIG)
@@ -252,14 +265,21 @@ def handle(event: dict[str, Any], _context: Any) -> dict[str, Any]:
             _publish(snapshot, metrics, environment)
             return snapshot
         except (ValueError, KeyError, StopIteration, RuntimeError, BotoCoreError, ClientError):
+            # Insufficient evidence for the SLO, and a separate observation-health failure.
+            dimensions = [{"Name": "Environment", "Value": environment}]
             metrics.put_metric_data(
                 Namespace="Raad/Platform",
                 MetricData=[
                     {
                         "MetricName": "PublicCollectionInsufficient",
                         "Value": 1,
-                        "Dimensions": [{"Name": "Environment", "Value": environment}],
-                    }
+                        "Dimensions": dimensions,
+                    },
+                    {
+                        "MetricName": "PublicCollectionFailures",
+                        "Value": 1,
+                        "Dimensions": dimensions,
+                    },
                 ],
             )
             return {"state": "insufficient", "coverage": "unknown"}

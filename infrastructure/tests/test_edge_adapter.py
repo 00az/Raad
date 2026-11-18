@@ -9,6 +9,7 @@ import jwt
 import pytest
 
 from raad_platform.edge import handler
+from raad_platform.edge.rate_store import Decision
 
 READ_ORIGIN_SECRET = handler._origin_secret
 
@@ -17,8 +18,12 @@ READ_ORIGIN_SECRET = handler._origin_secret
 def isolate_key_cache(monkeypatch):
     handler._jwk_clients.clear()
     handler._origin_cache = None
+    handler._rate_key_cache = None
     monkeypatch.setenv("ORIGIN_SECRET_ARN", "origin-secret")
     monkeypatch.setattr(handler, "_origin_secret", lambda: "a" * 64)
+    # Rate enforcement has its own tests (test_platform_rate_limits.py); admit here.
+    admitting = Mock(consume=Mock(return_value=Decision(True, 60)))
+    monkeypatch.setattr(handler, "_rate_limiter", lambda: admitting)
 
 
 def event() -> dict:
@@ -118,7 +123,7 @@ def test_missing_service_parameter_fails_closed(monkeypatch) -> None:
 
 def test_non_https_target_fails_closed(monkeypatch) -> None:
     monkeypatch.setattr(handler, "_profile", lambda: ("https://issuer", "http://internal-target"))
-    monkeypatch.setattr(handler, "_verify", lambda *_: None)
+    monkeypatch.setattr(handler, "_verify", lambda *_: "subject-1")
     result = handler.handle(event(), None)
     assert result["statusCode"] == 503
 
@@ -129,7 +134,7 @@ def test_signed_forwarding_preserves_c1_path_and_strips_spoofed_identity(monkeyp
         "_profile",
         lambda: ("https://issuer", "https://service.lambda-url.us-east-1.on.aws/"),
     )
-    monkeypatch.setattr(handler, "_verify", lambda *_: None)
+    monkeypatch.setattr(handler, "_verify", lambda *_: "subject-1")
     credentials = Mock(
         get_frozen_credentials=Mock(return_value=Mock(access_key="a", secret_key="s", token="t"))
     )
@@ -174,7 +179,7 @@ def test_upstream_timeout_returns_safe_503(monkeypatch) -> None:
         "_profile",
         lambda: ("https://issuer", "https://service.lambda-url.us-east-1.on.aws/"),
     )
-    monkeypatch.setattr(handler, "_verify", lambda *_: None)
+    monkeypatch.setattr(handler, "_verify", lambda *_: "subject-1")
     credentials = Mock(
         get_frozen_credentials=Mock(return_value=Mock(access_key="a", secret_key="s", token="t"))
     )
@@ -218,9 +223,9 @@ def test_token_verifier_checks_cognito_access_token_profile(
         "PyJWKClient",
         lambda *args, **kwargs: Mock(get_signing_key_from_jwt=Mock(return_value=signing_key)),
     )
-    decoded = {"token_use": "access", "client_id": "client-1"}
+    decoded = {"token_use": "access", "client_id": "client-1", "sub": "subject-1"}
     monkeypatch.setattr(jwt, "decode", lambda *args, **kwargs: decoded)
-    handler._verify("token", "https://issuer.example.test")
+    assert handler._verify("token", "https://issuer.example.test") == "subject-1"
     assert signing_key is not None
 
 
@@ -268,7 +273,9 @@ def test_key_cache_is_reused_with_one_second_fetch_and_one_minute_cooldown(monke
     monkeypatch.setattr(handler, "PyJWKClient", factory)
     monkeypatch.setenv("CLIENT_ID", "client")
     monkeypatch.setattr(
-        jwt, "decode", lambda *args, **kwargs: {"token_use": "access", "client_id": "client"}
+        jwt,
+        "decode",
+        lambda *args, **kwargs: {"token_use": "access", "client_id": "client", "sub": "s"},
     )
     handler._verify("token", "https://issuer")
     handler._verify("token", "https://issuer")
@@ -291,3 +298,126 @@ def test_verifier_failure_mapping_is_distinct(monkeypatch, failure, status, code
     response = handler.handle(event(), None)
     assert response["statusCode"] == status
     assert json.loads(response["body"])["code"] == code
+
+
+def forwarding(monkeypatch, status: int = 200, text: str = '{"ok":true}') -> dict:
+    """Wire a verified caller and capture the signed request sent to MoneyApi."""
+    monkeypatch.setattr(
+        handler,
+        "_profile",
+        lambda: ("https://issuer", "https://service.lambda-url.us-east-1.on.aws/"),
+    )
+    monkeypatch.setattr(handler, "_verify", lambda *_: "subject-1")
+    monkeypatch.setattr(handler, "_protected_correlation", lambda _: ("1", "hmac"))
+    credentials = Mock(
+        get_frozen_credentials=Mock(return_value=Mock(access_key="a", secret_key="s", token="t"))
+    )
+    monkeypatch.setattr(
+        handler.boto3,
+        "Session",
+        lambda: Mock(get_credentials=lambda: credentials, region_name="us-east-1"),
+    )
+    captured: dict = {}
+
+    def send(*args, **kwargs):
+        captured.update(kwargs)
+        return Mock(status_code=status, headers={"content-type": "application/json"}, text=text)
+
+    monkeypatch.setattr(handler.requests, "request", send)
+    return captured
+
+
+def test_forwarded_envelope_matches_c5_and_preserves_query_body_and_allowed_headers(monkeypatch):
+    import base64
+
+    from conftest import load_contract
+    from jsonschema import Draft202012Validator
+
+    captured = forwarding(monkeypatch)
+    request = event()
+    request["requestContext"]["http"]["method"] = "POST"
+    request["rawPath"] = "/money/v1/transfers"
+    request["rawQueryString"] = "a=1&b=two"
+    request["body"] = base64.b64encode(b'{"amountHalalas":100}').decode()
+    request["isBase64Encoded"] = True
+    request["headers"].update(
+        {
+            "Idempotency-Key": "key-123",
+            "Accept": "application/json",
+            "X-Wallet-Id": "spoofed",
+            "X-Authenticated-User": "spoofed",
+            "X-Forwarded-User": "spoofed",
+            "Cookie": "session=private",
+        }
+    )
+    assert handler.handle(request, None)["statusCode"] == 200
+    envelope = json.loads(captured["data"])
+    schema = load_contract("c5-money-edge-v1.yaml")["transport"]["edge_to_money_api"]["envelope"]
+    Draft202012Validator(schema).validate(envelope)
+    forwarded = envelope["request"]
+    assert forwarded["query"] == "a=1&b=two"
+    assert forwarded["body"] == '{"amountHalalas":100}'
+    assert forwarded["headers"] == {
+        "authorization": "Bearer signed-token",
+        "x-correlation-id": "request-123",
+        "content-type": "application/json",
+        "idempotency-key": "key-123",
+        "accept": "application/json",
+    }
+
+
+@pytest.mark.parametrize(
+    "supplied,kept",
+    [("request-123", True), ("a.b_c-d", True), ("~tilde", False), ("a:b", False), ("-x", False)],
+)
+def test_correlation_follows_the_reconciled_c5_pattern_end_to_end(monkeypatch, supplied, kept):
+    from conftest import load_contract
+
+    pattern = load_contract("c5-money-edge-v1.yaml")["forwarding"]["correlation_id"]
+    assert handler.CORRELATION_PATTERN.pattern == pattern["accepted_pattern"]
+    captured = forwarding(monkeypatch)
+    request = event()
+    request["headers"]["X-Correlation-Id"] = supplied
+    result = handler.handle(request, None)
+    sent = json.loads(captured["data"])["request"]["headers"]["x-correlation-id"]
+    assert result["headers"]["x-correlation-id"] == sent
+    assert (sent == supplied) is kept
+
+
+@pytest.mark.parametrize("path", ["/money/v2/wallet", "/money/v1x", "/stub/v1/ping", "/"])
+def test_unmatched_routes_answer_404_without_auth_or_forwarding(monkeypatch, path):
+    monkeypatch.setattr(handler, "_profile", Mock(side_effect=AssertionError("no auth")))
+    monkeypatch.setattr(handler.requests, "request", Mock(side_effect=AssertionError("no send")))
+    request = event()
+    request["rawPath"] = path
+    result = handler.handle(request, None)
+    assert result["statusCode"] == 404
+    assert json.loads(result["body"]) == {
+        "code": "NOT_FOUND",
+        "message": "The requested path does not exist.",
+        "correlationId": "request-123",
+    }
+
+
+def test_upstream_unavailable_answers_503_with_retry_after(monkeypatch):
+    forwarding(monkeypatch)
+    monkeypatch.setattr(handler.requests, "request", Mock(side_effect=handler.requests.Timeout()))
+    result = handler.handle(event(), None)
+    assert result["statusCode"] == 503
+    assert result["headers"]["retry-after"] == "1"
+    assert set(json.loads(result["body"])) == {"code", "message", "correlationId"}
+
+
+@pytest.mark.parametrize("claims", [{}, {"sub": ""}, {"sub": 7}, {"sub": "x" * 257}])
+def test_a_token_without_a_usable_subject_is_refused(monkeypatch, claims):
+    monkeypatch.setenv("CLIENT_ID", "client")
+    monkeypatch.setattr(
+        handler,
+        "PyJWKClient",
+        lambda *a, **k: Mock(get_signing_key_from_jwt=Mock(return_value=Mock(key="key"))),
+    )
+    monkeypatch.setattr(
+        jwt, "decode", lambda *a, **k: {"token_use": "access", "client_id": "client", **claims}
+    )
+    with pytest.raises(jwt.InvalidTokenError):
+        handler._verify("token", "https://issuer")

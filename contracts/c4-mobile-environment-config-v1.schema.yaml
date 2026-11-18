@@ -1,0 +1,60 @@
+# C4 — Mobile environment configuration v1 (contract ID: c4-mobile-config).
+# Canonical file named in the contract design's "Contract Files, Releases and Pinning" table.
+# Owner: U4 / Raad (the schema). Consumer: U3 / RaadMobile, which pins this file.
+# Each environment's values come from that environment's deployment outputs and are written by
+# scripts/write_platform_config.py as config/<env>.json; the values are not secrets and are not
+# committed to this repo.
+# Pre-release until U4's provider tests pass for the whole file; then tag
+# contract/c4-mobile-config/v1.0.0. The configVersion marker that travels with the data stays
+# MAJOR.MINOR ('1.0'): the existing mobile build already accepts exactly this shape.
+shared-schema: raad-mobile-environment-config
+version: 1.0.0-rc.1
+owner: u4-platform
+consumer: u3-mobile-app
+secrets_allowed: false
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  additionalProperties: false
+  required:
+    - configVersion
+    - environment
+    - apiBaseUrl
+    - moneyBasePath
+    - authIssuer
+    - authAudience
+    - authClientId
+  properties:
+    configVersion:
+      type: string
+      const: '1.0'
+    environment:
+      type: string
+      enum: [dev, stg, prd]
+    apiBaseUrl:
+      type: string
+      format: uri
+      pattern: '^https://'
+      description: >
+        The environment's public API origin. U4's writer emits scheme and host only, with no
+        path, query, fragment or user information.
+    moneyBasePath:
+      type: string
+      const: /money/v1
+    authIssuer:
+      type: string
+      format: uri
+      pattern: '^https://'
+      description: Must identify the same environment as environment and apiBaseUrl.
+    authAudience:
+      type: string
+      minLength: 1
+    authClientId:
+      type: string
+      minLength: 1
+      description: Public application identifier, not a secret.
+validation:
+  - apiBaseUrl, authIssuer, authAudience and authClientId must all belong to environment
+  - no key name may contain secret, password, token, privateKey or clientSecret
+  - production builds accept only environment prd
+  - development and staging builds show the matching DEV or STG chip; prd shows no chip

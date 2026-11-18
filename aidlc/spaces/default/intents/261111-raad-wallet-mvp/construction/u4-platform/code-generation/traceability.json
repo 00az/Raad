@@ -1,0 +1,260 @@
+{
+  "stage": "code-generation",
+  "unit": "u4-platform",
+  "upstream_ids": [
+    "AC1.1.1",
+    "AC1.1.2",
+    "AC1.1.3",
+    "AC1.1.4",
+    "AC1.2.1",
+    "AC1.2.2",
+    "AC1.2.3",
+    "AC1.2.4",
+    "AC1.2.5",
+    "AC1.2.6",
+    "AC1.3.1",
+    "AC1.3.2",
+    "AC1.3.3",
+    "AC1.3.4",
+    "AC1.3.5",
+    "AC1.5.1",
+    "AC1.5.2",
+    "AC1.5.3",
+    "AC1.6.1",
+    "AC1.6.2",
+    "AC3.5.1",
+    "AC3.5.2",
+    "AC3.5.3",
+    "AC3.5.4",
+    "AC6.2.1",
+    "AC6.2.2",
+    "NFR6.10",
+    "NFR7.10",
+    "NFR9.10",
+    "NFR1.10",
+    "NFR2.10",
+    "NFR2.11",
+    "NFR12.10",
+    "NFR12.11",
+    "NFR10.10",
+    "NFR11.10",
+    "NFR14.10",
+    "NFR7.11",
+    "NFR13.10",
+    "NFR5.10",
+    "NFR4.10",
+    "NFR9.11"
+  ],
+  "coverage": [
+    {
+      "id": "AC1.1.1",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/stacks.py"
+    },
+    {
+      "id": "AC1.1.2",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/stacks.py"
+    },
+    {
+      "id": "AC1.1.3",
+      "status": "OK",
+      "target": "infrastructure/tests/test_identity_stack.py"
+    },
+    {
+      "id": "AC1.1.4",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/stacks.py"
+    },
+    {
+      "id": "AC1.2.1",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/identity/publisher.py"
+    },
+    {
+      "id": "AC1.2.2",
+      "status": "OK",
+      "target": "contracts/c3-sign-in-client-profile-v1.yaml"
+    },
+    {
+      "id": "AC1.2.3",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/identity/publisher.py"
+    },
+    {
+      "id": "AC1.2.4",
+      "status": "OK",
+      "target": "infrastructure/tests/test_identity_publisher.py"
+    },
+    {
+      "id": "AC1.2.5",
+      "status": "N/A",
+      "target": "U1/U2 wallet-setup safety net (PUT /wallet) and U3 retry screen; U4 only publishes the confirmation event"
+    },
+    {
+      "id": "AC1.2.6",
+      "status": "OK",
+      "target": "scripts/check_identity_capabilities.py"
+    },
+    {
+      "id": "AC1.3.1",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/stacks.py"
+    },
+    {
+      "id": "AC1.3.2",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/stacks.py"
+    },
+    {
+      "id": "AC1.3.3",
+      "status": "OK",
+      "target": "contracts/c3-sign-in-client-profile-v1.yaml"
+    },
+    {
+      "id": "AC1.3.4",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/edge/handler.py"
+    },
+    {
+      "id": "AC1.3.5",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/stacks.py"
+    },
+    {
+      "id": "AC1.5.1",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/stacks.py"
+    },
+    {
+      "id": "AC1.5.2",
+      "status": "OK",
+      "target": "contracts/c3-sign-in-client-profile-v1.yaml"
+    },
+    {
+      "id": "AC1.5.3",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/stacks.py"
+    },
+    {
+      "id": "AC1.6.1",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/stacks.py"
+    },
+    {
+      "id": "AC1.6.2",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/stacks.py"
+    },
+    {
+      "id": "AC3.5.1",
+      "status": "N/A",
+      "target": "U2 unknown-recipient refusal and U3 message (unit-of-work-story-map: U4 owns only the lookup rate limit)"
+    },
+    {
+      "id": "AC3.5.2",
+      "status": "N/A",
+      "target": "U2 own-wallet refusal and U3 message (unit-of-work-story-map: U4 owns only the lookup rate limit)"
+    },
+    {
+      "id": "AC3.5.3",
+      "status": "N/A",
+      "target": "U2 email comparison and U3 client normalization (unit-of-work-story-map: U4 owns only the lookup rate limit)"
+    },
+    {
+      "id": "AC3.5.4",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/edge/rate_store.py"
+    },
+    {
+      "id": "AC6.2.1",
+      "status": "OK",
+      "target": "scripts/platform_smoke.py"
+    },
+    {
+      "id": "AC6.2.2",
+      "status": "OK",
+      "target": "scripts/write_platform_config.py"
+    },
+    {
+      "id": "NFR6.10",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/telemetry/handler.py"
+    },
+    {
+      "id": "NFR7.10",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/edge/rate_store.py"
+    },
+    {
+      "id": "NFR9.10",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/edge/handler.py"
+    },
+    {
+      "id": "NFR1.10",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/edge/handler.py"
+    },
+    {
+      "id": "NFR2.10",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/stacks.py"
+    },
+    {
+      "id": "NFR2.11",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/stacks.py"
+    },
+    {
+      "id": "NFR12.10",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/stacks.py"
+    },
+    {
+      "id": "NFR12.11",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/edge/rate_store.py"
+    },
+    {
+      "id": "NFR10.10",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/edge/handler.py"
+    },
+    {
+      "id": "NFR11.10",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/stacks.py"
+    },
+    {
+      "id": "NFR14.10",
+      "status": "OK",
+      "target": ".github/workflows/ci.yml"
+    },
+    {
+      "id": "NFR7.11",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/stacks.py"
+    },
+    {
+      "id": "NFR13.10",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/edge/stub.py"
+    },
+    {
+      "id": "NFR5.10",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/stacks.py"
+    },
+    {
+      "id": "NFR4.10",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/identity/publisher.py"
+    },
+    {
+      "id": "NFR9.11",
+      "status": "OK",
+      "target": "infrastructure/raad_platform/configuration.py"
+    }
+  ]
+}

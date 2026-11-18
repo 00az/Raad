@@ -1,0 +1,179 @@
+# C3 — Sign-in client behavior profile v1 (contract ID: c3-sign-in-profile).
+# Canonical file named in the contract design's "Contract Files, Releases and Pinning" table.
+# Owner: U4 / Raad. Consumer: U3 / RaadMobile, which pins this file. U2 consumes the verified
+# token claims through C5, not through this file.
+# Pre-release until U4's provider capability checks (P1-P13 below) pass on dev; then tag
+# contract/c3-sign-in-profile/v1.0.0. Until then the version carries the -rc suffix.
+# This profile is provider-neutral on purpose: it names no SDK. Which provider settings and
+# fallbacks satisfy each check is recorded in U4's infrastructure design and evidence.
+contract: raad-sign-in-client-profile
+version: 1.0.0-rc.1
+owner: u4-platform
+consumer: u3-mobile-app
+transport: provider SDK over TLS
+email_normalization:
+  client_before_send:
+    - remove surrounding Unicode whitespace
+    - lowercase for comparison
+  provider:
+    uniqueness: one account per normalized email
+    preserves_for_display: confirmed email
+  mutable_after_signup:
+    email: false
+    displayName: false
+operations:
+  signUp:
+    input: [email, displayName, password]
+    success: unconfirmed account and one emailed confirmation code
+    expected_failures: [EMAIL_IN_USE, PASSWORD_RULE_FAILED, RATE_LIMITED]
+  confirmEmail:
+    input: [email, confirmationCode]
+    success: >
+      Confirmed account. Event publication is asynchronous and is not part of
+      this client-visible success; pre-acceptance event loss is permitted and
+      PUT /wallet remains the authoritative safety net as C2 specifies.
+    expected_failures: [CODE_INVALID_OR_EXPIRED, RATE_LIMITED]
+  resendConfirmationCode:
+    input: [email]
+    success: generic acknowledgement; a new code replaces every earlier code
+    privacy_rule: >
+      Every outcome except rate limiting is presented by MobileApp as "We sent a
+      new code", whether the address is unknown, already confirmed or unconfirmed.
+    expected_failures: [RATE_LIMITED]
+  signIn:
+    input: [email, password]
+    success: access token and refresh token
+    privacy_rule: >
+      Wrong password, unknown email and unconfirmed account produce one client-visible
+      code SIGN_IN_FAILED and the same message. The provider may retain a private reason
+      for security monitoring, without email or password in logs.
+    expected_failures: [SIGN_IN_FAILED, RATE_LIMITED]
+  refreshSession:
+    input: [refreshToken]
+    success: new access token without showing sign-in
+    session_policy:
+      access_token_lifetime_minutes: 60
+      refresh_allowed_until_idle_days: 30
+      idle_rule_enforced_by: the provider when it has an idle limit; otherwise MobileApp (check P9)
+    expected_failures: [SESSION_EXPIRED]
+  requestPasswordReset:
+    input: [email]
+    success: generic acknowledgement
+    privacy_rule: >
+      MobileApp always displays "If an account exists for this address, we sent
+      a code", whether or not an account exists.
+    expected_failures: [RATE_LIMITED]
+  confirmPasswordReset:
+    input: [email, resetCode, newPassword]
+    success: password changed; old password no longer works
+    expected_failures: [CODE_INVALID_OR_EXPIRED, PASSWORD_RULE_FAILED, RATE_LIMITED]
+  signOut:
+    input: [refreshToken]
+    success: local tokens removed and refresh token revoked when supported
+password_rule:
+  minimum_characters: 8
+  requires_latin_lowercase: true
+  requires_latin_uppercase: true
+  requires_digit: true
+  # A4 sets no symbol requirement. The provider must not silently strengthen the rule.
+  requires_symbol: false
+  # A4's check passwords, used verbatim by provider and client tests.
+  examples:
+    accepted: [Abcdef12]
+    refused: [abcdef12, ABCDEF12, Abcdefgh, Abcde12]
+stored_user_attributes: [email, displayName]
+access_token:
+  required_claims: [sub, iss, audience_binding, exp, iat, token_type_marker]
+  claim_rules:
+    sub: immutable opaque user identifier within one environment
+    iss: unique issuer for one environment
+    audience_binding: >
+      The claim that names the mobile app client of one environment: aud, or
+      client_id when the provider's access tokens carry no aud. C5's verifier
+      configuration names which one applies.
+    token_type_marker: >
+      The provider's mark that the token is an access token and not an ID or
+      refresh token. C5's verifier configuration names it and its expected value.
+  profile_attributes:
+    email: confirmed address used by the C1 wallet-setup safety net
+    displayName: display name used by the C1 wallet-setup safety net
+    source: >
+      Claims in the access token when the provider can put them there; otherwise
+      the provider's own-profile call, made by MoneyApi with the caller's access
+      token. C5's verifier configuration says which source an environment uses.
+      They never come from a request body or from an ID token sent by the app.
+privacy:
+  never_log: [password, confirmationCode, resetCode, accessToken, refreshToken, email, displayName]
+  generic_client_errors:
+    - SIGN_IN_FAILED
+    - confirmation resend acknowledgement
+    - password reset request acknowledgement
+# Provider capability acceptance. Each check must pass on dev with recorded evidence before
+# this file is released; a check that fails takes the fallback in its row, and a fallback
+# that would change a requirement goes back to the person first.
+capability_checks:
+  - id: P1
+    guarantee: 'The access token carries `sub`, the issuer, an audience binding and a token-type marker'
+    acceptance: 'Decode an access token and find the claims that C5''s verifier configuration names; two sign-ins by one user give the same `sub`'
+    fallback: 'The configuration names whichever claim the provider uses (`aud` or `client_id`, and its own token-type marker). A provider with no audience binding or no token-type marker is not used'
+    fallback_owner: 'U4'
+  - id: P2
+    guarantee: 'MoneyApi gets the confirmed email address and display name from the verified sign-in'
+    acceptance: 'The access token holds `email` and `displayName` equal to the confirmed account''s values'
+    fallback: 'U4 adds both to the access token with the provider''s token-customization hook. With no such hook, the verifier configuration sets `profileAttributeSource` to `user-profile-endpoint`, and MoneyApi reads both once at wallet setup with the caller''s own access token and checks that the profile''s subject equals `sub`'
+    fallback_owner: 'U4 for the hook and the configuration; U2 for the own-profile call'
+  - id: P3
+    guarantee: 'One account per normalized email address (FR1.6)'
+    acceptance: 'Sign up `a@x.com`, then `A@x.com` with a trailing space: the second gets `EMAIL_IN_USE`'
+    fallback: 'MobileApp already trims and lowercases before every account call. U4 adds a check in the platform, before sign-up completes, that refuses an address differing only in capitals'
+    fallback_owner: 'U3 for the client rule; U4 for the check'
+  - id: P4
+    guarantee: 'The password rule of A4, at sign-up and at reset'
+    acceptance: 'A4''s five sample passwords give A4''s results'
+    fallback: 'U4 brings the difference to the person as a change to A4 before U3 builds the sign-up screen'
+    fallback_owner: 'U4'
+  - id: P5
+    guarantee: 'Only the email address and display name are stored about a user (AC1.1.4)'
+    acceptance: 'List a `dev` account''s attributes'
+    fallback: 'U4 requests and fills no other attribute. Identifiers, timestamps and status that the provider creates by itself are not data collected from the user'
+    fallback_owner: 'U4'
+  - id: P6
+    guarantee: 'Wrong password, unknown email and unconfirmed account give one refusal (AC1.3.2, AC1.3.3)'
+    acceptance: 'Try the three cases and compare what the app receives'
+    fallback: 'U4 turns on the provider''s setting that hides whether an account exists, where it has one. U3''s sign-in adapter maps every provider refusal except a rate limit to `SIGN_IN_FAILED` and one message. U4 reports any difference still visible on the network to the person before `stg`'
+    fallback_owner: 'U3 for the adapter; U4 for the setting and the report'
+  - id: P7
+    guarantee: 'A resent code replaces every earlier code, and the answer is the same for any address (AC1.2.6)'
+    acceptance: 'Ask for two codes: the first is refused and the second works. Ask for a resend for an unknown and for a confirmed address'
+    fallback: 'U3''s adapter shows the one acknowledgement for every outcome except a rate limit. If an earlier code stays valid, U4 adds its own confirmation step in the platform that cancels earlier codes, or returns AC1.2.6 to the person before U3 builds the confirmation screen. The app never works around it'
+    fallback_owner: 'U4; U3 for the message'
+  - id: P8
+    guarantee: 'A password-reset request gives one acknowledgement for any address'
+    acceptance: 'Ask for a reset for a known and for an unknown address'
+    fallback: 'U3''s adapter shows the one acknowledgement for every outcome except a rate limit'
+    fallback_owner: 'U3'
+  - id: P9
+    guarantee: 'An access token lasts 60 minutes, and renewal is refused after 30 days without use (A5)'
+    acceptance: 'Read both settings, and run A5''s test-clock check where the provider allows one'
+    fallback: 'If the provider has only a fixed renewal lifetime counted from sign-in, U4 sets it to at least 30 days (the value is chosen in Infrastructure Design). MobileApp keeps the time of last use in secure storage and, after more than 30 days without use, signs out and shows sign-in. An active user then signs in again only when the fixed lifetime ends'
+    fallback_owner: 'U3 for the idle rule; U4 for the lifetime'
+  - id: P10
+    guarantee: 'Per-caller limits on account operations (AC1.3.5, NFR12)'
+    acceptance: 'Send a burst of sign-in attempts from one caller: further attempts are refused and a second caller is unaffected'
+    fallback: 'U4 attaches the platform firewall''s per-caller rate rule to the sign-in service''s endpoint where the provider allows it. If neither can separate callers, U4 returns AC1.3.5 to the person before `stg`'
+    fallback_owner: 'U4'
+  - id: P11
+    guarantee: 'Every code under `expected_failures` is a stable client code'
+    acceptance: 'Produce each code once and list the provider error behind it'
+    fallback: 'U3''s adapter owns the mapping and turns any unlisted provider error into its generic failure, never into provider text'
+    fallback_owner: 'U3'
+  - id: P12
+    guarantee: 'Confirming an account can publish the C2 event with the email address and display name'
+    acceptance: 'Confirm a `dev` account and observe one C2 event'
+    fallback: 'None is needed: with no hook after confirmation, no event is published and `PUT /wallet` opens every wallet, as C2 permits'
+    fallback_owner: 'U4'
+  - id: P13
+    guarantee: 'Signing keys are published over HTTPS and tokens are signed with RS256'
+    acceptance: '`jwksUri` answers, and the token header names RS256'
+    fallback: 'None: a provider without public key discovery, or with shared-secret signing only, is not used'
+    fallback_owner: 'U4'
