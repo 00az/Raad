@@ -1,0 +1,424 @@
+{
+  "stage": "code-generation",
+  "unit": "u3-mobile-app",
+  "version": 1,
+  "writes": [
+    {
+      "path": "RaadMobile-u3@checkout/.github/workflows/ci.yml"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/README.md"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/android/app/build.gradle.kts"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/android/app/src/main/AndroidManifest.xml"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/android/app/src/main/res/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/android/app/src/main/res/mipmap-mdpi/ic_launcher.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/android/app/src/main/res/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/assets/images/raad_lockup.webp"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/assets/raad_bolt_icon.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/contracts/pinned/c1-money-api/raad-money-v1.yaml"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/contracts/pins.yaml"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/docs/acceptance-journey.md"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/integration_test/u3_journeys_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/integration_test/walking_skeleton_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Flutter/Debug-dev.xcconfig"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Flutter/Debug-prd.xcconfig"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Flutter/Debug-stg.xcconfig"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Flutter/Debug.xcconfig"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Flutter/Profile-dev.xcconfig"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Flutter/Profile-prd.xcconfig"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Flutter/Profile-stg.xcconfig"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Flutter/Release-dev.xcconfig"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Flutter/Release-prd.xcconfig"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Flutter/Release-stg.xcconfig"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Flutter/Release.xcconfig"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Podfile"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Podfile.lock"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner.xcodeproj/project.pbxproj"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner.xcodeproj/xcshareddata/xcschemes/dev.xcscheme"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner.xcodeproj/xcshareddata/xcschemes/prd.xcscheme"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner.xcodeproj/xcshareddata/xcschemes/stg.xcscheme"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@1x.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@2x.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-20x20@3x.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@1x.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@2x.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-29x29@3x.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@1x.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@2x.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-40x40@3x.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-50x50@1x.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-50x50@2x.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-57x57@1x.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-57x57@2x.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@2x.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-60x60@3x.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-72x72@1x.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-72x72@2x.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@1x.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-76x76@2x.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-83.5x83.5@2x.png"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/Runner/Info.plist"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/ios/scripts/check_c4.sh"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/l10n.yaml"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/api/generated/default_client/models/transfer_page.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/api/generated/default_client/models/transfer_result.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/api/generated/money_api_client.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/api/money_service.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/app/app_services.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/app/connectivity.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/app/language.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/app/protected_store.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/app/raad_app.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/auth/auth_service.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/auth/cognito_auth_service.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/auth/session_boundary.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/config/build_environment.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/config/environment_config.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/dev/fake_accounts.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/dev/fake_auth_service.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/dev/fake_money_backend.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/l10n/app_ar.arb"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/l10n/app_en.arb"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/l10n/app_localizations.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/l10n/app_localizations_ar.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/l10n/app_localizations_en.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/main.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/main_fake.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/money/balance_snapshot.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/money/halalas.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/money/history_controller.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/money/pending_transfer.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/money/submission_controller.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/money/wallet_controller.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/screens/account_screen.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/screens/confirm_email_screen.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/screens/forgot_password_screen.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/screens/history_list.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/screens/history_screen.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/screens/reset_password_screen.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/screens/send_form_screen.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/screens/send_result_screen.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/screens/send_review_screen.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/screens/sign_in_screen.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/screens/sign_up_screen.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/screens/wallet_screen.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/ui/formatting.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/ui/messages.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/ui/raad_theme.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/widgets/form_fields.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/widgets/language_selector.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/widgets/status_banner.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/lib/widgets/virtual_card.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/pubspec.lock"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/pubspec.yaml"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/accessibility_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/account_screens_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/app_start_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/auth_flows_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/balance_snapshot_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/cognito_auth_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/contract_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/environment_config_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/flavour_config_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/history_paging_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/history_screen_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/l10n_catalog_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/log_privacy_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/money_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/offline_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/pending_transfer_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/rtl_layout_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/send_refusals_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/session_boundary_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/sign_in_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/submission_controller_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/support/display.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/support/fakes.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/support/harness.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/transfer_flow_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/wallet_screen_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/test/wallet_setup_test.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/tool/check_env_config.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/tool/check_l10n.dart"
+    },
+    {
+      "path": "RaadMobile-u3@checkout/tool/check_no_logging.dart"
+    }
+  ]
+}
