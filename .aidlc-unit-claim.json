@@ -11,7 +11,9 @@
   "base_oid": "35d3a10df05c2ecafea48787242f56fa23027e97",
   "integration_ref": "refs/remotes/origin/main",
   "claim_ref": "refs/heads/claim/ce0a1b4e/u3-mobile-app",
-  "predecessor_oid": null,
+  "predecessor_oid": "c074da5aa65802c5a75549963dd4625ee25b7f57",
   "gate_rhythm": "per-stage",
-  "audit_shard": "ziyads-macbook-air-local-330fad58217e.md"
+  "audit_shard": "ziyads-macbook-air-local-330fad58217e.md",
+  "candidate_tree_oid": "1023924497ff83df882ad44772d5211d2d11b044",
+  "candidate_head_oid": "4a8fbdbe7f1e72e668f692edb842036984524f1d"
 }
