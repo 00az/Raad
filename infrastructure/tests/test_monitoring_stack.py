@@ -17,6 +17,48 @@ def test_logs_have_fourteen_day_retention() -> None:
     template().has_resource_properties("AWS::Logs::LogGroup", {"RetentionInDays": 14})
 
 
+def test_edge_logs_use_the_key_arn_and_the_key_lets_cloudwatch_logs_use_it() -> None:
+    t = template()
+    keys = t.find_resources("AWS::KMS::Key")
+    assert len(keys) == 1
+    key_id = next(iter(keys))
+    t.has_resource_properties(
+        "AWS::Logs::LogGroup",
+        {
+            "LogGroupName": "/raad/dev/platform-edge",
+            "KmsKeyId": {"Fn::GetAtt": [key_id, "Arn"]},
+        },
+    )
+    t.has_resource_properties(
+        "AWS::KMS::Key",
+        {
+            "KeyPolicy": {
+                "Statement": Match.array_with(
+                    [
+                        Match.object_like(
+                            {
+                                "Principal": {
+                                    "Service": {
+                                        "Fn::Join": Match.array_with(
+                                            [Match.array_with([".amazonaws.com"])]
+                                        )
+                                    }
+                                },
+                                "Action": Match.array_with(["kms:GenerateDataKey*"]),
+                                "Condition": {
+                                    "ArnLike": {
+                                        "kms:EncryptionContext:aws:logs:arn": Match.any_value()
+                                    }
+                                },
+                            }
+                        )
+                    ]
+                )
+            }
+        },
+    )
+
+
 def test_server_error_alarm_requires_two_periods() -> None:
     template().has_resource_properties(
         "AWS::CloudWatch::Alarm", {"EvaluationPeriods": 2, "DatapointsToAlarm": 2}
@@ -207,3 +249,39 @@ def test_every_alarm_notifies_and_records_the_accepted_native_recovery_deviation
         assert "accepted deviation" in props["AlarmDescription"]
         if props.get("MetricName") != "PublicCollectorHeartbeat":
             assert props["TreatMissingData"] == "missing"
+
+
+def _monitoring(context: dict[str, str], environment: str = "dev") -> Template:
+    app = cdk.App(context=context)
+    return Template.from_stack(
+        MonitoringStack(app, "Monitoring", environment=environment, alert_email="")
+    )
+
+
+def test_reserved_concurrency_is_kept_by_default() -> None:
+    _monitoring({}).has_resource_properties(
+        "AWS::Lambda::Function", {"ReservedConcurrentExecutions": 2}
+    )
+
+
+def test_dev_can_turn_reserved_concurrency_off_for_a_new_account() -> None:
+    functions = _monitoring({"raad:reservedConcurrency": "off"}).find_resources(
+        "AWS::Lambda::Function"
+    )
+    assert functions
+    assert all("ReservedConcurrentExecutions" not in f["Properties"] for f in functions.values())
+
+
+def test_stg_and_prd_refuse_turning_reserved_concurrency_off() -> None:
+    import pytest
+
+    for environment in ("stg", "prd"):
+        with pytest.raises(ValueError, match="only in dev"):
+            _monitoring({"raad:reservedConcurrency": "off"}, environment)
+
+
+def test_an_unknown_reserved_concurrency_setting_is_refused() -> None:
+    import pytest
+
+    with pytest.raises(ValueError, match="on or off"):
+        _monitoring({"raad:reservedConcurrency": "maybe"})

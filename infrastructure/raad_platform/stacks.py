@@ -135,6 +135,26 @@ def log_retention(environment: str) -> logs.RetentionDays:
     return logs.RetentionDays.TWO_WEEKS if environment == "dev" else logs.RetentionDays.ONE_MONTH
 
 
+RESERVED_CONCURRENCY_CONTEXT = "raad:reservedConcurrency"
+
+
+def reserved_concurrency(scope: Construct, environment: str, value: int | None) -> int | None:
+    """A function's reserved concurrency, unless a dev deploy turns reservations off.
+
+    A new AWS account allows 10 concurrent executions and keeps all 10 unreserved, so no
+    reservation can be made until the limit is raised. A dev deploy in such an account passes
+    `-c raad:reservedConcurrency=off`; stg and prd refuse the switch.
+    """
+    setting = scope.node.try_get_context(RESERVED_CONCURRENCY_CONTEXT)
+    if setting is None or str(setting).lower() in ("on", "true"):
+        return value
+    if str(setting).lower() not in ("off", "false"):
+        raise ValueError(f"{RESERVED_CONCURRENCY_CONTEXT} must be on or off")
+    if environment != "dev":
+        raise ValueError(f"{RESERVED_CONCURRENCY_CONTEXT}=off is allowed only in dev")
+    return None
+
+
 @dataclass(frozen=True)
 class DeploymentInputs:
     """One environment's deployment inputs; none of them is a credential."""
@@ -446,7 +466,7 @@ class IdentityStack(Stack):
             ),
             memory_size=128,
             timeout=Duration.seconds(3),
-            reserved_concurrent_executions=2,
+            reserved_concurrent_executions=reserved_concurrency(self, environment, 2),
             log_group=publisher_logs,
             role=self.publisher_role,
             environment={
@@ -594,11 +614,35 @@ class MonitoringStack(Stack):
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
         require_environment(environment)
+        self.logs_key = kms.Key(self, "LogsKey", enable_key_rotation=True)
+        # CloudWatch Logs can encrypt a log group with this key only when the key policy names
+        # the regional Logs service, limited here to this account's log groups. Without it the
+        # first dev deploy failed to create the edge log group.
+        self.logs_key.add_to_resource_policy(
+            iam.PolicyStatement(
+                principals=[iam.ServicePrincipal(f"logs.{self.region}.amazonaws.com")],
+                actions=[
+                    "kms:Encrypt*",
+                    "kms:Decrypt*",
+                    "kms:ReEncrypt*",
+                    "kms:GenerateDataKey*",
+                    "kms:Describe*",
+                ],
+                resources=["*"],
+                conditions={
+                    "ArnLike": {
+                        "kms:EncryptionContext:aws:logs:arn": (
+                            f"arn:{self.partition}:logs:{self.region}:{self.account}:log-group:*"
+                        )
+                    }
+                },
+            )
+        )
         self.key = kms.Alias(
             self,
             "LogKey",
             alias_name=f"alias/raad-{environment}-logs",
-            target_key=kms.Key(self, "LogsKey", enable_key_rotation=True),
+            target_key=self.logs_key,
         )
         self.topic = sns.Topic(self, "Alerts", topic_name=f"raad-{environment}-alerts")
         self.topic.add_to_resource_policy(
@@ -707,7 +751,8 @@ class MonitoringStack(Stack):
             "EdgeLogs",
             log_group_name=f"/raad/{environment}/platform-edge",
             retention=log_retention(environment),
-            encryption_key=self.key,
+            # CloudWatch Logs takes the key's own ARN; an alias ARN is refused.
+            encryption_key=self.logs_key,
         )
         self.public_samples = logs.LogGroup(
             self,
@@ -733,7 +778,7 @@ class MonitoringStack(Stack):
             handler="handler.handle",
             code=lambda_.Code.from_asset("raad_platform/telemetry"),
             timeout=Duration.seconds(20),
-            reserved_concurrent_executions=2,
+            reserved_concurrent_executions=reserved_concurrency(self, environment, 2),
             log_group=processor_logs,
             role=processor_role,
             environment={
@@ -1058,7 +1103,9 @@ class PublicEdgeStack(Stack):
             handler="raad_platform.edge.handler.entry",
             code=code,
             timeout=Duration.seconds(9),
-            reserved_concurrent_executions=20 if environment == "dev" else None,
+            reserved_concurrent_executions=reserved_concurrency(
+                self, environment, 20 if environment == "dev" else None
+            ),
             environment={
                 "ENVIRONMENT": environment,
                 "USER_POOL_ID": identity.user_pool.user_pool_id,
@@ -1384,7 +1431,7 @@ class PublicEdgeStack(Stack):
             code=code,
             memory_size=128,
             timeout=Duration.seconds(3),
-            reserved_concurrent_executions=2,
+            reserved_concurrent_executions=reserved_concurrency(self, environment, 2),
             log_group=stub_logs,
             role=_execution_role(self, "DevStubExecutionRole", stub_logs),
             environment={
